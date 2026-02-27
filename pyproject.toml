@@ -4,34 +4,41 @@ version = "0.1.0"
 description = "Adaptive inference orchestration for LLM serving"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.24",
+    "pandas>=2.0",
     "pyyaml>=6.0",
     "prometheus-client>=0.19",
     "httpx>=0.25",
+    "aiohttp>=3.9",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "pytest-aiohttp>=1.0",
     "black>=23.0",
     "ruff>=0.1",
     "mypy>=1.0",
+    "yappi>=1.4",
 ]
 profiling = [
     "py-spy>=0.3",
     "nvidia-ml-py>=12.0",
     "matplotlib>=3.7",
-    "pandas>=2.0",
+    "seaborn>=0.12",
+    "datasets>=2.14",
+    "jupyter>=1.0",
+    "ipykernel>=6.25",
 ]
 vllm = ["vllm>=0.6.0"]
 sglang = ["sglang>=0.3.0"]
 
 [build-system]
 requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88

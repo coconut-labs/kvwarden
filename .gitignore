@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Profiling results (generated data)
+profiling/results/
+benchmarks/results/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# pytest
+.pytest_cache/

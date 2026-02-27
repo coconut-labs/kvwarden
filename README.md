@@ -40,14 +40,68 @@ Phase 1: Profiling & Baselines — Reproducing scheduling overhead findings
 
 ```bash
 pip install -e ".[dev,profiling]"
-python profiling/scripts/profile_vllm_scheduler.py --model meta-llama/Llama-3.1-8B-Instruct
 ```
 
-## Benchmarks
+## Reproducing Baselines
+
+### 1. Start inference engines
 
 ```bash
-docker compose -f docker/docker-compose.yml up vllm-server
-python benchmarks/scripts/run_benchmark.py --config benchmarks/configs/sharegpt_baseline.yaml
+docker compose -f docker/docker-compose.yml up
+```
+
+This starts both vLLM (port 8000) and SGLang (port 8001) servers.
+
+### 2. Profile vLLM scheduling overhead
+
+```bash
+python profiling/scripts/profile_vllm_scheduler.py \
+    --base-url http://localhost:8000 \
+    --model meta-llama/Llama-3.1-8B-Instruct \
+    --concurrency 1,8,32,64,128 \
+    --num-requests 200 \
+    --workload sharegpt
+```
+
+Add `--profile-internal` to generate py-spy flame graphs (requires py-spy installed).
+
+### 3. Profile SGLang scheduling overhead
+
+```bash
+python profiling/scripts/profile_sglang_scheduler.py \
+    --base-url http://localhost:8001 \
+    --model meta-llama/Llama-3.1-8B-Instruct \
+    --concurrency 1,8,32,64,128 \
+    --num-requests 200 \
+    --workload sharegpt
+```
+
+### 4. Run head-to-head comparison
+
+```bash
+python benchmarks/scripts/run_baseline_comparison.py \
+    --vllm-url http://localhost:8000 \
+    --sglang-url http://localhost:8001 \
+    --concurrency 1,10,50,100 \
+    --workload all
+```
+
+Results are saved to `benchmarks/results/baseline/`.
+
+### 5. View analysis
+
+```bash
+jupyter notebook profiling/analysis/scheduling_overhead_analysis.ipynb
+```
+
+### Running tests
+
+```bash
+# Unit tests (no GPU/server required)
+pytest tests/unit/ -v
+
+# Integration tests (requires aiohttp)
+pytest tests/integration/ -v
 ```
 
 ## License
