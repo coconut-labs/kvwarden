@@ -1,0 +1,44 @@
+# Baseline benchmark configuration
+# Compares vanilla vLLM vs vanilla SGLang on ShareGPT workload
+
+benchmark:
+  name: sharegpt_baseline
+  description: "Baseline throughput comparison on real conversation workloads"
+
+dataset:
+  name: sharegpt
+  num_prompts: 500
+  seed: 42
+
+engines:
+  - name: vllm
+    version: latest
+    config:
+      model: meta-llama/Llama-3.1-8B-Instruct
+      dtype: bfloat16
+      gpu_memory_utilization: 0.8
+      max_model_len: 8192
+
+  - name: sglang
+    version: latest
+    config:
+      model: meta-llama/Llama-3.1-8B-Instruct
+      dtype: bfloat16
+      mem_fraction_static: 0.8
+
+concurrency_levels: [1, 10, 50, 100, 500]
+
+metrics:
+  - throughput_toks_per_sec
+  - ttft_ms_p50
+  - ttft_ms_p99
+  - tpot_ms_p50
+  - tpot_ms_p99
+  - gpu_utilization_pct
+  - scheduling_overhead_pct
+
+hardware:
+  # Fill in your actual hardware
+  gpu: "NVIDIA A100 80GB"  # or H100, etc.
+  cpu: "TBD"
+  ram_gb: "TBD"

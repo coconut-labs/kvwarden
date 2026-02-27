@@ -1,0 +1,45 @@
+# InferGrid benchmark environment
+# Usage: docker compose -f docker/docker-compose.yml up vllm-server
+
+version: "3.8"
+
+services:
+  vllm-server:
+    image: vllm/vllm-openai:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8000:8000"
+    command: >
+      --model meta-llama/Llama-3.1-8B-Instruct
+      --dtype bfloat16
+      --gpu-memory-utilization 0.8
+    volumes:
+      - huggingface-cache:/root/.cache/huggingface
+
+  sglang-server:
+    image: lmsysorg/sglang:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8001:30000"
+    command: >
+      python -m sglang.launch_server
+      --model meta-llama/Llama-3.1-8B-Instruct
+      --dtype bfloat16
+      --mem-fraction-static 0.8
+    volumes:
+      - huggingface-cache:/root/.cache/huggingface
+
+volumes:
+  huggingface-cache:
