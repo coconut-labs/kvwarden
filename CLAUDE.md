@@ -39,16 +39,29 @@ Three components communicating through a shared state object:
 - **Benchmarking:** ShareGPT dataset, custom synthetic workloads
 - **Testing:** pytest, benchmark reproducibility via Docker Compose
 
-## Current Phase
+## Current Phase: I_1.0.0.2 — Profiling & Baseline Reproduction
 
-Phase 1 (Weeks 1-3): Deep-dive into vLLM and SGLang source code. Profile both engines. Reproduce WukLab scheduling overhead findings.
+Profiling vLLM and SGLang scheduling overhead. Reproducing the published claim
+that scheduling consumes >50% of inference time on fast models and that vLLM
+trails SGLang by ~29% due to orchestration overhead.
 
-Key tasks:
-- Profile vLLM serving Llama 3 8B — measure CPU scheduling vs GPU execution time split
-- Profile SGLang on same workload — compare scheduling overhead
-- Reproduce the 29% throughput gap with identical FlashInfer kernels
-- Document baseline metrics: throughput (tok/s), TTFT, TPOT, GPU utilization
-- Understand vLLM's scheduler interface and plugin points
+Key outputs:
+- Quantified scheduling overhead (flame graphs, cProfile data)
+- Head-to-head benchmark: ShareGPT + synthetic workloads across concurrency sweep
+- Identified intervention points for WorkloadRouter design
+- Baseline metrics: throughput (tok/s), TTFT, TPOT, GPU utilization
+- Analysis notebook with publication-quality visualizations
+- Findings document: `docs/phase1_findings.md`
+
+### Profiling scripts
+- `profiling/scripts/profiling_utils.py` — shared infrastructure (GPU collector, request generator, async client)
+- `profiling/scripts/profile_vllm_scheduler.py` — vLLM external + internal profiling
+- `profiling/scripts/profile_sglang_scheduler.py` — SGLang external + internal profiling
+- `benchmarks/scripts/run_baseline_comparison.py` — controlled head-to-head comparison
+
+### Previous Phase: I_1.0.0.1 (Completed)
+Project scaffolding — directory structure, pyproject.toml, docker-compose for
+vLLM + SGLang, benchmark config stubs, package layout under src/infergrid/.
 
 ## Key Research Context
 

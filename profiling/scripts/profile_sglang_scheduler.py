@@ -1,18 +1,18 @@
-"""Profile vLLM scheduling overhead.
+"""Profile SGLang scheduling overhead.
 
-Reproduces WukLab findings that vLLM scheduling consumes >50% of inference
-time on fast models. Measures CPU scheduling time vs GPU execution time
-at multiple concurrency levels.
+Mirrors profile_vllm_scheduler.py methodology for direct comparison.
+Measures CPU scheduling time vs GPU execution time at multiple
+concurrency levels against an SGLang server.
 
 Two profiling levels:
   Level A — External (black-box): Send requests via OpenAI-compatible API,
             collect throughput, TTFT, TPOT, GPU utilization.
-  Level B — Internal (white-box): py-spy flame graphs + cProfile of
-            scheduler hot paths.
+  Level B — Internal (white-box): py-spy flame graphs targeting SGLang's
+            RadixAttention tree management and batch scheduler.
 
 Usage:
-    python profiling/scripts/profile_vllm_scheduler.py \\
-        --base-url http://localhost:8000 \\
+    python profiling/scripts/profile_sglang_scheduler.py \\
+        --base-url http://localhost:8001 \\
         --model meta-llama/Llama-3.1-8B-Instruct \\
         --concurrency 1,8,32,64,128 \\
         --num-requests 200 \\
@@ -25,7 +25,6 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 import shutil
 import subprocess
 import sys
@@ -54,20 +53,20 @@ logger = logging.getLogger(__name__)
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Profile vLLM scheduling overhead",
+        description="Profile SGLang scheduling overhead",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--base-url",
         type=str,
-        default="http://localhost:8000",
-        help="vLLM server base URL",
+        default="http://localhost:8001",
+        help="SGLang server base URL",
     )
     parser.add_argument(
         "--model",
         type=str,
         default="meta-llama/Llama-3.1-8B-Instruct",
-        help="Model name served by the vLLM instance",
+        help="Model name served by the SGLang instance",
     )
     parser.add_argument(
         "--concurrency",
@@ -91,13 +90,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="profiling/results/vllm",
+        default="profiling/results/sglang",
         help="Directory for output files",
     )
     parser.add_argument(
         "--profile-internal",
         action="store_true",
-        help="Enable internal profiling (py-spy flame graphs + cProfile)",
+        help="Enable internal profiling (py-spy flame graphs)",
     )
     parser.add_argument(
         "--duration",
@@ -156,7 +155,7 @@ async def run_external_profiling(
     """Level A: External black-box profiling via the OpenAI-compatible API.
 
     Args:
-        base_url: vLLM server URL.
+        base_url: SGLang server URL.
         model: Model name.
         concurrency_levels: List of concurrency levels to sweep.
         requests: Pre-generated request dicts.
@@ -216,27 +215,34 @@ async def run_external_profiling(
     return all_summaries
 
 
-def find_vllm_server_pid() -> int | None:
-    """Find the PID of a running vLLM server process.
+def find_sglang_server_pid() -> int | None:
+    """Find the PID of a running SGLang server process.
 
     Returns:
-        PID of the vLLM server, or None if not found.
+        PID of the SGLang server, or None if not found.
     """
-    try:
-        result = subprocess.run(
-            ["pgrep", "-f", "vllm.entrypoints"],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            pids = result.stdout.strip().split("\n")
-            pid = int(pids[0])
-            logger.info("Found vLLM server process: PID %d", pid)
-            return pid
-    except Exception as exc:
-        logger.debug("pgrep failed: %s", exc)
+    search_patterns = [
+        "sglang.srt.server",
+        "sglang.launch_server",
+        "python.*sglang",
+    ]
 
-    # Fallback: check via /proc
+    for pattern in search_patterns:
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", pattern],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                pids = result.stdout.strip().split("\n")
+                pid = int(pids[0])
+                logger.info("Found SGLang server process: PID %d (pattern: %s)", pid, pattern)
+                return pid
+        except Exception as exc:
+            logger.debug("pgrep for '%s' failed: %s", pattern, exc)
+
+    # Fallback: check via ps
     try:
         result = subprocess.run(
             ["ps", "aux"],
@@ -244,11 +250,11 @@ def find_vllm_server_pid() -> int | None:
             text=True,
         )
         for line in result.stdout.split("\n"):
-            if "vllm" in line and "entrypoints" in line:
+            if "sglang" in line.lower() and ("server" in line or "launch" in line):
                 parts = line.split()
                 if len(parts) > 1:
                     pid = int(parts[1])
-                    logger.info("Found vLLM server via ps: PID %d", pid)
+                    logger.info("Found SGLang server via ps: PID %d", pid)
                     return pid
     except Exception as exc:
         logger.debug("ps fallback failed: %s", exc)
@@ -259,7 +265,7 @@ def find_vllm_server_pid() -> int | None:
 def run_pyspy_profiling(
     pid: int, duration: int, output_dir: Path
 ) -> Path | None:
-    """Run py-spy to generate a flame graph of the target process.
+    """Run py-spy to generate a flame graph of the SGLang server process.
 
     Args:
         pid: Target process PID.
@@ -278,8 +284,8 @@ def run_pyspy_profiling(
     internal_dir = output_dir / "internal"
     internal_dir.mkdir(parents=True, exist_ok=True)
 
-    svg_path = internal_dir / "vllm_flamegraph.svg"
-    speedscope_path = internal_dir / "vllm_flamegraph.speedscope.json"
+    svg_path = internal_dir / "sglang_flamegraph.svg"
+    speedscope_path = internal_dir / "sglang_flamegraph.speedscope.json"
 
     # Generate SVG flame graph
     logger.info("Recording py-spy flame graph for %ds (PID=%d)...", duration, pid)
@@ -332,89 +338,6 @@ def run_pyspy_profiling(
     return svg_path
 
 
-def run_cprofile_analysis(output_dir: Path) -> None:
-    """Profile vLLM scheduler internals using cProfile.
-
-    Attempts to import vLLM and profile key scheduler functions.
-    Only works when vLLM is installed locally (not just in Docker).
-
-    Args:
-        output_dir: Directory for output files.
-    """
-    internal_dir = output_dir / "internal"
-    internal_dir.mkdir(parents=True, exist_ok=True)
-
-    try:
-        import cProfile
-        import pstats
-
-        from vllm.core.scheduler import Scheduler  # type: ignore[import-untyped]
-
-        logger.info("vLLM installed locally — running cProfile on scheduler hot path")
-
-        profiler = cProfile.Profile()
-
-        # Profile scheduler methods by wrapping them
-        original_schedule = Scheduler.schedule
-
-        call_count = 0
-        total_schedule_time_ms = 0.0
-
-        def profiled_schedule(self: Any, *args: Any, **kwargs: Any) -> Any:
-            nonlocal call_count, total_schedule_time_ms
-            start = time.perf_counter()
-            profiler.enable()
-            result = original_schedule(self, *args, **kwargs)
-            profiler.disable()
-            elapsed = (time.perf_counter() - start) * 1000
-            total_schedule_time_ms += elapsed
-            call_count += 1
-            return result
-
-        Scheduler.schedule = profiled_schedule  # type: ignore[assignment]
-
-        logger.info(
-            "Scheduler.schedule patched for profiling. "
-            "Run workload to collect data, then check output."
-        )
-
-        # Save profiling results
-        stats_path = internal_dir / "scheduler_cprofile.prof"
-        profiler.dump_stats(str(stats_path))
-
-        text_path = internal_dir / "scheduler_cprofile.txt"
-        with open(text_path, "w") as f:
-            stats = pstats.Stats(profiler, stream=f)
-            stats.sort_stats("cumulative")
-            stats.print_stats(50)
-
-        logger.info("cProfile stats saved to %s", stats_path)
-        logger.info("cProfile text saved to %s", text_path)
-
-        # Restore original
-        Scheduler.schedule = original_schedule  # type: ignore[assignment]
-
-        # Summary
-        cprofile_summary = {
-            "schedule_call_count": call_count,
-            "total_schedule_time_ms": total_schedule_time_ms,
-            "avg_schedule_time_ms": (
-                total_schedule_time_ms / call_count if call_count > 0 else 0
-            ),
-        }
-        summary_path = internal_dir / "cprofile_summary.json"
-        with open(summary_path, "w") as f:
-            json.dump(cprofile_summary, f, indent=2)
-
-    except ImportError:
-        logger.info(
-            "vLLM not installed locally — skipping cProfile analysis. "
-            "This is expected when profiling a remote/Docker vLLM instance."
-        )
-    except Exception as exc:
-        logger.error("cProfile analysis failed: %s", exc)
-
-
 async def run_internal_profiling(
     base_url: str,
     model: str,
@@ -422,55 +345,63 @@ async def run_internal_profiling(
     output_dir: Path,
     duration: int,
 ) -> None:
-    """Level B: Internal white-box profiling using py-spy and cProfile.
+    """Level B: Internal white-box profiling using py-spy.
 
-    Starts a load generator in the background, then attaches py-spy to the
-    vLLM server process to capture flame graphs.
+    Targets SGLang-specific scheduler components:
+    - RadixAttention tree management
+    - Batch scheduler
+    - Tokenizer pipeline
 
     Args:
-        base_url: vLLM server URL.
+        base_url: SGLang server URL.
         model: Model name.
         requests: Pre-generated request dicts.
         output_dir: Directory for output files.
         duration: py-spy recording duration in seconds.
     """
-    logger.info("=== Internal profiling (py-spy + cProfile) ===")
+    logger.info("=== Internal profiling (py-spy) ===")
 
-    # Find vLLM server PID
-    pid = find_vllm_server_pid()
+    # Find SGLang server PID
+    pid = find_sglang_server_pid()
     if pid is None:
         logger.warning(
-            "Could not find vLLM server PID. Skipping py-spy profiling. "
-            "Ensure vLLM is running locally (not just in Docker) or provide "
+            "Could not find SGLang server PID. Skipping py-spy profiling. "
+            "Ensure SGLang is running locally (not just in Docker) or provide "
             "the PID manually."
         )
-    else:
-        # Start load generator in background
-        client = AsyncBenchmarkClient(
-            base_url=base_url,
-            model_name=model,
-            concurrency_level=32,
-            timeout_s=300,
-        )
+        return
 
-        # Run py-spy and load gen concurrently
-        async def background_load() -> None:
-            """Generate load while py-spy is recording."""
-            await client.run(requests)
+    # Start load generator in background
+    client = AsyncBenchmarkClient(
+        base_url=base_url,
+        model_name=model,
+        concurrency_level=32,
+        timeout_s=300,
+    )
 
-        load_task = asyncio.create_task(background_load())
+    async def background_load() -> None:
+        """Generate load while py-spy is recording."""
+        await client.run(requests)
 
-        # Give load generator a moment to start
-        await asyncio.sleep(2)
+    load_task = asyncio.create_task(background_load())
 
-        # Run py-spy (blocking)
-        run_pyspy_profiling(pid, duration, output_dir)
+    # Give load generator a moment to start
+    await asyncio.sleep(2)
 
-        # Wait for load to finish
-        await load_task
+    # Run py-spy (blocking)
+    run_pyspy_profiling(pid, duration, output_dir)
 
-    # Attempt cProfile analysis
-    run_cprofile_analysis(output_dir)
+    # Wait for load to finish
+    await load_task
+
+    logger.info(
+        "Internal profiling complete. Key SGLang components to examine "
+        "in flame graphs:\n"
+        "  - RadixAttention tree operations (insert, match, evict)\n"
+        "  - Batch scheduler (schedule_batch, update_running)\n"
+        "  - Tokenizer pipeline (tokenize, detokenize)\n"
+        "  - FlashInfer kernel dispatch"
+    )
 
 
 def print_results_table(summaries: dict[str, Any]) -> None:
@@ -487,7 +418,7 @@ def print_results_table(summaries: dict[str, Any]) -> None:
     separator = "-" * len(header)
 
     logger.info("\n%s", separator)
-    logger.info("vLLM Profiling Results")
+    logger.info("SGLang Profiling Results")
     logger.info("%s", separator)
     logger.info("%s", header)
     logger.info("%s", separator)
@@ -516,7 +447,7 @@ def print_results_table(summaries: dict[str, Any]) -> None:
 
 
 async def main() -> None:
-    """Main entry point for vLLM scheduler profiling."""
+    """Main entry point for SGLang scheduler profiling."""
     args = parse_args()
 
     # Configure logging
@@ -528,7 +459,7 @@ async def main() -> None:
     )
 
     logger.info("=" * 60)
-    logger.info("InferGrid Phase 1: vLLM Scheduler Profiling")
+    logger.info("InferGrid Phase 1: SGLang Scheduler Profiling")
     logger.info("=" * 60)
 
     # Log environment and config
@@ -559,15 +490,15 @@ async def main() -> None:
         json.dump(config, f, indent=2)
 
     # Check engine connectivity
-    logger.info("Checking vLLM server connectivity...")
+    logger.info("Checking SGLang server connectivity...")
     healthy = await check_engine_health(args.base_url)
     if not healthy:
         logger.error(
-            "Cannot reach vLLM server at %s. "
+            "Cannot reach SGLang server at %s. "
             "Start the server first:\n"
-            "  docker compose -f docker/docker-compose.yml up vllm-server\n"
-            "  OR: python -m vllm.entrypoints.openai.api_server "
-            "--model %s",
+            "  docker compose -f docker/docker-compose.yml up sglang-server\n"
+            "  OR: python -m sglang.launch_server "
+            "--model-path %s --port 8001",
             args.base_url,
             args.model,
         )
