@@ -42,6 +42,19 @@ Phase 1: Profiling & Baselines — Reproducing scheduling overhead findings
 pip install -e ".[dev,profiling]"
 ```
 
+## GPU profiling setup (RunPod / Lambda Labs)
+
+Always use a virtual environment on cloud GPU instances to avoid dependency conflicts:
+
+```bash
+git clone https://github.com/coconut-labs/infergrid.git
+cd infergrid
+export HF_TOKEN="your_token"
+source scripts/setup_venv.sh
+bash scripts/setup_gpu_env.sh --model-config configs/models/llama4_scout.yaml
+nohup bash scripts/run_all_baselines.sh --model-config configs/models/llama4_scout.yaml --repeats 2 > run.log 2>&1 &
+```
+
 ## Automated Baseline Collection (Recommended)
 
 The fastest way to reproduce all results on a GPU instance:

@@ -22,6 +22,13 @@
 
 set -euo pipefail
 
+if [ -z "${VIRTUAL_ENV:-}" ]; then
+    echo "[ERROR] Not running inside a virtual environment!"
+    echo "[ERROR] Run: source scripts/setup_venv.sh"
+    echo "[ERROR] Then re-run this script."
+    exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 

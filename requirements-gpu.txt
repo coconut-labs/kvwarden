@@ -1,0 +1,30 @@
+# requirements-gpu.txt
+# Pinned dependencies for InferGrid GPU profiling runs
+# Tested on: NVIDIA A100-SXM4-80GB, CUDA 12.4, Python 3.11
+# Date: 2026-03-22
+
+# === Inference engine ===
+vllm==0.8.5
+
+# === Core ML (let vllm pull these — DO NOT pin torch separately) ===
+# torch, torchvision, torchaudio are pulled by vllm as transitive deps
+# Pinning them separately causes conflicts
+
+# === Profiling dependencies ===
+aiohttp>=3.9,<4.0
+numpy>=1.24,<2.2
+pandas>=2.2,<3.0
+matplotlib>=3.8,<4.0
+pyyaml>=6.0,<7.0
+nvidia-ml-py>=12.0
+
+# === Tokenizer (for accurate token counting in profiling scripts) ===
+# transformers version MUST match what vllm pulls — do not override
+# The venv install order handles this: install vllm FIRST, then profiling deps
+
+# === Dataset ===
+datasets>=2.14
+
+# === Testing ===
+pytest>=8.0
+pytest-asyncio>=0.23
