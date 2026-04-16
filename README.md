@@ -6,15 +6,15 @@ InferGrid is a middleware that jointly optimizes scheduling, KV cache management
 
 ## The Problem
 
-Current LLM serving wastes compute at three layers:
+Current LLM serving suffers from scheduling quality degradation under load:
 
-| Layer | Waste | Impact |
-|-------|-------|--------|
-| **Scheduling** | CPU-side overhead consumes >50% of inference time on fast models | Requests wait in queue while GPU sits idle between batches |
-| **KV Cache** | No unified compression + eviction + offloading across memory tiers | 40GB of KV cache per request at 128K context — evicted and recomputed constantly |
-| **Allocation** | GPUs allocated as indivisible units | A task needing 4GB gets an 80GB A100 (95% waste) |
+| Layer | Problem | Impact |
+|-------|---------|--------|
+| **Scheduling** | TTFT degrades 8-15x at saturation (c>128) while GPU stays >95% utilized | Users experience multi-second wait times despite available compute |
+| **KV Cache** | No unified lifecycle management across memory tiers | KV cache evicted and recomputed; no cross-tier offloading |
+| **Multi-Model** | Models loaded/evicted with naive LRU | Cold-start latency spikes when traffic patterns shift |
 
-**Compound loss: 81.6%** from physical GPU to effective compute.
+GPU utilization is consistently >95% -- the waste is in **scheduling quality** (TTFT degradation, tail latency), not GPU idleness.
 
 ## Why InferGrid
 
@@ -28,7 +28,7 @@ Every existing solution requires either Kubernetes or gives up intelligent sched
 | AIBrix v0.6 | Yes | Yes | Yes | Yes |
 | Ollama | No | LRU only | No | No |
 | LocalAI | No | LRU only | No | No |
-| **InferGrid** | **No** | **Yes** | **Yes** | **Yes** |
+| **InferGrid** | **No** | **Yes** | **Planned** | **Yes** |
 
 InferGrid is the only system that provides intelligent multi-model orchestration, KV cache tiering, and per-tenant isolation on bare metal without Kubernetes.
 
@@ -53,26 +53,43 @@ InferGrid is the only system that provides intelligent multi-model orchestration
 
 **WorkloadRouter** — Length-aware, frequency-based model loading and request scheduling. Not LRU — learns from traffic patterns.
 
-**CacheManager** — Tiered KV cache across GPU HBM, CPU RAM, and NVMe SSD. Evicts based on predicted reuse, not just recency.
+**CacheManager** — KV cache lifecycle tracking with planned LMCache integration for cross-tier offloading. Evicts based on predicted reuse, not just recency.
 
 **TenantManager** — Per-tenant resource budgets with request isolation. One tenant's burst doesn't starve others.
 
 ## Phase 1 Results: The Scheduling Cliff
 
-Profiled on NVIDIA A100 80GB SXM and H100 80GB HBM3 with Llama 3.1 8B:
+Profiled on NVIDIA A100 80GB SXM and H100 80GB SXM with Llama 3.1 8B Instruct:
 
-| Concurrency | Throughput (tok/s) | TTFT p50 (ms) | TPOT p50 (ms) | GPU Util % |
-|:-----------:|:------------------:|:-------------:|:-------------:|:----------:|
-| 1 | 86 | 22 | 11.5 | 99.3% |
-| 8 | 663 | 41 | 11.8 | 98.6% |
-| 32 | 2,014 | 68 | 13.7 | 95.4% |
-| 64 | 3,196 | 96 | 16.6 | 99.3% |
-| 128 | 5,014 | 319 | 19.1 | 97.4% |
-| 256 | 5,121 | 2,608 | 19.0 | 98.5% |
+### Cross-Engine Throughput (tok/s)
 
-**The scheduling cliff at c>128:** Doubling concurrency from 128 to 256 yields only **2% more throughput** but **8x worse TTFT** (319ms to 2,608ms). GPU utilization stays >95% — the bottleneck is scheduling, not compute. This is where InferGrid's WorkloadRouter intervenes.
+| Concurrency | vLLM A100 SXM | SGLang A100 SXM | vLLM H100 SXM |
+|:-----------:|:-------------:|:---------------:|:--------------:|
+| 1 | 90 | 84 | 150 |
+| 8 | 690 | 691 | 1,142 |
+| 32 | 2,060 | 2,155 | 3,590 |
+| 64 | 3,314 | 3,348 | 6,365 |
+| 128 | 5,334 | 5,276 | 10,341 |
+| 256 | 5,353 | 5,214 | 10,545 |
 
-**Tail latency is extreme:** TTFT p99/p50 ratio reaches 25x at c=8, meaning 1% of requests wait 25x longer than the median. Priority scheduling can dramatically reduce this.
+**vLLM vs SGLang throughput gap does not exist** -- the engines are within <5% across all concurrency levels on identical hardware. The real difference is in scheduling quality.
+
+### TTFT at Saturation
+
+| Config | TTFT p50 (ms) |
+|--------|:-------------:|
+| vLLM A100 c=128 | 150.9 |
+| vLLM A100 c=256 | 2,315.2 |
+| SGLang A100 c=128 | 102.4 |
+| SGLang A100 c=256 | 1,052.8 |
+| vLLM H100 c=128 | 184.8 |
+| vLLM H100 c=256 | 1,293.4 |
+
+**The scheduling cliff is universal:** On all hardware and both engines, doubling concurrency past the saturation point yields <3% more throughput but 8-15x worse TTFT. GPU utilization stays >95% -- the bottleneck is scheduling quality, not compute.
+
+**SGLang has 2.2x better TTFT at saturation** (1,053ms vs 2,315ms at c=256 on A100 SXM), showing that scheduler implementation quality matters more than raw throughput.
+
+**InferGrid's intervention:** Admission control and multi-queue scheduling to maintain TTFT SLOs at saturation, with expected 2-4x p99 improvement. Multi-model lifecycle management to reduce cold-start latency during traffic shifts.
 
 ## Quick Start
 

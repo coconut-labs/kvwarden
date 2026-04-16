@@ -2,14 +2,13 @@
 
 ## Summary
 
-This document presents Phase 1 profiling results measuring CPU-side scheduling overhead in vLLM on an NVIDIA A100 80GB PCIe. SGLang profiling was skipped due to version incompatibility with the installed vLLM 0.19.0 (SGLang 0.3.6 could not load the model in this environment). The vLLM results establish concrete baselines for InferGrid's WorkloadRouter to beat.
+This document presents Phase 1 profiling results measuring CPU-side scheduling overhead in vLLM and SGLang. Initial profiling was done on A100 80GB PCIe (vLLM only, SGLang had version incompatibility). Follow-up runs on A100 80GB SXM and H100 80GB SXM provided the first direct cross-engine comparison, revealing that the vLLM-SGLang throughput gap does not exist (<5%) but SGLang has 2.2x better TTFT at saturation.
 
 ## Methodology
 
-- **Hardware:** NVIDIA A100 80GB PCIe, Driver 555.42.02
+- **Hardware:** NVIDIA A100 80GB PCIe (initial), A100 80GB SXM, H100 80GB SXM (follow-up)
 - **Model:** meta-llama/Llama-3.1-8B-Instruct (8B parameters, BF16)
 - **Workloads:**
-  - Synthetic fixed-length (fallback — ShareGPT dataset format changed)
   - Fixed-length synthetic (input=512 tokens, output=256 tokens)
   - Mixed-length (1K: 40%, 4K: 30%, 8K: 20%, 16K: 10%)
 - **Concurrency sweep:** 1, 8, 32, 64, 128, 256 concurrent requests
@@ -19,7 +18,7 @@ This document presents Phase 1 profiling results measuring CPU-side scheduling o
   - Custom async benchmark client (aiohttp, streaming)
 - **Reproducibility:** Seed=42, all scripts in `scripts/`, results in `results/`
 
-## Finding 1: vLLM Throughput and Latency Profile
+## Finding 1: vLLM Throughput and Latency Profile (A100 PCIe)
 
 ### Throughput (tokens/second)
 
@@ -32,7 +31,7 @@ This document presents Phase 1 profiling results measuring CPU-side scheduling o
 | 128 | 5,013.5 | 94.2 |
 | 256 | 5,121.2 | 0.8 |
 
-**Key observation:** Throughput scales linearly from c=1 to c=128 (58x improvement), then plateaus at ~5,100 tok/s between c=128 and c=256 — a clear saturation point where the GPU compute is fully utilized and the scheduler becomes the bottleneck.
+**Key observation:** Throughput scales linearly from c=1 to c=128 (58x improvement), then plateaus at ~5,100 tok/s between c=128 and c=256 -- a clear saturation point where the scheduler becomes the bottleneck.
 
 ### Latency (TTFT and TPOT)
 
@@ -46,9 +45,37 @@ This document presents Phase 1 profiling results measuring CPU-side scheduling o
 | 256 | 2,608.4 | 5,171.2 | 19.0 | 19.1 |
 
 **Key observations:**
-1. **TTFT degrades sharply at high concurrency** — from 22ms (c=1) to 2.6 seconds (c=256). This is the scheduling queue delay: requests wait for earlier batches to complete before their prefill runs.
-2. **TPOT remains remarkably stable** — 11.5ms at c=1 to 19.0ms at c=256 (only 1.65x degradation). Once a request enters the decode phase, per-token generation speed is consistent.
-3. **TTFT p99 variance is extreme** — at c=8, p99 TTFT is 1,044ms vs p50 of 41ms (25x ratio). This tail latency is where intelligent scheduling can have the most impact.
+1. **TTFT degrades sharply at high concurrency** -- from 22ms (c=1) to 2.6 seconds (c=256). This is the scheduling queue delay: requests wait for earlier batches to complete before their prefill runs.
+2. **TPOT remains remarkably stable** -- 11.5ms at c=1 to 19.0ms at c=256 (only 1.65x degradation). Once a request enters the decode phase, per-token generation speed is consistent.
+3. **TTFT p99 variance is extreme** -- at c=8, p99 TTFT is 1,044ms vs p50 of 41ms (25x ratio). This tail latency is where intelligent scheduling can have the most impact.
+
+## Finding 1b: Cross-Engine Comparison (A100 SXM / H100 SXM)
+
+### Throughput (tokens/second)
+
+| Concurrency | vLLM A100 SXM | SGLang A100 SXM | vLLM H100 SXM |
+|:-----------:|:-------------:|:---------------:|:--------------:|
+| 1 | 90 | 84 | 150 |
+| 8 | 690 | 691 | 1,142 |
+| 32 | 2,060 | 2,155 | 3,590 |
+| 64 | 3,314 | 3,348 | 6,365 |
+| 128 | 5,334 | 5,276 | 10,341 |
+| 256 | 5,353 | 5,214 | 10,545 |
+
+**Key finding: The vLLM-SGLang throughput gap does not exist.** Both engines are within <5% of each other at every concurrency level on identical A100 SXM hardware. This invalidates claims that one engine is significantly faster than the other for throughput.
+
+### TTFT at Saturation
+
+| Config | TTFT p50 (ms) |
+|--------|:-------------:|
+| vLLM A100 SXM c=128 | 150.9 |
+| vLLM A100 SXM c=256 | 2,315.2 |
+| SGLang A100 SXM c=128 | 102.4 |
+| SGLang A100 SXM c=256 | 1,052.8 |
+| vLLM H100 SXM c=128 | 184.8 |
+| vLLM H100 SXM c=256 | 1,293.4 |
+
+**Key finding: SGLang has 2.2x better TTFT at saturation** (1,053ms vs 2,315ms at c=256 on A100 SXM). The difference is entirely in scheduling quality, not throughput. The scheduling cliff exists on all hardware and both engines.
 
 ## Finding 2: GPU Utilization Patterns
 
@@ -61,7 +88,7 @@ This document presents Phase 1 profiling results measuring CPU-side scheduling o
 | 128 | 97.4 | 100.0 |
 | 256 | 98.5 | 100.0 |
 
-**Key observation:** GPU utilization is consistently >95% across all concurrency levels, with p50 at 100%. This means the GPU is always busy — the "81% efficiency gap" thesis is about *what* the GPU is busy doing (scheduling overhead, KV cache management, padding waste) rather than idle time. The optimization opportunity is in *quality* of GPU utilization, not *quantity*.
+**Key observation:** GPU utilization is consistently >95% across all concurrency levels, with p50 at 100%. The GPU is always busy -- the optimization opportunity is in **scheduling quality** (reducing TTFT degradation and tail latency), not GPU idleness.
 
 ## Finding 3: Throughput Saturation Analysis
 
@@ -76,50 +103,52 @@ Doubling concurrency from 128→256 yields only 2% more throughput but 8x worse 
 
 ## Finding 4: Head-to-Head Comparison
 
-SGLang could not load the model in this environment (version incompatibility with vLLM 0.19.0 torch requirements). The comparison will be completed in a follow-up run with a compatible SGLang version.
+SGLang could not load the model on the initial A100 PCIe environment (version incompatibility with vLLM 0.19.0 torch requirements). The comparison was completed in follow-up runs on A100 SXM and H100 SXM hardware (see Finding 1b above).
 
-**Workaround for Phase 2:** Use a dedicated SGLang-compatible environment or pin to an older torch+vLLM pair that both engines support.
+**Result:** The throughput gap does not exist (<5%). SGLang's advantage is in TTFT at saturation (2.2x better), suggesting superior scheduling under load.
 
 ## Identified Intervention Points for WorkloadRouter
 
 Priority-ranked based on measured data:
 
-### Priority 1: TTFT Reduction at High Concurrency
-- **Problem:** TTFT degrades from 22ms to 2,608ms (119x) as concurrency scales from 1 to 256.
-- **Intervention:** Multi-queue architecture with length-bucketed scheduling. Short requests get priority routing to avoid head-of-line blocking behind long requests.
-- **Expected impact:** 50-70% TTFT reduction at c>=128 based on the gap between p50 and p99.
+### Priority 1: Admission Control at the Scheduling Cliff
+- **Problem:** TTFT degrades 8-15x when concurrency exceeds the saturation point (c>128), on all hardware and both engines.
+- **Intervention:** Intelligent admission control with per-tenant budgets. Shed excess load to maintain TTFT SLOs rather than accepting all requests.
+- **Expected impact:** 2-4x p99 TTFT improvement at saturation through controlled load shedding.
 
-### Priority 2: Tail Latency Elimination
+### Priority 2: Tail Latency Reduction
 - **Problem:** TTFT p99/p50 ratio is 25x at c=8, indicating extreme scheduling variance.
 - **Intervention:** Priority-based scheduling with SLO-aware queue ordering. Requests nearing their latency deadline get promoted.
-- **Expected impact:** 5-10x reduction in TTFT p99/p50 ratio.
+- **Expected impact:** Significant reduction in TTFT p99/p50 ratio.
 
-### Priority 3: Throughput Beyond the Saturation Point
-- **Problem:** Throughput plateaus at ~5,100 tok/s regardless of concurrency beyond 128.
-- **Intervention:** Predictive batch construction — group requests by estimated output length to minimize padding waste and maximize GPU compute utilization per batch.
-- **Expected impact:** 10-20% throughput improvement beyond the current plateau.
+### Priority 3: Multi-Model Lifecycle Management
+- **Problem:** Serving multiple models requires intelligent loading/eviction to avoid cold-start latency.
+- **Intervention:** Frequency+recency weighted model lifecycle management (not naive LRU). Predictive pre-loading based on traffic patterns.
+- **Expected impact:** Reduced cold-start latency during traffic shifts.
 
 ### Priority 4: Request Length Prediction
 - **Problem:** Without knowing output length at arrival time, the scheduler makes suboptimal batching decisions.
 - **Intervention:** Lightweight length predictor (small classifier on prompt features).
-- **Expected impact:** Enables Priority 1, 2, and 3 optimizations.
+- **Expected impact:** Enables better batch construction and admission control decisions.
 
-## Implications for InferGrid Paper
+## Implications for InferGrid
 
 ### Confirmed Claims
-1. GPU utilization is consistently high (>95%) — the bottleneck is scheduling efficiency, not GPU idleness
-2. The throughput-latency tradeoff has a sharp knee at c=128-256 — this is where middleware intervention has maximum value
-3. Tail latency (p99/p50 ratio) is the most promising optimization target — 25x at c=8 suggests large gains possible
+1. GPU utilization is consistently high (>95%) -- the bottleneck is scheduling quality, not GPU idleness
+2. The throughput-latency tradeoff has a sharp knee at c=128-256 -- this is where middleware intervention has maximum value
+3. The vLLM-SGLang throughput gap does not exist (<5%) -- the real difference is in TTFT at saturation (SGLang 2.2x better)
+4. The scheduling cliff exists on all hardware (A100 SXM, H100 SXM) and both engines
 
 ### Benchmark Targets
 Based on measured baselines, InferGrid should demonstrate:
-- **50% TTFT reduction** at c>=128 vs vanilla vLLM
-- **5x p99/p50 improvement** through priority scheduling
-- **15% throughput increase** beyond the 5,100 tok/s plateau via length-aware batching
+- **2-4x p99 TTFT improvement** at saturation through admission control
+- **Significant p99/p50 reduction** through priority scheduling
+- **Multi-model lifecycle management** with frequency+recency eviction (not LRU)
 
 ## Raw Data References
 
-- vLLM profiling results: `results/results_llama31-8b_20260416_120938/profiling/vllm/external/`
-- Benchmark comparison (vLLM): `results/results_llama31-8b_20260416_120938/benchmarks/baseline/`
+- vLLM A100 PCIe profiling: `results/results_llama31-8b_20260416_120938/profiling/vllm/external/`
+- Benchmark comparison: `results/results_llama31-8b_20260416_120938/benchmarks/baseline/`
 - GPU metrics: `results/results_llama31-8b_20260416_120938/gpu_metrics_*.csv`
 - Run metadata: `results/results_llama31-8b_20260416_120938/run_metadata.json`
+- Cross-GPU comparison data (A100 SXM, H100 SXM): see `results/results_llama31-8b_20260416_120938/summary.md`

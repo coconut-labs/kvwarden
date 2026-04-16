@@ -98,8 +98,8 @@ class VLLMAdapter(EngineAdapter):
         )
 
         # Poll for health
-        deadline = asyncio.get_event_loop().time() + timeout_s
-        while asyncio.get_event_loop().time() < deadline:
+        deadline = asyncio.get_running_loop().time() + timeout_s
+        while asyncio.get_running_loop().time() < deadline:
             if self._process.returncode is not None:
                 stderr = ""
                 if self._process.stderr:
@@ -188,39 +188,34 @@ class VLLMAdapter(EngineAdapter):
             payload["stream"] = True
 
         timeout = aiohttp.ClientTimeout(total=300)
-        session = aiohttp.ClientSession(timeout=timeout)
 
-        try:
-            if stream:
-                return self._stream_response(session, url, payload)
-            else:
+        if stream:
+            return self._stream_response(url, payload, timeout)
+        else:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, json=payload) as resp:
-                    result = await resp.json()
-                    await session.close()
-                    return result
-        except Exception:
-            await session.close()
-            raise
+                    return await resp.json()
 
     async def _stream_response(
         self,
-        session: aiohttp.ClientSession,
         url: str,
         payload: dict[str, Any],
+        timeout: aiohttp.ClientTimeout,
     ) -> AsyncIterator[bytes]:
         """Stream SSE chunks from the engine.
 
+        Creates and owns its own ClientSession to guarantee cleanup
+        even if the caller abandons iteration.
+
         Args:
-            session: aiohttp session (caller manages lifetime).
             url: Full request URL.
             payload: JSON body.
+            timeout: Client timeout configuration.
 
         Yields:
             Raw SSE bytes from the engine.
         """
-        try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.post(url, json=payload) as resp:
                 async for chunk in resp.content.iter_any():
                     yield chunk
-        finally:
-            await session.close()

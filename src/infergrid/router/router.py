@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import socket
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -119,7 +120,7 @@ class PendingRequest:
     tenant_id: str
     bucket: str
     enqueue_time: float = field(default_factory=time.monotonic)
-    future: asyncio.Future[Any] = field(default_factory=lambda: asyncio.get_event_loop().create_future())
+    future: asyncio.Future[Any] = field(default_factory=lambda: asyncio.get_running_loop().create_future())
 
 
 class WorkloadRouter:
@@ -612,10 +613,34 @@ class WorkloadRouter:
     # ------------------------------------------------------------------
 
     def _allocate_port(self) -> int:
-        """Allocate the next available port for an engine."""
-        port = self._next_port
-        self._next_port += 1
-        return port
+        """Allocate the next available port for an engine.
+
+        Checks that the port is actually free by attempting a socket
+        bind before returning it.
+        """
+        while True:
+            port = self._next_port
+            self._next_port += 1
+            if self._is_port_available(port):
+                return port
+
+    @staticmethod
+    def _is_port_available(port: int) -> bool:
+        """Check whether a TCP port is free to bind.
+
+        Args:
+            port: Port number to check.
+
+        Returns:
+            True if the port can be bound.
+        """
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                sock.bind(("127.0.0.1", port))
+                return True
+        except OSError:
+            return False
 
     def _create_adapter(self, config: ModelConfig, port: int) -> EngineAdapter:
         """Create the appropriate engine adapter.

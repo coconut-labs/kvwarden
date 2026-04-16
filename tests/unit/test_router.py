@@ -6,22 +6,18 @@ and request length classification.
 
 from __future__ import annotations
 
-import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from infergrid.common.config import InferGridConfig, ModelConfig
-from infergrid.common.metrics import MetricsCollector
 from infergrid.router.router import (
     BudgetExceededError,
     ModelState,
-    PendingRequest,
     WorkloadRouter,
     classify_request_length,
 )
-from infergrid.tenant.manager import TenantManager
 
 
 # ---------------------------------------------------------------------------
@@ -169,12 +165,14 @@ class TestWorkloadRouter:
         assert "tenants" in snap
         assert "metrics" in snap
 
-    def test_allocate_port_increments(self) -> None:
+    def test_allocate_port_returns_available(self) -> None:
         config = self._make_config()
         router = WorkloadRouter(config=config)
         p1 = router._allocate_port()
         p2 = router._allocate_port()
-        assert p2 == p1 + 1
+        assert p2 > p1
+        # Both ports should have been verified available
+        assert p1 >= 8001
 
     def test_create_adapter_vllm(self) -> None:
         config = self._make_config()
@@ -192,13 +190,11 @@ class TestWorkloadRouter:
         from infergrid.engines.sglang_adapter.adapter import SGLangAdapter
         assert isinstance(adapter, SGLangAdapter)
 
-    def test_unknown_model_raises(self) -> None:
+    async def test_unknown_model_raises(self) -> None:
         config = self._make_config(n_models=0)
         router = WorkloadRouter(config=config)
         with pytest.raises(ValueError, match="Unknown model"):
-            asyncio.get_event_loop().run_until_complete(
-                router.ensure_model_loaded("nonexistent/model")
-            )
+            await router.ensure_model_loaded("nonexistent/model")
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +205,7 @@ class TestWorkloadRouter:
 class TestEvictionOrdering:
     """Test that evict_model picks the right victim."""
 
-    def test_evicts_lowest_scored_model(self) -> None:
+    async def test_evicts_lowest_scored_model(self) -> None:
         config = InferGridConfig(port=9999, models=[])
         router = WorkloadRouter(config=config)
 
@@ -231,9 +227,7 @@ class TestEvictionOrdering:
         # model-2 has the most requests but is the stalest.
         # model-0 has fewest requests but is most recent.
         # The eviction policy should pick based on frequency*decay.
-        evicted = asyncio.get_event_loop().run_until_complete(
-            router.evict_model()
-        )
+        evicted = await router.evict_model()
         # The evicted model should be the one with the lowest combined score
         assert evicted is not None
         assert evicted in ["model-0", "model-1", "model-2"]

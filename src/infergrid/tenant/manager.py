@@ -55,13 +55,14 @@ class TenantRecord:
         """Try to acquire a request slot without blocking.
 
         Checks both the concurrency semaphore and the sliding-window
-        rate limit.
+        rate limit.  The check and acquire are done under the same lock
+        to avoid a TOCTOU race on the semaphore counter.
 
         Returns:
             True if the request is allowed, False if it should be rejected.
         """
-        # Check rate limit first (cheap)
         async with self._lock:
+            # Check rate limit (cheap)
             now = time.monotonic()
             window_start = now - 60.0
             # Prune old timestamps
@@ -72,13 +73,13 @@ class TenantRecord:
             if len(self.usage._request_timestamps) >= self.budget.rate_limit_rpm:
                 return False
 
-        # Try concurrency limit (non-blocking)
-        acquired = self._semaphore._value > 0  # type: ignore[attr-defined]
-        if not acquired:
-            return False
+            # Check concurrency limit -- read + acquire under same lock
+            if self._semaphore._value <= 0:  # type: ignore[attr-defined]
+                return False
+            # Safe: we hold _lock so no other task can race between
+            # the check and the acquire.
+            await self._semaphore.acquire()
 
-        await self._semaphore.acquire()
-        async with self._lock:
             self.usage._request_timestamps.append(time.monotonic())
             self.usage.active_requests += 1
         return True
