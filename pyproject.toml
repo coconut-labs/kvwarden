@@ -37,6 +37,9 @@ profiling = [
 vllm = ["vllm~=0.6.0"]
 sglang = ["sglang~=0.3.0"]
 
+[project.scripts]
+infergrid = "infergrid.cli:main"
+
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
