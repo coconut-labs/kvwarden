@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-VENV_DIR="/root/infergrid-env"
+VENV_DIR="${INFERGRID_VENV:-/workspace/venv}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
@@ -33,7 +33,7 @@ pip install --upgrade pip setuptools wheel
 # Step 4: Install vLLM FIRST (it pulls correct torch + transformers + tokenizers)
 echo "[INFO] Installing vLLM (this pulls torch, transformers, tokenizers)..."
 echo "[INFO] This may take 5-10 minutes..."
-pip install vllm==0.8.5
+pip install vllm
 
 # Step 5: Verify the critical packages vLLM pulled
 echo "[INFO] Verifying vLLM dependency chain..."
