@@ -1,0 +1,20 @@
+scenario: "dual-model-serving"
+models:
+  - id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama-8b"
+    gpu_memory_fraction: 0.4
+  - id: "Qwen/Qwen2.5-7B-Instruct"
+    short_name: "qwen-7b"
+    gpu_memory_fraction: 0.4
+gpu_budget: 0.85
+workloads:
+  - name: "alternating"
+    description: "Alternate between models every request"
+    num_requests: 200
+  - name: "bursty"
+    description: "100 requests to model A, 100 to B, 50 to A"
+    pattern: [100, 100, 50]
+  - name: "concurrent"
+    description: "50/50 random split between models"
+    num_requests: 200
+concurrency_levels: [1, 8, 32]
