@@ -144,11 +144,22 @@ else
 fi
 
 # Install inference engines
+# vLLM requires specific torch version — install it first to avoid ABI mismatch
 if pip show vllm &>/dev/null; then
     log_ok "vLLM already installed"
 else
     log_info "Installing vLLM (this may take a few minutes)..."
     pip install --no-cache-dir vllm
+    # Ensure torch version matches what vLLM was compiled against
+    REQUIRED_TORCH=$(pip show vllm 2>/dev/null | grep "Requires:" | grep -oP 'torch==\S+' | head -1 || true)
+    if [[ -n "$REQUIRED_TORCH" ]]; then
+        CURRENT_TORCH=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null || echo "0")
+        EXPECTED_TORCH=$(echo "$REQUIRED_TORCH" | sed 's/torch==//')
+        if [[ "$CURRENT_TORCH" != "$EXPECTED_TORCH" ]]; then
+            log_warn "vLLM needs torch==$EXPECTED_TORCH but found $CURRENT_TORCH — upgrading..."
+            pip install --no-cache-dir "torch==$EXPECTED_TORCH" --index-url https://download.pytorch.org/whl/cu124
+        fi
+    fi
 fi
 
 if pip show sglang &>/dev/null; then
@@ -196,7 +207,14 @@ if [[ -d "$MODEL_CACHE_DIR" ]]; then
     log_ok "Model already cached at $MODEL_CACHE_DIR"
 else
     log_info "Downloading $MODEL_ID (~${EST_WEIGHT_GB}GB, this takes a while)..."
-    huggingface-cli download "$MODEL_ID" --token "$HF_TOKEN"
+    # Try 'hf' CLI first (newer), fallback to 'huggingface-cli' (deprecated)
+    if command -v hf &>/dev/null; then
+        hf download "$MODEL_ID" --token "$HF_TOKEN"
+    elif command -v huggingface-cli &>/dev/null; then
+        huggingface-cli download "$MODEL_ID" --token "$HF_TOKEN"
+    else
+        python3 -c "from huggingface_hub import snapshot_download; snapshot_download('$MODEL_ID', token='$HF_TOKEN')"
+    fi
     log_ok "Model downloaded successfully"
 fi
 
