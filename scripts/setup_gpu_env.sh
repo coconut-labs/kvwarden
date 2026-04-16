@@ -18,10 +18,8 @@
 set -euo pipefail
 
 if [ -z "${VIRTUAL_ENV:-}" ]; then
-    echo "[ERROR] Not running inside a virtual environment!"
-    echo "[ERROR] Run: source scripts/setup_venv.sh"
-    echo "[ERROR] Then re-run this script."
-    exit 1
+    log_warn "Not running inside a virtual environment — using system Python."
+    log_warn "This is fine for ephemeral cloud instances (RunPod, Lambda Labs)."
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
