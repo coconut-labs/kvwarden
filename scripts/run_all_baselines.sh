@@ -224,7 +224,7 @@ start_vllm() {
         --dtype "$DTYPE" \
         --gpu-memory-utilization "$GPU_MEM_UTIL" \
         --max-model-len "$MAX_MODEL_LEN" \
-        --disable-log-requests \
+        --no-enable-log-requests \
         $VLLM_EXTRA \
         &>"$RESULTS_DIR/vllm_server.log" &
     ENGINE_PID=$!
