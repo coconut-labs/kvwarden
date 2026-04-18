@@ -463,6 +463,12 @@ class MultiModelBenchmarkClient:
             first_token_time: float | None = None
             tokens_out = 0
 
+            # D1: per-request log so a stall is visible on the terminal within
+            # seconds, not only in the post-run CSV. Previously a 3-hour stall
+            # on c=1 produced zero output between "Starting benchmark" and the
+            # 300s timeout storm.
+            logger.info("req=%d MODEL=%s START", request_id, model)
+
             try:
                 timeout = aiohttp.ClientTimeout(total=self.timeout_s)
                 async with session.post(
@@ -502,6 +508,8 @@ class MultiModelBenchmarkClient:
                             tokens_out += 1
 
             except asyncio.TimeoutError:
+                logger.warning("req=%d MODEL=%s TIMEOUT after %.0fs",
+                               request_id, model, time.time() - start_time)
                 return MultiModelRequestMetrics(
                     model=model,
                     request_id=request_id,
@@ -514,6 +522,7 @@ class MultiModelBenchmarkClient:
                     error="timeout",
                 )
             except Exception as exc:
+                logger.warning("req=%d MODEL=%s ERROR %s", request_id, model, exc)
                 return MultiModelRequestMetrics(
                     model=model,
                     request_id=request_id,
@@ -539,6 +548,11 @@ class MultiModelBenchmarkClient:
                 tpot_ms = generation_time_ms / (tokens_out - 1)
             else:
                 tpot_ms = 0.0
+
+            logger.info(
+                "req=%d MODEL=%s DONE tokens_out=%d latency_ms=%.0f ttft_ms=%.0f",
+                request_id, model, tokens_out, total_latency_ms, ttft_ms,
+            )
 
             return MultiModelRequestMetrics(
                 model=model,

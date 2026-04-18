@@ -63,6 +63,11 @@ class EngineAdapter(abc.ABC):
         self.extra_args = extra_args or []
         self._healthy = False
         self._process: asyncio.subprocess.Process | None = None
+        # Single aiohttp session reused across forward_request calls. Opening a
+        # new session+connector per request leaks FDs and defeats connection
+        # pooling — a meaningful slice of Gate 0's 3h stall was spent dialing
+        # new sockets to an engine that had already stopped responding.
+        self._session: aiohttp.ClientSession | None = None
 
     @property
     def base_url(self) -> str:
@@ -91,6 +96,29 @@ class EngineAdapter(abc.ABC):
             TimeoutError: If the engine does not become healthy in time.
             RuntimeError: If the engine process exits unexpectedly.
         """
+        # Dev/test mode: reuse an already-running engine on self.port (e.g. the
+        # mock engine from benchmarks/scripts/mock_engine.py). Skips subprocess
+        # launch so the router can be exercised without a GPU.
+        if os.environ.get("INFERGRID_DEV_SKIP_ENGINE_LAUNCH"):
+            logger.info(
+                "%s dev mode: skipping subprocess launch, attaching to localhost:%d",
+                self.engine_name, self.port,
+            )
+            # Wait briefly for the already-running engine to be healthy
+            deadline = asyncio.get_event_loop().time() + timeout_s
+            while asyncio.get_event_loop().time() < deadline:
+                if await self.health_check():
+                    self._healthy = True
+                    logger.info(
+                        "%s (mock) reachable on port %d for model %s",
+                        self.engine_name, self.port, self.model_id,
+                    )
+                    return
+                await asyncio.sleep(1.0)
+            raise TimeoutError(
+                f"{self.engine_name} dev-mode: no mock engine on port {self.port}"
+            )
+
         cmd = self._build_cmd()
         logger.info("Starting %s server: %s", self.engine_name, " ".join(cmd))
 
@@ -153,7 +181,11 @@ class EngineAdapter(abc.ABC):
         )
 
     async def stop(self) -> None:
-        """Stop the engine subprocess gracefully."""
+        """Stop the engine subprocess gracefully and close the shared session."""
+        if self._session is not None and not self._session.closed:
+            await self._session.close()
+            self._session = None
+
         if self._process is None:
             return
 
@@ -191,6 +223,32 @@ class EngineAdapter(abc.ABC):
             self._healthy = False
             return False
 
+    # Asymmetric timeouts for router-to-engine calls (Gate 0.5 fix).
+    # total: upper bound on any single engine call. Set below the harness /
+    #   router-to-client total so router surfaces failure before the client
+    #   gives up.
+    # sock_connect: TCP connect budget.
+    # sock_read: idle budget — max time between bytes. This is the one that
+    #   turns a silent vLLM hang from a 300s stall into a ~30s fast failure.
+    _ENGINE_TOTAL_TIMEOUT_S = 240
+    _ENGINE_CONNECT_TIMEOUT_S = 10
+    _ENGINE_IDLE_TIMEOUT_S = 30
+
+    def _get_session(self) -> aiohttp.ClientSession:
+        """Return the shared session, creating it on first use.
+
+        One session per adapter means connection pooling works and the FD
+        footprint stays bounded at high request counts.
+        """
+        if self._session is None or self._session.closed:
+            timeout = aiohttp.ClientTimeout(
+                total=self._ENGINE_TOTAL_TIMEOUT_S,
+                sock_connect=self._ENGINE_CONNECT_TIMEOUT_S,
+                sock_read=self._ENGINE_IDLE_TIMEOUT_S,
+            )
+            self._session = aiohttp.ClientSession(timeout=timeout)
+        return self._session
+
     async def forward_request(
         self,
         path: str,
@@ -208,26 +266,23 @@ class EngineAdapter(abc.ABC):
             JSON response dict, or async byte iterator for streaming.
 
         Raises:
-            aiohttp.ClientError: On connection or HTTP errors.
+            asyncio.TimeoutError: on total/connect/idle timeout.
+            aiohttp.ClientError: on connection or HTTP errors.
         """
         url = f"{self.base_url}{path}"
         if stream:
             payload["stream"] = True
 
-        timeout = aiohttp.ClientTimeout(total=300)
-        session = aiohttp.ClientSession(timeout=timeout)
+        session = self._get_session()
 
-        try:
-            if stream:
-                return self._stream_response(session, url, payload)
-            else:
-                async with session.post(url, json=payload) as resp:
-                    result = await resp.json()
-                    await session.close()
-                    return result
-        except Exception:
-            await session.close()
-            raise
+        if stream:
+            # Return the async generator directly; it uses the shared session
+            # and does NOT close it on completion (session lifetime == adapter
+            # lifetime).
+            return self._stream_response(session, url, payload)
+
+        async with session.post(url, json=payload) as resp:
+            return await resp.json()
 
     async def _stream_response(
         self,
@@ -235,22 +290,10 @@ class EngineAdapter(abc.ABC):
         url: str,
         payload: dict[str, Any],
     ) -> AsyncIterator[bytes]:
-        """Stream SSE chunks from the engine.
-
-        Args:
-            session: aiohttp session (caller manages lifetime).
-            url: Full request URL.
-            payload: JSON body.
-
-        Yields:
-            Raw SSE bytes from the engine.
-        """
-        try:
-            async with session.post(url, json=payload) as resp:
-                async for chunk in resp.content.iter_any():
-                    yield chunk
-        finally:
-            await session.close()
+        """Stream SSE chunks from the engine over the shared session."""
+        async with session.post(url, json=payload) as resp:
+            async for chunk in resp.content.iter_any():
+                yield chunk
 
     @property
     def is_healthy(self) -> bool:

@@ -1,0 +1,20 @@
+# Gate 0.5 local reproducer config — points at mock engines on fixed ports.
+# Used by benchmarks/scripts/repro_gate0_stall.sh.
+
+host: 0.0.0.0
+port: 8000
+max_concurrent: 128
+log_level: INFO
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    engine: "vllm"
+    port: 8002              # mock_engine.py listens here
+    gpu_memory_utilization: 0.35
+    max_model_len: 4096
+
+  - model_id: "Qwen/Qwen2.5-7B-Instruct"
+    engine: "vllm"
+    port: 8003              # mock_engine.py listens here
+    gpu_memory_utilization: 0.35
+    max_model_len: 4096
