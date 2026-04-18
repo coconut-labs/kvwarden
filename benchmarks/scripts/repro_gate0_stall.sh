@@ -46,11 +46,13 @@ python3 benchmarks/scripts/mock_engine.py --port 8003 \
 sleep 2
 
 echo "--- starting infergrid serve (dev mode: skip engine launch, attach to mocks) ---"
+# Use gate05_mock.yaml so engines are pinned to ports 8002/8003 matching mocks.
+# Without --config the router auto-allocates from 8001 and the mapping breaks.
 INFERGRID_ENGINE_LOG_DIR="$LOGDIR" \
 INFERGRID_DEV_SKIP_ENGINE_LAUNCH=1 \
+PYTHONPATH="$REPO_ROOT/src:${PYTHONPATH:-}" \
 python3 -m infergrid.cli serve \
-    --port 8000 \
-    "meta-llama/Llama-3.1-8B-Instruct" "Qwen/Qwen2.5-7B-Instruct" \
+    --config benchmarks/configs/gate05_mock.yaml \
     --log-level INFO \
     > "$LOGDIR/infergrid.log" 2>&1 &
 IG_PID=$!

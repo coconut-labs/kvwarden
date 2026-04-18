@@ -14,11 +14,21 @@ import logging
 import os
 import re
 import tempfile
+import time
 from typing import Any, AsyncIterator
 
 import aiohttp
 
 logger = logging.getLogger(__name__)
+
+
+class EngineCircuitOpenError(Exception):
+    """Raised when an engine's circuit breaker is open (too many recent timeouts).
+
+    Router handlers should catch this and return HTTP 503 without re-attempting
+    the engine call. Shedding fast is the point: it turns a 30-second
+    per-request timeout storm into millisecond-scale errors.
+    """
 
 # Directory for per-engine subprocess logs. Overridden via INFERGRID_ENGINE_LOG_DIR env.
 _ENGINE_LOG_DIR = os.environ.get("INFERGRID_ENGINE_LOG_DIR") or tempfile.gettempdir()
@@ -68,6 +78,12 @@ class EngineAdapter(abc.ABC):
         # pooling — a meaningful slice of Gate 0's 3h stall was spent dialing
         # new sockets to an engine that had already stopped responding.
         self._session: aiohttp.ClientSession | None = None
+        # Circuit breaker state (R4). After `_CIRCUIT_THRESHOLD` consecutive
+        # TimeoutErrors, the circuit opens for `_CIRCUIT_COOLDOWN_S` seconds.
+        # forward_request raises EngineCircuitOpenError while open, without
+        # touching the network.
+        self._consecutive_timeouts = 0
+        self._circuit_open_until: float = 0.0
 
     @property
     def base_url(self) -> str:
@@ -233,6 +249,9 @@ class EngineAdapter(abc.ABC):
     _ENGINE_TOTAL_TIMEOUT_S = 240
     _ENGINE_CONNECT_TIMEOUT_S = 10
     _ENGINE_IDLE_TIMEOUT_S = 30
+    # Circuit breaker parameters (R4).
+    _CIRCUIT_THRESHOLD = 3          # consecutive timeouts before opening
+    _CIRCUIT_COOLDOWN_S = 60.0      # seconds the circuit stays open
 
     def _get_session(self) -> aiohttp.ClientSession:
         """Return the shared session, creating it on first use.
@@ -248,6 +267,39 @@ class EngineAdapter(abc.ABC):
             )
             self._session = aiohttp.ClientSession(timeout=timeout)
         return self._session
+
+    def _check_circuit(self) -> None:
+        """Raise EngineCircuitOpenError if the circuit is currently open."""
+        if self._circuit_open_until and time.monotonic() < self._circuit_open_until:
+            raise EngineCircuitOpenError(
+                f"{self.engine_name} circuit open for {self.model_id}: "
+                f"{self._consecutive_timeouts} consecutive timeouts, "
+                f"cooldown {self._circuit_open_until - time.monotonic():.1f}s remaining"
+            )
+        # Cooldown elapsed — give it one chance to recover. The next success
+        # resets _consecutive_timeouts; another failure re-opens the circuit.
+
+    def _note_timeout(self) -> None:
+        """Record a router-to-engine TimeoutError; open circuit if threshold hit."""
+        self._consecutive_timeouts += 1
+        if self._consecutive_timeouts >= self._CIRCUIT_THRESHOLD:
+            self._circuit_open_until = time.monotonic() + self._CIRCUIT_COOLDOWN_S
+            self._healthy = False
+            logger.warning(
+                "%s circuit OPEN for %s: %d consecutive timeouts, cooldown %.0fs",
+                self.engine_name, self.model_id,
+                self._consecutive_timeouts, self._CIRCUIT_COOLDOWN_S,
+            )
+
+    def _note_success(self) -> None:
+        """Record a successful request; close circuit if it was cooling down."""
+        if self._consecutive_timeouts > 0 or self._circuit_open_until:
+            logger.info(
+                "%s circuit RESET for %s (was %d consecutive timeouts)",
+                self.engine_name, self.model_id, self._consecutive_timeouts,
+            )
+        self._consecutive_timeouts = 0
+        self._circuit_open_until = 0.0
 
     async def forward_request(
         self,
@@ -269,6 +321,8 @@ class EngineAdapter(abc.ABC):
             asyncio.TimeoutError: on total/connect/idle timeout.
             aiohttp.ClientError: on connection or HTTP errors.
         """
+        self._check_circuit()
+
         url = f"{self.base_url}{path}"
         if stream:
             payload["stream"] = True
@@ -278,11 +332,17 @@ class EngineAdapter(abc.ABC):
         if stream:
             # Return the async generator directly; it uses the shared session
             # and does NOT close it on completion (session lifetime == adapter
-            # lifetime).
+            # lifetime). The generator notes success/timeout internally.
             return self._stream_response(session, url, payload)
 
-        async with session.post(url, json=payload) as resp:
-            return await resp.json()
+        try:
+            async with session.post(url, json=payload) as resp:
+                result = await resp.json()
+        except (asyncio.TimeoutError, aiohttp.ServerTimeoutError):
+            self._note_timeout()
+            raise
+        self._note_success()
+        return result
 
     async def _stream_response(
         self,
@@ -291,9 +351,15 @@ class EngineAdapter(abc.ABC):
         payload: dict[str, Any],
     ) -> AsyncIterator[bytes]:
         """Stream SSE chunks from the engine over the shared session."""
-        async with session.post(url, json=payload) as resp:
-            async for chunk in resp.content.iter_any():
-                yield chunk
+        try:
+            async with session.post(url, json=payload) as resp:
+                async for chunk in resp.content.iter_any():
+                    yield chunk
+        except (asyncio.TimeoutError, aiohttp.ServerTimeoutError):
+            self._note_timeout()
+            raise
+        else:
+            self._note_success()
 
     @property
     def is_healthy(self) -> bool:

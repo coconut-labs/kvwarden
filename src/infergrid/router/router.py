@@ -18,12 +18,13 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+import aiohttp
 from aiohttp import web
 
 from infergrid.cache.manager import CacheManager
 from infergrid.common.config import InferGridConfig, ModelConfig
 from infergrid.common.metrics import MetricsCollector
-from infergrid.engines.base import EngineAdapter
+from infergrid.engines.base import EngineAdapter, EngineCircuitOpenError
 from infergrid.engines.sglang_adapter.adapter import SGLangAdapter
 from infergrid.engines.vllm_adapter.adapter import VLLMAdapter
 from infergrid.router.admission import AdmissionController, AdmissionTimeoutError
@@ -551,13 +552,43 @@ class WorkloadRouter:
             )
 
             if stream and hasattr(result, "__aiter__"):
-                response = web.StreamResponse(
-                    status=200,
-                    headers={"Content-Type": "text/event-stream"},
-                )
-                await response.prepare(request)
-                async for chunk in result:
-                    await response.write(chunk)
+                # Delay response.prepare() until the FIRST chunk arrives so an
+                # engine failure before any byte is sent can still return a
+                # clean 500 (instead of an uncommittable mid-stream error).
+                # Gate 0.5 repro showed the SSE client hangs for its full
+                # client-side timeout when the server commits 200 then closes
+                # with no body.
+                response: web.StreamResponse | None = None
+                try:
+                    async for chunk in result:
+                        if response is None:
+                            response = web.StreamResponse(
+                                status=200,
+                                headers={"Content-Type": "text/event-stream"},
+                            )
+                            await response.prepare(request)
+                        await response.write(chunk)
+                except (asyncio.TimeoutError, aiohttp.ServerTimeoutError) as exc:
+                    if response is None:
+                        # Engine failed before first byte — clean 504.
+                        return web.json_response(
+                            {"error": "engine timeout", "detail": str(exc)},
+                            status=504,
+                        )
+                    # Already committed 200 headers; close the stream.
+                    logger.warning(
+                        "engine timeout mid-stream for %s: %s", model_id, exc,
+                    )
+                    await response.write_eof()
+                    return response
+
+                if response is None:
+                    # Iterator yielded nothing — treat as empty successful response.
+                    response = web.StreamResponse(
+                        status=200,
+                        headers={"Content-Type": "text/event-stream"},
+                    )
+                    await response.prepare(request)
                 await response.write_eof()
                 return response
 
@@ -571,6 +602,12 @@ class WorkloadRouter:
                     "queue_depth": exc.queue_depth,
                     "in_flight": exc.in_flight,
                 },
+                status=503,
+            )
+        except EngineCircuitOpenError as exc:
+            # Engine has hit the consecutive-timeout threshold; shed fast.
+            return web.json_response(
+                {"error": "engine unavailable", "detail": str(exc)},
                 status=503,
             )
         except BudgetExceededError as exc:
