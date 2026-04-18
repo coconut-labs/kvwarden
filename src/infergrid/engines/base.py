@@ -107,10 +107,15 @@ class EngineAdapter(abc.ABC):
         engine_log = open(self._engine_log_path, "w", buffering=1)
         logger.info("%s engine log: %s", self.engine_name, self._engine_log_path)
 
+        # Force unbuffered Python in the child so crash-time stderr actually hits
+        # disk before the process dies (block buffering otherwise swallows the
+        # last few KB — exactly where the root cause tends to be).
+        child_env = {**os.environ, "PYTHONUNBUFFERED": "1"}
         self._process = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=engine_log,
             stderr=engine_log,
+            env=child_env,
         )
         engine_log.close()  # subprocess has its own dup'd fd; our handle is safe to drop
 
