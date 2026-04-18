@@ -3,11 +3,13 @@
 # Budget: ~$4.50 / 2 hours
 #
 # Design notes:
-# - gpu_memory_utilization 0.42 per model -> 0.84 aggregate, 80GB * 0.84 = 67.2 GB reserved
+# - gpu_memory_utilization 0.40 per model -> 0.80 aggregate, 80GB * 0.80 = 64 GB reserved
+#   Leaves ~16 GB headroom for 2x CUDA contexts, NCCL buffers, vLLM profile_run peaks.
 #   Weights: Llama-3.1-8B bf16 ~16 GB, Qwen2.5-7B bf16 ~14 GB
-#   KV/activation headroom per engine: ~17-19 GB (sufficient for max_model_len=4096)
+#   KV/activation per engine: ~16-18 GB (sufficient for max_model_len=4096).
 # - Top-level `gpu_budget_fraction` is currently informational only in the router;
 #   per-model `gpu_memory_utilization` is what actually gets passed to vLLM.
+# - vLLM's --gpu-memory-utilization is a fraction of TOTAL device VRAM.
 # - max_model_len capped at 4096; benchmark prompts are ~256 in / 128 out.
 
 host: 0.0.0.0
@@ -23,7 +25,7 @@ models:
     short_name: "llama31-8b"
     engine: "vllm"
     dtype: "bfloat16"
-    gpu_memory_utilization: 0.42
+    gpu_memory_utilization: 0.40
     max_model_len: 4096
     tensor_parallel_size: 1
 
@@ -31,6 +33,6 @@ models:
     short_name: "qwen25-7b"
     engine: "vllm"
     dtype: "bfloat16"
-    gpu_memory_utilization: 0.42
+    gpu_memory_utilization: 0.40
     max_model_len: 4096
     tensor_parallel_size: 1
