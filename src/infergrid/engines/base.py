@@ -11,11 +11,17 @@ from __future__ import annotations
 import abc
 import asyncio
 import logging
+import os
+import re
+import tempfile
 from typing import Any, AsyncIterator
 
 import aiohttp
 
 logger = logging.getLogger(__name__)
+
+# Directory for per-engine subprocess logs. Overridden via INFERGRID_ENGINE_LOG_DIR env.
+_ENGINE_LOG_DIR = os.environ.get("INFERGRID_ENGINE_LOG_DIR") or tempfile.gettempdir()
 
 
 class EngineAdapter(abc.ABC):
@@ -88,23 +94,46 @@ class EngineAdapter(abc.ABC):
         cmd = self._build_cmd()
         logger.info("Starting %s server: %s", self.engine_name, " ".join(cmd))
 
+        # Persist full stdout+stderr to a per-engine log file. vLLM's v1 engine
+        # spawns its own worker subprocess whose stderr is lost if we read via
+        # PIPE + trailing slice -- we must tee the full stream to disk so the
+        # root cause survives for postmortem (e.g. "Numba needs NumPy <= 2.2").
+        safe_id = re.sub(r"[^A-Za-z0-9._-]", "_", self.model_id)
+        self._engine_log_path = os.path.join(
+            _ENGINE_LOG_DIR,
+            f"infergrid_engine_{self.engine_name.lower()}_{safe_id}_p{self.port}.log",
+        )
+        # Truncate on each start to keep failures scoped to the current attempt.
+        engine_log = open(self._engine_log_path, "w", buffering=1)
+        logger.info("%s engine log: %s", self.engine_name, self._engine_log_path)
+
+        # Force unbuffered Python in the child so crash-time stderr actually hits
+        # disk before the process dies (block buffering otherwise swallows the
+        # last few KB — exactly where the root cause tends to be).
+        child_env = {**os.environ, "PYTHONUNBUFFERED": "1"}
         self._process = await asyncio.create_subprocess_exec(
             *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
+            stdout=engine_log,
+            stderr=engine_log,
+            env=child_env,
         )
+        engine_log.close()  # subprocess has its own dup'd fd; our handle is safe to drop
 
         # Poll for health
         deadline = asyncio.get_event_loop().time() + timeout_s
         while asyncio.get_event_loop().time() < deadline:
             if self._process.returncode is not None:
-                stderr = ""
-                if self._process.stderr:
-                    stderr_bytes = await self._process.stderr.read()
-                    stderr = stderr_bytes.decode(errors="replace")[-2000:]
+                tail = ""
+                try:
+                    with open(self._engine_log_path, "r", errors="replace") as f:
+                        tail = f.read()[-10_000:]
+                except OSError:
+                    pass
                 raise RuntimeError(
                     f"{self.engine_name} process exited with code "
-                    f"{self._process.returncode}: {stderr}"
+                    f"{self._process.returncode}. "
+                    f"Full log: {self._engine_log_path}. "
+                    f"Last 10KB:\n{tail}"
                 )
 
             if await self.health_check():

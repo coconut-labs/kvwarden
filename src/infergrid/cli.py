@@ -45,8 +45,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     serve_parser.add_argument(
         "models",
-        nargs="+",
-        help="HuggingFace model IDs to serve",
+        nargs="*",
+        help="HuggingFace model IDs to serve (optional when --config provides models)",
     )
     serve_parser.add_argument(
         "--gpu-budget",
@@ -200,6 +200,11 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     if args.config:
         config = InferGridConfig.from_yaml(args.config)
     else:
+        if not args.models:
+            raise SystemExit(
+                "infergrid serve: at least one positional MODEL is required "
+                "when --config is not provided"
+            )
         gpu_budget = _parse_gpu_budget(args.gpu_budget)
         config = InferGridConfig.from_cli_args(
             model_ids=args.models,
