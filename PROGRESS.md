@@ -23,7 +23,7 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | Infrastructure (profiling, scripts, benchmarks) | 6,774 lines |
 | Documentation (docs/) | 871 lines |
 | Profiling data points | 416,019 rows across 879 files |
-| Unit tests | 121 passing |
+| Unit tests | 129 collected, 121 pass, 8 xfail (pre-existing in `test_benchmark_client`) |
 | GPU configurations profiled | 3 (vLLM A100, SGLang A100, vLLM H100) |
 | PRs merged | 12 |
 
@@ -150,7 +150,7 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 - Streaming session leak in vLLM/SGLang adapters
 - Port allocation without availability check
 
-**Test results:** 121 unit tests, all passing (9 seconds on M1 Mac).
+**Test results:** 129 unit tests collected, 121 pass + 8 pre-existing integration xfail in `test_benchmark_client.py` (CSV/dataframe export, connection error handling — orthogonal to the core router/cache/tenant code paths). Runs in ~12s on M1 Mac.
 
 ### Phase 6: Documentation + Polish (Apr 16, 2026)
 
