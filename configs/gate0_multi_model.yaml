@@ -1,0 +1,36 @@
+# Gate 0 — first-ever GPU bring-up of `infergrid serve` with 2 models
+# Target hardware: 1x A100-SXM4-80GB on RunPod
+# Budget: ~$4.50 / 2 hours
+#
+# Design notes:
+# - gpu_memory_utilization 0.42 per model -> 0.84 aggregate, 80GB * 0.84 = 67.2 GB reserved
+#   Weights: Llama-3.1-8B bf16 ~16 GB, Qwen2.5-7B bf16 ~14 GB
+#   KV/activation headroom per engine: ~17-19 GB (sufficient for max_model_len=4096)
+# - Top-level `gpu_budget_fraction` is currently informational only in the router;
+#   per-model `gpu_memory_utilization` is what actually gets passed to vLLM.
+# - max_model_len capped at 4096; benchmark prompts are ~256 in / 128 out.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.85        # informational; engines read per-model gpu_memory_utilization
+max_concurrent: 128
+admission_queue_size: 1024
+engine_start_timeout_s: 420      # 7 min per engine load
+log_level: INFO
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.42
+    max_model_len: 4096
+    tensor_parallel_size: 1
+
+  - model_id: "Qwen/Qwen2.5-7B-Instruct"
+    short_name: "qwen25-7b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.42
+    max_model_len: 4096
+    tensor_parallel_size: 1
