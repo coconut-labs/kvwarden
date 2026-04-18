@@ -542,6 +542,16 @@ class WorkloadRouter:
         path = request.path
         stream = payload.get("stream", False)
 
+        # D3: per-request trace ID. Stable across the lifetime of one request,
+        # printed at entry, exit, and all error branches so a stuck request can
+        # be tracked end-to-end in the log without grepping by timestamp. The
+        # client can also pass X-Request-ID to correlate with their own log.
+        req_id = request.headers.get("X-Request-ID") or (
+            f"r{int(time.time() * 1000) % 1_000_000_000:09d}"
+        )
+        logger.info("req_id=%s ENTER model=%s tenant=%s stream=%s path=%s",
+                    req_id, model_id, tenant_id, stream, path)
+
         try:
             result = await self.route_request(
                 model_id=model_id,
@@ -571,13 +581,16 @@ class WorkloadRouter:
                 except (asyncio.TimeoutError, aiohttp.ServerTimeoutError) as exc:
                     if response is None:
                         # Engine failed before first byte — clean 504.
+                        logger.warning("req_id=%s EXIT 504 engine_timeout_pre_byte detail=%s",
+                                       req_id, exc)
                         return web.json_response(
                             {"error": "engine timeout", "detail": str(exc)},
                             status=504,
                         )
                     # Already committed 200 headers; close the stream.
                     logger.warning(
-                        "engine timeout mid-stream for %s: %s", model_id, exc,
+                        "req_id=%s EXIT 200_partial engine_timeout_mid_stream detail=%s",
+                        req_id, exc,
                     )
                     await response.write_eof()
                     return response
@@ -590,11 +603,15 @@ class WorkloadRouter:
                     )
                     await response.prepare(request)
                 await response.write_eof()
+                logger.info("req_id=%s EXIT 200 stream_complete", req_id)
                 return response
 
+            logger.info("req_id=%s EXIT 200 json_complete", req_id)
             return web.json_response(result)
 
         except AdmissionTimeoutError as exc:
+            logger.warning("req_id=%s EXIT 503 admission_timeout queue=%d in_flight=%d",
+                           req_id, exc.queue_depth, exc.in_flight)
             return web.json_response(
                 {
                     "error": "server overloaded",
@@ -606,20 +623,23 @@ class WorkloadRouter:
             )
         except EngineCircuitOpenError as exc:
             # Engine has hit the consecutive-timeout threshold; shed fast.
+            logger.warning("req_id=%s EXIT 503 circuit_open detail=%s", req_id, exc)
             return web.json_response(
                 {"error": "engine unavailable", "detail": str(exc)},
                 status=503,
             )
         except BudgetExceededError as exc:
+            logger.warning("req_id=%s EXIT 429 budget_exceeded detail=%s", req_id, exc)
             return web.json_response(
                 {"error": str(exc)}, status=429
             )
         except ValueError as exc:
+            logger.warning("req_id=%s EXIT 404 value_error detail=%s", req_id, exc)
             return web.json_response(
                 {"error": str(exc)}, status=404
             )
         except Exception as exc:
-            logger.exception("Request failed: %s", exc)
+            logger.exception("req_id=%s EXIT 500 unhandled: %s", req_id, exc)
             return web.json_response(
                 {"error": f"internal error: {exc}"}, status=500
             )
