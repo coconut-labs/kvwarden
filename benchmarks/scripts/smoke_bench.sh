@@ -33,6 +33,7 @@ rm -f "$LOGDIR"/*.log "$LOGDIR"/tmp_config.yaml 2>/dev/null
 
 cleanup() {
     echo "--- cleanup ---"
+    [ -n "${POLLER_PID:-}" ] && kill "$POLLER_PID" 2>/dev/null || true
     pkill -f "mock_engine.py --port 8002" 2>/dev/null || true
     pkill -f "mock_engine.py --port 8003" 2>/dev/null || true
     pkill -f "infergrid.cli serve.*tmp_config" 2>/dev/null || true
@@ -97,6 +98,27 @@ done
 
 # ---- 4. Sweep c=1,8,32 ----
 echo "--- sweep c=1,8,32 num=$NUM_REQUESTS ---"
+
+# Background poller: every 50 ms, sample admission gauges. Drops a CSV row
+# per sample so peak in_flight + peak queue_depth survive the bench wall clock.
+# Gauges go back to 0 between phases, so a final snapshot would lie about
+# whether admission actually engaged. The poller is the only honest signal.
+ADM_CSV="$LOGDIR/admission_trace.csv"
+echo "ts,in_flight,queue_depth,admitted_total,rejected_total" > "$ADM_CSV"
+(
+  while true; do
+    M=$(curl -sf http://localhost:8000/metrics 2>/dev/null) || M=""
+    IF=$(printf '%s\n' "$M" | awk '/^infergrid_admission_in_flight /{print $2; exit}')
+    QD=$(printf '%s\n' "$M" | awk '/^infergrid_admission_queue_depth /{print $2; exit}')
+    AT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_admitted_total /{print $2; exit}')
+    RT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_rejected_total\{/{sum+=$2} END{print sum+0}')
+    printf "%s,%s,%s,%s,%s\n" "$(date +%s.%N)" "${IF:-0}" "${QD:-0}" "${AT:-0}" "${RT:-0}" >> "$ADM_CSV"
+    sleep 0.05
+  done
+) > "$LOGDIR/poller.log" 2>&1 &
+POLLER_PID=$!
+echo "  poller pid=$POLLER_PID sampling /metrics every 50 ms"
+
 START=$(date +%s)
 python3 benchmarks/scripts/benchmark_multi_model.py \
     --url http://localhost:8000 \
@@ -109,8 +131,17 @@ BENCH_RC=$?
 END=$(date +%s)
 ELAPSED=$((END - START))
 
+# Stop the poller
+kill "$POLLER_PID" 2>/dev/null || true
+
 # Final metrics snapshot for admission verification
 curl -sf http://localhost:8000/metrics > "$LOGDIR/metrics_final.txt" 2>/dev/null || true
+
+# Compute peak admission in_flight + queue_depth from poller trace.
+# Float-aware so a fractional gauge doesn't break the int parse.
+PEAK_IF=$(awk -F, 'NR>1 && $2+0>peak{peak=$2+0} END{printf "%.0f", peak+0}' "$ADM_CSV" 2>/dev/null || echo 0)
+PEAK_QD=$(awk -F, 'NR>1 && $3+0>peak{peak=$3+0} END{printf "%.0f", peak+0}' "$ADM_CSV" 2>/dev/null || echo 0)
+SAMPLES=$(($(wc -l < "$ADM_CSV") - 1))
 
 # ---- 5. Asserts ----
 echo "═══════════════════════════════════════════════════════"
@@ -134,19 +165,27 @@ fi
 echo "    throughput lines (all non-zero): $TPUT_NONZERO/$TPUT_LINES"
 echo "    throughput > 0:   $([ $THROUGHPUT_OK -eq 1 ] && echo PASS || echo CHECK)"
 
-# Admission engaged at c=32 (in_flight gauge should have hit max_concurrent)
+# Admission engaged at c=32 (in_flight gauge should have hit MAX_CONCURRENT
+# during the c=32 phase). With MAX_CONCURRENT=16 and c=32 over a streaming
+# bench, healthy admission shows peak in_flight close to 16 and queue_depth
+# briefly > 0 between request waves.
+ADM_FLOOR=$((MAX_CONCURRENT * 3 / 4))   # 75% of cap counts as engaged
 ADM_OK=0
-if grep -qE "infergrid_admission_in_flight" "$LOGDIR/metrics_final.txt" 2>/dev/null; then
+if [ "$PEAK_IF" -ge "$ADM_FLOOR" ]; then
     ADM_OK=1
 fi
-echo "    admission metrics present: $([ $ADM_OK -eq 1 ] && echo PASS || echo CHECK)"
+echo "    admission samples: $SAMPLES"
+echo "    admission peak in_flight:    $PEAK_IF (need >= $ADM_FLOOR / cap=$MAX_CONCURRENT)"
+echo "    admission peak queue_depth:  $PEAK_QD"
+echo "    admission engaged: $([ $ADM_OK -eq 1 ] && echo PASS || echo FAIL)"
 
 echo ""
 echo "  Logs: $LOGDIR/"
+echo "  Trace: $ADM_CSV"
 echo ""
 
 # Overall exit
-if [ $BENCH_RC -eq 0 ] && [ $ELAPSED -le 120 ] && [ $THROUGHPUT_OK -eq 1 ]; then
+if [ $BENCH_RC -eq 0 ] && [ $ELAPSED -le 120 ] && [ $THROUGHPUT_OK -eq 1 ] && [ $ADM_OK -eq 1 ]; then
     echo "OVERALL: PASS"
     exit 0
 else

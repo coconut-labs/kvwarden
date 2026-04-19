@@ -399,6 +399,10 @@ class WorkloadRouter:
                 in_flight=self.admission_controller.in_flight,
             )
 
+        # If we leave this scope without handing the slot to the streaming
+        # wrapper below, release it ourselves. The wrapper sets `released=True`
+        # so we only release once.
+        released = False
         try:
             # Ensure model is loaded
             state = await self.ensure_model_loaded(model_id)
@@ -431,6 +435,27 @@ class WorkloadRouter:
                 tenant_id, tokens_in=tokens_in, tokens_out=tokens_out,
                 gpu_seconds=elapsed,
             )
+
+            # For streaming, `result` is an async generator that has NOT yet
+            # been consumed. If we release admission here in `finally`, the
+            # slot frees microseconds after acquire() — the engine is still
+            # generating tokens but admission already counts the slot as free.
+            # That is exactly the streaming-bypass bug confirmed by the
+            # smoke_bench poller (peak in_flight=0 with cap=16).
+            #
+            # Fix: hand the slot to a wrapper generator whose own `finally`
+            # releases when the iterator exhausts, raises, or is GC'd by the
+            # caller. Caveat: a client that abandons mid-stream keeps the slot
+            # held until the wrapper is collected. Acceptable trade-off for the
+            # honest engagement we need at Gate 1; revisit with a hard
+            # per-request keepalive timeout once we have real-traffic data.
+            if stream and hasattr(result, "__aiter__"):
+                wrapped = self._stream_with_admission(
+                    result, tenant_id=tenant_id,
+                )
+                released = True  # ownership transferred to wrapper
+                return wrapped
+
             return result
 
         except BudgetExceededError:
@@ -442,6 +467,25 @@ class WorkloadRouter:
                 status="error", latency_s=elapsed,
             )
             raise
+        finally:
+            if not released:
+                self.admission_controller.release()
+                await self.tenant_manager.release_for_tenant(tenant_id)
+
+    async def _stream_with_admission(
+        self,
+        inner: Any,
+        tenant_id: str,
+    ) -> Any:
+        """Stream inner iterator while holding the admission slot.
+
+        Releases the admission slot and tenant slot in `finally` so cancellation,
+        client disconnect (aiohttp closes the response), and normal completion
+        all converge on a single release path.
+        """
+        try:
+            async for chunk in inner:
+                yield chunk
         finally:
             self.admission_controller.release()
             await self.tenant_manager.release_for_tenant(tenant_id)

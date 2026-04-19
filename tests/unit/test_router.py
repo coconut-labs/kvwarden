@@ -6,6 +6,7 @@ and request length classification.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock
 
@@ -232,3 +233,115 @@ class TestEvictionOrdering:
         assert evicted is not None
         assert evicted in ["model-0", "model-1", "model-2"]
         assert evicted not in router._models
+
+
+# ---------------------------------------------------------------------------
+# Streaming admission control
+# ---------------------------------------------------------------------------
+
+
+class TestStreamingAdmission:
+    """Regression: admission slot must be held for the full streaming lifetime.
+
+    Pre-fix bug: route_request awaits forward_request (which returns the
+    async-generator object immediately for stream=True), then its outer finally
+    fires admission_controller.release() — so the slot is freed in microseconds
+    while the engine is still generating tokens. The smoke_bench poller showed
+    peak in_flight = 0 with cap = 16 over 149 samples. That makes admission
+    cap a no-op for streaming traffic.
+
+    Fix: route_request hands the slot to a wrapper async generator whose own
+    finally releases. These tests pin that contract.
+    """
+
+    def _make_router_with_slow_stream(
+        self, *, max_concurrent: int, chunk_count: int = 5, chunk_delay_s: float = 0.05,
+    ) -> WorkloadRouter:
+        cfg = InferGridConfig(
+            port=9999,
+            max_concurrent=max_concurrent,
+            models=[ModelConfig(model_id="m", engine="vllm")],
+        )
+        router = WorkloadRouter(config=cfg)
+
+        async def fake_stream():
+            for i in range(chunk_count):
+                await asyncio.sleep(chunk_delay_s)
+                yield f"data: chunk{i}\n\n".encode()
+
+        adapter = MagicMock()
+        adapter.is_healthy = True
+        # forward_request is `await`ed; AsyncMock with side_effect returning the
+        # async-gen object mirrors the real adapter contract.
+        adapter.forward_request = AsyncMock(side_effect=lambda *a, **kw: fake_stream())
+        state = ModelState(config=ModelConfig(model_id="m"), adapter=adapter)
+        router._models["m"] = state
+        return router
+
+    async def test_in_flight_is_held_during_stream(self) -> None:
+        router = self._make_router_with_slow_stream(max_concurrent=4)
+
+        # Start one stream and begin iterating
+        result = await router.route_request(
+            model_id="m", path="/v1/completions",
+            payload={"stream": True, "max_tokens": 32}, stream=True,
+        )
+        agen = result.__aiter__()
+        first = await agen.__anext__()
+        assert first.startswith(b"data: ")
+
+        # Mid-stream: slot must still be held
+        assert router.admission_controller.in_flight == 1, (
+            "admission slot was released before stream finished — streaming "
+            "bypass regression"
+        )
+
+        # Drain
+        async for _ in agen:
+            pass
+
+        # Done: slot released
+        assert router.admission_controller.in_flight == 0
+
+    async def test_streaming_respects_concurrency_cap(self) -> None:
+        # cap=2, 3 concurrent streams → one must queue
+        router = self._make_router_with_slow_stream(max_concurrent=2, chunk_count=3, chunk_delay_s=0.04)
+
+        async def consume():
+            r = await router.route_request(
+                model_id="m", path="/v1/completions",
+                payload={"stream": True, "max_tokens": 32}, stream=True,
+            )
+            async for _ in r:
+                pass
+
+        tasks = [asyncio.create_task(consume()) for _ in range(3)]
+        # Let the first wave grab slots
+        await asyncio.sleep(0.02)
+
+        adm = router.admission_controller
+        assert adm.in_flight == 2, f"expected in_flight=2, got {adm.in_flight}"
+        assert adm.queue_depth == 1, f"expected queue_depth=1, got {adm.queue_depth}"
+
+        await asyncio.gather(*tasks)
+        assert adm.in_flight == 0
+        assert adm.queue_depth == 0
+
+    async def test_slot_released_when_consumer_aborts_midstream(self) -> None:
+        router = self._make_router_with_slow_stream(
+            max_concurrent=2, chunk_count=20, chunk_delay_s=0.05,
+        )
+
+        result = await router.route_request(
+            model_id="m", path="/v1/completions",
+            payload={"stream": True, "max_tokens": 256}, stream=True,
+        )
+        agen = result.__aiter__()
+        await agen.__anext__()
+        assert router.admission_controller.in_flight == 1
+
+        # Consumer abandons. aclose() runs the wrapper's finally, releasing
+        # the slot. (A truly-leaked iterator would only release on GC; aclose
+        # is the well-behaved path and is what aiohttp does on disconnect.)
+        await agen.aclose()
+        assert router.admission_controller.in_flight == 0
