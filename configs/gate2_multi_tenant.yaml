@@ -1,0 +1,43 @@
+# Gate 2-lite Arm 1 — InferGrid full stack with two co-loaded models.
+# Llama-3.1-8B + Qwen2.5-7B on a single A100-SXM4 80GB. Admission ON,
+# per-tenant budget enforced. WorkloadRouter mediates which engine
+# handles which model.
+#
+# See docs/launch/gate2_design.md for the full hypothesis and arm contract.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+# Tighter than Gate 1's 128: two engines share the GPU compute pipeline,
+# so the per-engine effective concurrency cap should be ~half. 96 leaves
+# headroom for short-prompt chat tenant bursts without starving RAG.
+max_concurrent: 96
+admission_queue_size: 1024
+engine_start_timeout_s: 600   # 10 min — two models load in parallel
+log_level: INFO
+
+# Two-tenant workload: chat (high-RPS short prompts) + RAG (low-RPS long
+# prompts with bursts). 48-each splits the budget evenly; if a tenant
+# wants more it must be explicitly granted via per-tenant override.
+tenant_defaults:
+  max_concurrent_requests: 48
+  rate_limit_rpm: 30000
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    # 0.40+0.40=0.80 leaves 0.20 for KV cache + activations on 80GB A100.
+    # PR #15 review flagged 0.42 as "tight"; 0.40 each is the safer point.
+    gpu_memory_utilization: 0.40
+    max_model_len: 8192   # bumped from Gate 1's 4096 for the RAG tenant's 8K prompts
+    tensor_parallel_size: 1
+  - model_id: "Qwen/Qwen2.5-7B-Instruct"
+    short_name: "qwen25-7b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.40
+    max_model_len: 8192
+    tensor_parallel_size: 1
