@@ -1,0 +1,207 @@
+2026-04-19 00:22:46 [INFO] __main__: ======================================================================
+2026-04-19 00:22:46 [INFO] __main__: InferGrid Multi-Model Benchmark Harness
+2026-04-19 00:22:46 [INFO] __main__: ======================================================================
+2026-04-19 00:22:46 [INFO] profiling_utils: Environment info:
+2026-04-19 00:22:46 [INFO] profiling_utils:   python_version: 3.11.10 (main, Sep  7 2024, 18:35:41) [GCC 11.4.0]
+2026-04-19 00:22:46 [INFO] profiling_utils:   platform: Linux-6.8.0-100-generic-x86_64-with-glibc2.35
+2026-04-19 00:22:46 [INFO] profiling_utils:   processor: x86_64
+2026-04-19 00:22:46 [INFO] profiling_utils:   nvidia_driver: 580.126.16
+2026-04-19 00:22:46 [INFO] profiling_utils:   gpu_count: 1
+2026-04-19 00:22:46 [INFO] profiling_utils:   gpu_0_name: NVIDIA A100-SXM4-80GB
+2026-04-19 00:22:46 [INFO] profiling_utils:   gpu_0_memory_mb: 81920
+2026-04-19 00:22:46 [INFO] profiling_utils:   random_seed: 42
+2026-04-19 00:22:46 [INFO] __main__: Models: ['meta-llama/Llama-3.1-8B-Instruct', 'Qwen/Qwen2.5-7B-Instruct']
+2026-04-19 00:22:46 [INFO] __main__: Server: http://localhost:8000
+2026-04-19 00:22:46 [INFO] profiling_utils: Engine at http://localhost:8000 is healthy
+2026-04-19 00:22:47 [INFO] __main__: 
+============================================================
+2026-04-19 00:22:47 [INFO] __main__: Workload: alternating | Concurrency: 1
+2026-04-19 00:22:47 [INFO] __main__: ============================================================
+2026-04-19 00:22:47 [INFO] __main__: === Concurrent Throughput: alternating ===
+2026-04-19 00:22:47 [INFO] __main__: Schedule length: 25, Models: ['meta-llama/Llama-3.1-8B-Instruct', 'Qwen/Qwen2.5-7B-Instruct']
+2026-04-19 00:22:47 [INFO] profiling_utils: GPU metrics collection started (interval=100ms)
+2026-04-19 00:22:47 [INFO] __main__: Starting multi-model benchmark: 25 requests, concurrency=1, target=http://localhost:8000, models=['Qwen/Qwen2.5-7B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 00:22:47 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:22:48 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1561 ttft_ms=37
+2026-04-19 00:22:48 [INFO] __main__: req=1 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:22:50 [INFO] __main__: req=1 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1494 ttft_ms=34
+2026-04-19 00:22:50 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:22:51 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1550 ttft_ms=33
+2026-04-19 00:22:51 [INFO] __main__: req=3 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:22:53 [INFO] __main__: req=3 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1494 ttft_ms=32
+2026-04-19 00:22:53 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:22:54 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1550 ttft_ms=33
+2026-04-19 00:22:54 [INFO] __main__: req=5 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:22:56 [INFO] __main__: req=5 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1494 ttft_ms=32
+2026-04-19 00:22:56 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:22:57 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1550 ttft_ms=34
+2026-04-19 00:22:57 [INFO] __main__: req=7 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:22:59 [INFO] __main__: req=7 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1492 ttft_ms=32
+2026-04-19 00:22:59 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:00 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1549 ttft_ms=34
+2026-04-19 00:23:00 [INFO] __main__: req=9 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:02 [INFO] __main__: req=9 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1496 ttft_ms=32
+2026-04-19 00:23:02 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:03 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1549 ttft_ms=34
+2026-04-19 00:23:03 [INFO] __main__: req=11 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:05 [INFO] __main__: req=11 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1493 ttft_ms=32
+2026-04-19 00:23:05 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:06 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1549 ttft_ms=34
+2026-04-19 00:23:06 [INFO] __main__: req=13 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:08 [INFO] __main__: req=13 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1492 ttft_ms=32
+2026-04-19 00:23:08 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:09 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1549 ttft_ms=33
+2026-04-19 00:23:09 [INFO] __main__: req=15 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:11 [INFO] __main__: req=15 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1494 ttft_ms=32
+2026-04-19 00:23:11 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:12 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1550 ttft_ms=34
+2026-04-19 00:23:12 [INFO] __main__: req=17 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:14 [INFO] __main__: req=17 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1493 ttft_ms=32
+2026-04-19 00:23:14 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:15 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1550 ttft_ms=34
+2026-04-19 00:23:15 [INFO] __main__: req=19 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:17 [INFO] __main__: req=19 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1491 ttft_ms=31
+2026-04-19 00:23:17 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:19 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1552 ttft_ms=34
+2026-04-19 00:23:19 [INFO] __main__: req=21 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:20 [INFO] __main__: req=21 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1493 ttft_ms=32
+2026-04-19 00:23:20 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:22 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1549 ttft_ms=33
+2026-04-19 00:23:22 [INFO] __main__: req=23 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:23 [INFO] __main__: req=23 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=1493 ttft_ms=32
+2026-04-19 00:23:23 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1549 ttft_ms=34
+2026-04-19 00:23:25 [INFO] profiling_utils: GPU metrics collection stopped (381 samples)
+2026-04-19 00:23:25 [INFO] __main__: Multi-model results saved to /workspace/results/gate06/benchmarks/alternating_c1.csv (25 requests)
+2026-04-19 00:23:25 [INFO] __main__:   Throughput: 84.0 tok/s | TTFT p50: 33.4ms | TTFT p99: 36.2ms
+2026-04-19 00:23:25 [INFO] __main__: 
+============================================================
+2026-04-19 00:23:25 [INFO] __main__: Workload: alternating | Concurrency: 8
+2026-04-19 00:23:25 [INFO] __main__: ============================================================
+2026-04-19 00:23:25 [INFO] __main__: === Concurrent Throughput: alternating ===
+2026-04-19 00:23:25 [INFO] __main__: Schedule length: 25, Models: ['meta-llama/Llama-3.1-8B-Instruct', 'Qwen/Qwen2.5-7B-Instruct']
+2026-04-19 00:23:25 [INFO] profiling_utils: GPU metrics collection started (interval=100ms)
+2026-04-19 00:23:25 [INFO] __main__: Starting multi-model benchmark: 25 requests, concurrency=8, target=http://localhost:8000, models=['Qwen/Qwen2.5-7B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 00:23:25 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=1 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=3 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=5 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:25 [INFO] __main__: req=7 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=7 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3417 ttft_ms=150
+2026-04-19 00:23:28 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=3 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3418 ttft_ms=151
+2026-04-19 00:23:28 [INFO] __main__: req=1 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3418 ttft_ms=151
+2026-04-19 00:23:28 [INFO] __main__: req=5 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3418 ttft_ms=68
+2026-04-19 00:23:28 [INFO] __main__: req=9 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=11 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3454 ttft_ms=157
+2026-04-19 00:23:28 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3455 ttft_ms=157
+2026-04-19 00:23:28 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3456 ttft_ms=69
+2026-04-19 00:23:28 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3456 ttft_ms=158
+2026-04-19 00:23:28 [INFO] __main__: req=13 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:28 [INFO] __main__: req=15 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3414 ttft_ms=141
+2026-04-19 00:23:32 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3416 ttft_ms=142
+2026-04-19 00:23:32 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3452 ttft_ms=113
+2026-04-19 00:23:32 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3453 ttft_ms=114
+2026-04-19 00:23:32 [INFO] __main__: req=17 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=19 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=11 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3455 ttft_ms=113
+2026-04-19 00:23:32 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=15 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3418 ttft_ms=142
+2026-04-19 00:23:32 [INFO] __main__: req=21 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=13 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3419 ttft_ms=143
+2026-04-19 00:23:32 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:32 [INFO] __main__: req=9 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3456 ttft_ms=113
+2026-04-19 00:23:32 [INFO] __main__: req=23 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:35 [INFO] __main__: req=21 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3418 ttft_ms=151
+2026-04-19 00:23:35 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:35 [INFO] __main__: req=19 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3422 ttft_ms=154
+2026-04-19 00:23:35 [INFO] __main__: req=17 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3422 ttft_ms=154
+2026-04-19 00:23:35 [INFO] __main__: req=23 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3418 ttft_ms=150
+2026-04-19 00:23:35 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3454 ttft_ms=159
+2026-04-19 00:23:35 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3455 ttft_ms=159
+2026-04-19 00:23:35 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3459 ttft_ms=162
+2026-04-19 00:23:35 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3460 ttft_ms=163
+2026-04-19 00:23:36 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=1563 ttft_ms=46
+2026-04-19 00:23:36 [INFO] profiling_utils: GPU metrics collection stopped (119 samples)
+2026-04-19 00:23:36 [INFO] __main__: Multi-model results saved to /workspace/results/gate06/benchmarks/alternating_c8.csv (25 requests)
+2026-04-19 00:23:37 [INFO] __main__:   Throughput: 269.9 tok/s | TTFT p50: 150.3ms | TTFT p99: 163.0ms
+2026-04-19 00:23:37 [INFO] __main__: 
+============================================================
+2026-04-19 00:23:37 [INFO] __main__: Workload: alternating | Concurrency: 32
+2026-04-19 00:23:37 [INFO] __main__: ============================================================
+2026-04-19 00:23:37 [INFO] __main__: === Concurrent Throughput: alternating ===
+2026-04-19 00:23:37 [INFO] __main__: Schedule length: 25, Models: ['meta-llama/Llama-3.1-8B-Instruct', 'Qwen/Qwen2.5-7B-Instruct']
+2026-04-19 00:23:37 [INFO] profiling_utils: GPU metrics collection started (interval=100ms)
+2026-04-19 00:23:37 [INFO] __main__: Starting multi-model benchmark: 25 requests, concurrency=32, target=http://localhost:8000, models=['Qwen/Qwen2.5-7B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 00:23:37 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=1 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=3 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=5 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=7 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=9 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=11 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=13 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=15 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=17 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=19 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=21 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=23 MODEL=Qwen/Qwen2.5-7B-Instruct START
+2026-04-19 00:23:37 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 00:23:40 [INFO] __main__: req=17 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3920 ttft_ms=379
+2026-04-19 00:23:40 [INFO] __main__: req=15 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3920 ttft_ms=379
+2026-04-19 00:23:40 [INFO] __main__: req=21 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3920 ttft_ms=379
+2026-04-19 00:23:40 [INFO] __main__: req=23 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3920 ttft_ms=99
+2026-04-19 00:23:40 [INFO] __main__: req=19 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3921 ttft_ms=379
+2026-04-19 00:23:40 [INFO] __main__: req=3 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3924 ttft_ms=382
+2026-04-19 00:23:40 [INFO] __main__: req=9 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3924 ttft_ms=381
+2026-04-19 00:23:40 [INFO] __main__: req=5 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3924 ttft_ms=382
+2026-04-19 00:23:40 [INFO] __main__: req=11 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3924 ttft_ms=381
+2026-04-19 00:23:40 [INFO] __main__: req=1 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3925 ttft_ms=102
+2026-04-19 00:23:40 [INFO] __main__: req=7 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3924 ttft_ms=382
+2026-04-19 00:23:40 [INFO] __main__: req=13 MODEL=Qwen/Qwen2.5-7B-Instruct DONE tokens_out=128 latency_ms=3922 ttft_ms=380
+2026-04-19 00:23:40 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3935 ttft_ms=394
+2026-04-19 00:23:40 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3937 ttft_ms=396
+2026-04-19 00:23:40 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3935 ttft_ms=393
+2026-04-19 00:23:40 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3938 ttft_ms=397
+2026-04-19 00:23:40 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3935 ttft_ms=394
+2026-04-19 00:23:40 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3938 ttft_ms=397
+2026-04-19 00:23:40 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3938 ttft_ms=397
+2026-04-19 00:23:40 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3939 ttft_ms=397
+2026-04-19 00:23:40 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3936 ttft_ms=394
+2026-04-19 00:23:40 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3936 ttft_ms=394
+2026-04-19 00:23:40 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3939 ttft_ms=397
+2026-04-19 00:23:40 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3936 ttft_ms=394
+2026-04-19 00:23:40 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=128 latency_ms=3936 ttft_ms=73
+2026-04-19 00:23:40 [INFO] profiling_utils: GPU metrics collection stopped (40 samples)
+2026-04-19 00:23:40 [INFO] __main__: Multi-model results saved to /workspace/results/gate06/benchmarks/alternating_c32.csv (25 requests)
+2026-04-19 00:23:40 [INFO] __main__:   Throughput: 812.2 tok/s | TTFT p50: 381.8ms | TTFT p99: 397.1ms
+2026-04-19 00:23:40 [INFO] __main__: 
+======================================================================
+2026-04-19 00:23:40 [INFO] __main__: Multi-model benchmark complete. Results in /workspace/results/gate06/benchmarks
+2026-04-19 00:23:40 [INFO] __main__: ======================================================================
+2026-04-19 00:23:40 [INFO] __main__: 
+Key findings:
+2026-04-19 00:23:40 [INFO] __main__:   alternating (c=1): 84.0 tok/s, TTFT p50=33.4ms
+2026-04-19 00:23:40 [INFO] __main__:   alternating (c=8): 269.9 tok/s, TTFT p50=150.3ms
+2026-04-19 00:23:40 [INFO] __main__:   alternating (c=32): 812.2 tok/s, TTFT p50=381.8ms
