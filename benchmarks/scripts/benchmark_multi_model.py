@@ -163,6 +163,7 @@ class MultiModelBenchmarkResults:
     switch_events: list[ModelSwitchEvent] = field(default_factory=list)
     gpu_metrics_df: Any = None
     config: dict[str, Any] = field(default_factory=dict)
+    aborted_after_n_errors: int | None = None  # R5: set if phase aborted early
 
     def summary(self) -> dict[str, Any]:
         """Compute aggregate statistics, broken down by model.
@@ -370,8 +371,17 @@ class MultiModelBenchmarkClient:
             sorted(set(schedule)),
         )
 
+        # R5: phase-abort on 5 consecutive request errors. Using as_completed +
+        # task cancellation so a stuck engine can't waste 30s × remaining_reqs.
+        # "Consecutive" is by completion order; at c=1 this matches request-id
+        # order. At c>1 it gives bounded blast radius from a stalling engine.
+        phase_name = getattr(self, "phase_name", "unknown")
+        consec_errors = 0
+        aborted_after: int | None = None
+        ABORT_THRESHOLD = 5
+
         async with aiohttp.ClientSession() as session:
-            tasks = []
+            tasks: list[asyncio.Task[MultiModelRequestMetrics]] = []
             for i, (model, req) in enumerate(zip(schedule, requests)):
                 prompt = req.get("prompt", "") if isinstance(req, dict) else str(req)
                 max_tokens = (
@@ -379,13 +389,36 @@ class MultiModelBenchmarkClient:
                     if isinstance(req, dict)
                     else self.max_tokens
                 )
-                tasks.append(
+                tasks.append(asyncio.create_task(
                     self._send_request(
                         session, i, model, prompt, max_tokens, semaphore
                     )
-                )
-            raw_metrics = await asyncio.gather(*tasks)
-            all_metrics = list(raw_metrics)
+                ))
+            raw_metrics: list[MultiModelRequestMetrics] = []
+            for fut in asyncio.as_completed(tasks):
+                m = await fut
+                raw_metrics.append(m)
+                if m.error is not None:
+                    consec_errors += 1
+                    if consec_errors >= ABORT_THRESHOLD:
+                        aborted_after = consec_errors
+                        logger.warning(
+                            "phase=%s c=%d ABORT %d consecutive errors",
+                            phase_name, self.concurrency, consec_errors,
+                        )
+                        for t in tasks:
+                            if not t.done():
+                                t.cancel()
+                        break
+                else:
+                    consec_errors = 0
+            # Drain any in-flight tasks (cancelled or otherwise) so we don't
+            # leak "Task was destroyed but it is pending" warnings.
+            drained = await asyncio.gather(*tasks, return_exceptions=True)
+            for d in drained:
+                if isinstance(d, MultiModelRequestMetrics) and d not in raw_metrics:
+                    raw_metrics.append(d)
+            all_metrics = raw_metrics
 
         if gpu_collector is not None:
             gpu_collector.stop()
@@ -424,6 +457,7 @@ class MultiModelBenchmarkClient:
             per_request=all_metrics,
             switch_events=switch_events,
             gpu_metrics_df=gpu_df,
+            aborted_after_n_errors=aborted_after,
         )
 
     async def _send_request(
