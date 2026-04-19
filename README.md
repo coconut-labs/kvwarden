@@ -1,160 +1,147 @@
 # InferGrid
 
-**The missing orchestration layer for LLM inference — intelligent multi-model serving without Kubernetes.**
+**Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes.**
 
-InferGrid is a middleware that jointly optimizes scheduling, KV cache management, and GPU multi-tenancy for LLM inference. It sits on top of existing engines (vLLM, SGLang) and turns 1-4 GPUs into an intelligent inference platform — no Kubernetes, no datacenter infrastructure.
+InferGrid is middleware that sits on top of vLLM/SGLang and gives a quiet user predictable TTFT even when a noisy neighbor is hammering the same shared engine. One pip install. No cluster. No YAML pile.
 
-## The Problem
+## The hero number
 
-Current LLM serving suffers from scheduling quality degradation under load:
+![Quiet-tenant TTFT under noisy-neighbor contention — three arms compared on log scale, with the per-window trace showing zero warmup transients in the token-bucket arm](docs/launch/figures/launch_hero_chart.png)
 
-| Layer | Problem | Impact |
-|-------|---------|--------|
-| **Scheduling** | TTFT degrades 8-15x at saturation (c>128) while GPU stays >95% utilized | Users experience multi-second wait times despite available compute |
-| **KV Cache** | No unified lifecycle management across memory tiers | KV cache evicted and recomputed; no cross-tier offloading |
-| **Multi-Model** | Models loaded/evicted with naive LRU | Cold-start latency spikes when traffic patterns shift |
+Single A100, Llama-3.1-8B, two clients sharing one engine: a flooder at 32 RPS, a quiet user at 1 RPS.
 
-GPU utilization is consistently >95% -- the waste is in **scheduling quality** (TTFT degradation, tail latency), not GPU idleness.
+| | Quiet user TTFT p99 |
+|---|---:|
+| Solo (no contention) | 54.9 ms |
+| Vanilla vLLM under flooder | **28,716 ms** (523× starvation) |
+| InferGrid + token-bucket rate-limit | **74.2 ms** (within 1.35× of solo) |
+
+Ten lines of YAML. No application code change. The quiet user is essentially unaware the flooder exists.
+
+Full writeup: [`results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md`](results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md) + [`SUPPLEMENT_arm5b.md`](results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm5b.md).
+
+## What InferGrid is and isn't
+
+InferGrid is a thin orchestration layer (~3,500 LOC) that sits between your app and vLLM/SGLang. It adds three things engines can't do internally:
+
+1. **Per-tenant token-bucket rate limiting at the budget gate.** This is the load-bearing mechanism (validated empirically — see Gate 2-FAIRNESS results). Engines have no concept of a tenant; InferGrid does.
+2. **Multi-model lifecycle management** on a single GPU — frequency+recency eviction, hot-swap routing, no-K8s.
+3. **OpenAI-compatible HTTP API** in front of multiple engines, so your app code doesn't change.
+
+It is **not** a vLLM/SGLang replacement. It runs them as subprocesses and proxies to them. It is **not** a Kubernetes alternative for datacenter workloads — Dynamo, llm-d, Mammoth do that better. It is **not** going to magically lower single-tenant TTFT — Gate 1.5 measured a robust DISCONFIRM there; vLLM's continuous batching matches a coarse upstream cap on single-tenant single-model workloads.
 
 ## Why InferGrid
 
-Every existing solution requires either Kubernetes or gives up intelligent scheduling:
+Every existing solution requires Kubernetes or gives up tenant fairness:
 
-| System | K8s Required | Multi-Model | KV Tiering | Intelligent Scheduling |
-|--------|:------------:|:-----------:|:----------:|:---------------------:|
-| NVIDIA Dynamo v1.0 | Yes | Yes | Yes | Yes |
-| llm-d v0.5 (CNCF) | Yes | 1 model/pool | Yes | Yes |
-| Mammoth (Modular) | Yes | Yes | Yes | Yes |
-| AIBrix v0.6 | Yes | Yes | Yes | Yes |
-| Ollama | No | LRU only | No | No |
-| LocalAI | No | LRU only | No | No |
-| **InferGrid** | **No** | **Yes** | **Planned** | **Yes** |
+| System | K8s Required | Multi-Model | Per-Tenant Fairness | Hardware |
+|---|:---:|:---:|:---:|---|
+| NVIDIA Dynamo v1.0 | Yes | Yes | No | NVIDIA only, datacenter |
+| llm-d v0.5 (CNCF) | Yes | 1/pool | No | NVIDIA, datacenter |
+| Mammoth (Modular) | Yes | Yes | No | NVIDIA + AMD, datacenter |
+| AIBrix v0.6 | Yes | Yes | No | NVIDIA, datacenter |
+| Ollama | No | LRU eviction | No | Multi, single node |
+| Vanilla vLLM/SGLang | No | One model per process | No | Single node |
+| **InferGrid** | **No** | **Yes (frequency+recency)** | **Yes (token bucket + DRR)** | **Single node, 1-4 GPUs** |
 
-InferGrid is the only system that provides intelligent multi-model orchestration, KV cache tiering, and per-tenant isolation on bare metal without Kubernetes.
+The "multi-tenant on a small shared box without K8s" cell is empty. That's the gap InferGrid fills.
+
+## Quickstart
+
+```bash
+pip install -e .          # PyPI placeholder pending; until then, install from source
+infergrid serve --config configs/quickstart_fairness.yaml
+
+# Hit it as two tenants on the same model:
+curl localhost:8000/v1/completions -H "X-Tenant-ID: noisy" \
+  -d '{"model":"llama31-8b","prompt":"...","max_tokens":64,"stream":true}'
+curl localhost:8000/v1/completions -H "X-Tenant-ID: quiet" \
+  -d '{"model":"llama31-8b","prompt":"...","max_tokens":64,"stream":true}'
+
+# Watch the rate-limit fire and the engine queue stay composed:
+curl localhost:8000/metrics | grep -E "tenant_rejected|admission_queue_depth"
+```
+
+The [`quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily commented. For a deeper "when to use which lever" treatment, see the [Tuning Guide](docs/tuning_guide.md) — every recommendation in it traces back to a specific experiment.
 
 ## Architecture
 
 ```
                     +---------------------+
-                    |   WorkloadRouter    |  <-- request profiling, SLO-aware routing
+                    |   WorkloadRouter    |  request profiling, length-bucket scheduling
                     +--------+------------+
                              |
               +--------------+--------------+
               |              |              |
      +--------v--------+ +--v---+ +--------v--------+
-     |  CacheManager   | |Shared| | TenantManager   |
-     | GPU -> CPU -> SSD| |State | |Resource budgets |
+     |  CacheManager   | |Shared| | TenantManager   |  per-tenant token bucket + budget
+     |  (KV lifecycle) | |State | | rate_limit_burst|
      +-----------------+ +------+ +-----------------+
               |                            |
      +--------v----------------------------v--------+
-     |          vLLM / SGLang Engine                 |
+     |          vLLM / SGLang Engines (1-N)         |
      +----------------------------------------------+
 ```
 
-**WorkloadRouter** — Length-aware, frequency-based model loading and request scheduling. Not LRU — learns from traffic patterns.
+| Component | What it does | Source |
+|---|---|---|
+| WorkloadRouter | Length-bucketed admission queue, length-aware scheduling, model lifecycle (freq+recency, not LRU), OpenAI-compatible HTTP API | `src/infergrid/router/router.py` (655 LOC) |
+| AdmissionController | Concurrency cap with priority queue (lower=served first), Prometheus metrics, sub-ms fast-path | `src/infergrid/router/admission.py` (309 LOC) |
+| CacheManager | KV cache block tracking across GPU/CPU/SSD tiers, weighted eviction (planned LMCache integration) | `src/infergrid/cache/manager.py` (487 LOC) |
+| TenantManager | Per-tenant budgets, **token-bucket rate limiting** (refill + burst capacity), DRR priority scoring | `src/infergrid/tenant/manager.py` (267 LOC) |
+| Engine Adapters | Subprocess management for vLLM/SGLang, health checks, HTTP proxying | `src/infergrid/engines/` (277 LOC) |
 
-**CacheManager** — KV cache lifecycle tracking with planned LMCache integration for cross-tier offloading. Evicts based on predicted reuse, not just recency.
+Total: 2,872 LOC src + 2,400+ LOC tests (144 unit tests passing).
 
-**TenantManager** — Per-tenant resource budgets with request isolation. One tenant's burst doesn't starve others.
+## Empirical results
 
-## Phase 1 Results: The Scheduling Cliff
+Each claim above traces to a specific experiment. Numbers are **honest** — TTFT measurement was rebuilt mid-project after a shadow review caught the original harness was timing SSE first-frame RTT, not first non-empty token (see `results/CORRECTIONS.md` C2/C5).
 
-Profiled on NVIDIA A100 80GB SXM and H100 80GB SXM with Llama 3.1 8B Instruct:
+| Gate | Hardware | Spend | Verdict |
+|---|---|---:|---|
+| Gate 0 (system bring-up) | A100-SXM4 | $5.76 | PASS |
+| Gate 0.6 (real-vLLM bench validation) | A100-SXM4 | $3.17 | PASS |
+| Gate 1 (single-model admission cap, short bench) | H100 SXM5 | $1.00 | DISCONFIRM (under-powered, see Gate 1.5) |
+| Gate 1.5 (powered rerun, 16k req/arm) | H100 SXM5 | $1.30 | **Robust DISCONFIRM** — single-model admission cap is not load-bearing |
+| Gate 2-FAIRNESS (5 arms tenant fairness) | A100-SXM4 | $1.40 | **CONFIRM** — 523× starvation → ~30ms steady state with rate-limit |
+| Gate 2-FAIRNESS Arm 5b (token bucket) | A100-SXM4 | $0.30 | **CLEAN CONFIRM** — quiet within 1.35× of solo, no warmup transient |
+| Gate 2-FAIRNESS Arm 6 (DRR isolation) | A100-SXM4 | $0.30 | DRR not material on this workload — token bucket alone does the work |
 
-### Cross-Engine Throughput (tok/s)
+Total compute spend: ~$13. Full raw artifacts and per-window traces in `results/`.
 
-| Concurrency | vLLM A100 SXM | SGLang A100 SXM | vLLM H100 SXM |
-|:-----------:|:-------------:|:---------------:|:--------------:|
-| 1 | 90 | 84 | 150 |
-| 8 | 690 | 691 | 1,142 |
-| 32 | 2,060 | 2,155 | 3,590 |
-| 64 | 3,314 | 3,348 | 6,365 |
-| 128 | 5,334 | 5,276 | 10,341 |
-| 256 | 5,353 | 5,214 | 10,545 |
-
-**vLLM vs SGLang throughput gap does not exist** -- the engines are within <5% across all concurrency levels on identical hardware. The real difference is in scheduling quality.
-
-### TTFT at Saturation
-
-| Config | TTFT p50 (ms) |
-|--------|:-------------:|
-| vLLM A100 c=128 | 150.9 |
-| vLLM A100 c=256 | 2,315.2 |
-| SGLang A100 c=128 | 102.4 |
-| SGLang A100 c=256 | 1,052.8 |
-| vLLM H100 c=128 | 184.8 |
-| vLLM H100 c=256 | 1,293.4 |
-
-**The scheduling cliff is universal:** On all hardware and both engines, doubling concurrency past the saturation point yields <3% more throughput but 8-15x worse TTFT. GPU utilization stays >95% -- the bottleneck is scheduling quality, not compute.
-
-**SGLang has 2.2x better TTFT at saturation** (1,053ms vs 2,315ms at c=256 on A100 SXM), showing that scheduler implementation quality matters more than raw throughput.
-
-**InferGrid's intervention:** Admission control and multi-queue scheduling to maintain TTFT SLOs at saturation, with expected 2-4x p99 improvement. Multi-model lifecycle management to reduce cold-start latency during traffic shifts.
-
-## Quick Start
+## Tests
 
 ```bash
-pip install -e ".[dev,profiling]"
-```
-
-## Running Benchmarks
-
-### Cloud GPU (RunPod / Lambda Labs)
-
-```bash
-# Clone and set up
-git clone https://github.com/coconut-labs/infergrid.git
-cd infergrid
-
-# Option A: Universal benchmark runner (one engine per run)
-export HF_TOKEN="your_token"
-export ENGINE="vllm"  # or "sglang"
-export GPU_LABEL="a100-sxm"
-bash scripts/cloud_benchmark.sh
-
-# Option B: Full baseline collection
-source scripts/setup_venv.sh
-bash scripts/setup_gpu_env.sh --model-config configs/models/llama31_8b.yaml
-bash scripts/run_all_baselines.sh --model-config configs/models/llama31_8b.yaml
-```
-
-### Docker (local multi-GPU)
-
-```bash
-docker compose -f docker/docker-compose.yml up
-python benchmarks/scripts/run_baseline_comparison.py \
-    --vllm-url http://localhost:8000 \
-    --sglang-url http://localhost:8001 \
-    --concurrency 1,8,32,64,128,256 \
-    --workload all
-```
-
-### Tests
-
-```bash
-pytest tests/unit/ -v        # No GPU required
-pytest tests/integration/ -v # Requires aiohttp
+pytest tests/unit/        # 144 tests, no GPU required, ~10 s
 ```
 
 ## Roadmap
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| Phase 1 | Done | Profiling vLLM/SGLang scheduling overhead on A100/H100 |
-| Phase 2 | In Progress | WorkloadRouter: frequency-based model management, priority scheduling |
-| Phase 3 | Planned | CacheManager: GPU/CPU/SSD KV cache tiering |
-| Phase 4 | Planned | TenantManager: multi-tenant isolation with resource budgets |
-| Phase 5 | Planned | Integration benchmarks, arXiv preprint |
+| Phase | Status | Notes |
+|---|---|---|
+| Phase 1 — vLLM/SGLang profiling | ✅ Done | TTFT numbers under-counted by ~30ms (CORRECTIONS C2); honest TTFT shipped in PR #28/#31 |
+| Phase 2 — Core implementation | ✅ Done | WorkloadRouter, AdmissionController, TenantManager, CacheManager, CLI |
+| Gate 0 — first GPU bring-up | ✅ Done | A100-SXM4, system PASS |
+| Gate 0.6 — bench harness validation | ✅ Done | Real vLLM end-to-end |
+| Gate 1.5 — single-model admission test | ✅ Done | Falsified the original "scheduling cliff" pitch |
+| Gate 2-FAIRNESS — multi-tenant fairness | ✅ Done | Hero number; this README's lead chart |
+| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page; ship-gated on PyPI placeholder + Cloudflare Worker |
+| Gate 2-lite — multi-model contention | Post-launch | InferGrid's other differentiator vs Ollama; never benchmarked |
+| KV cache tiering (LMCache integration) | Post-launch | Phase 3 of original roadmap |
+| Multi-engine routing (vLLM ↔ SGLang) | Post-launch | Phase 1 hinted SGLang 2.2× better at TTFT at c=256 |
 
-## Research
+## Research artifacts
 
-- [Inference Orchestration Gap Analysis](docs/inference_orchestration_gaps_report.md) — 7 verified gaps in the LLM inference landscape (April 2026)
-- [Phase 1 Findings](docs/phase1_findings.md) — Scheduling overhead profiling results
-- [Strategic Analysis](docs/strategic_analysis.md) — Paper vs product decision framework
+- [Gate 2-FAIRNESS OUTCOME](results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md) + [SUPPLEMENT (Arm 5b)](results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm5b.md) + [SUPPLEMENT (Arm 6)](results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm6.md)
+- [Gate 1.5 OUTCOME](results/gate1_5_20260419/GATE1_5_OUTCOME.md)
+- [Gate 1 OUTCOME (with Little's Law caveat)](results/gate1_20260419/GATE1_OUTCOME.md)
+- [Tuning Guide](docs/tuning_guide.md) — when to use which lever, with empirical evidence
+- [Inference Orchestration Gap Analysis](docs/inference_orchestration_gaps_report.md) — competitive landscape (April 2026)
+- [Corrections / measurement honesty log](results/CORRECTIONS.md) — every metric we under-counted and the fix
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports especially welcome with a `prometheus_dump.txt` and `server.log` — that's worth more to us than a star.
 
 ## License
 
