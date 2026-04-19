@@ -1,0 +1,41 @@
+# Gate 2-lite Arm 3 — Thin proxy baseline. Same two co-loaded models
+# but admission and per-tenant budget are effectively OFF. This isolates
+# what the WorkloadRouter + AdmissionController + TenantManager STACK
+# contributes vs just multiplexing two engines on one GPU.
+#
+# If Arm 1 (gate2_multi_tenant.yaml) ≈ Arm 3 on all metrics, the
+# scheduling-intelligence layer isn't load-bearing for multi-model and
+# the launch pitch needs rethinking.
+#
+# See docs/launch/gate2_design.md.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+# 9999 = effectively unbounded; whatever the engines can take.
+max_concurrent: 9999
+admission_queue_size: 1
+engine_start_timeout_s: 600
+log_level: INFO
+
+# Per-tenant budget also effectively OFF.
+tenant_defaults:
+  max_concurrent_requests: 9999
+  rate_limit_rpm: 999999
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.40
+    max_model_len: 8192
+    tensor_parallel_size: 1
+  - model_id: "Qwen/Qwen2.5-7B-Instruct"
+    short_name: "qwen25-7b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.40
+    max_model_len: 8192
+    tensor_parallel_size: 1
