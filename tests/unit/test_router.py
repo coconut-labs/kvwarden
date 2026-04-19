@@ -7,11 +7,13 @@ and request length classification.
 from __future__ import annotations
 
 import asyncio
+import gc
 import time
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+import infergrid.router.router as router_module
 from infergrid.common.config import InferGridConfig, ModelConfig
 from infergrid.router.router import (
     BudgetExceededError,
@@ -391,4 +393,64 @@ class TestStreamingAdmission:
         # tokens_in came from prompt split.
         assert call["tokens_in"] == 2, (
             f"tokens_in={call['tokens_in']} — _approx_tokens_in regression"
+        )
+
+    async def test_max_stream_duration_releases_slot(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Slow-client guard: a stream that exceeds the configured max
+        duration must abort and release the admission slot (PR #33)."""
+        monkeypatch.setattr(router_module, "_STREAM_MAX_DURATION_S", 0.15)
+
+        # 50 chunks × 50 ms = 2.5s — well past the 0.15s fence.
+        router = self._make_router_with_slow_stream(
+            max_concurrent=2, chunk_count=50, chunk_delay_s=0.05,
+        )
+
+        result = await router.route_request(
+            model_id="m", path="/v1/completions",
+            payload={"prompt": "p", "stream": True, "max_tokens": 50},
+            stream=True,
+        )
+        with pytest.raises(asyncio.TimeoutError):
+            async for _ in result:
+                pass
+
+        assert router.admission_controller.in_flight == 0, (
+            "admission slot leaked when max-stream-duration fence fired"
+        )
+
+    async def test_slot_released_after_gc_without_aclose(self) -> None:
+        """When a consumer drops the wrapper without calling aclose() (and
+        without aiohttp's disconnect path), the slot SHOULD eventually
+        release once Python GCs the async generator. CPython runs the
+        finalizer on the asyncio loop's idle pass, so we collect + yield.
+
+        This documents the GC-path behavior (and is the reason PR #33 also
+        adds a max-duration fence as a hard upper bound — GC timing is
+        cooperative and not guaranteed).
+        """
+        router = self._make_router_with_slow_stream(
+            max_concurrent=2, chunk_count=50, chunk_delay_s=0.05,
+        )
+
+        result = await router.route_request(
+            model_id="m", path="/v1/completions",
+            payload={"prompt": "p", "stream": True, "max_tokens": 50},
+            stream=True,
+        )
+        agen = result.__aiter__()
+        await agen.__anext__()
+        assert router.admission_controller.in_flight == 1
+
+        # Drop both refs WITHOUT aclose. The wrapper finalizer is queued
+        # by CPython on collection; asyncio's _asyncgen_finalizer_hook
+        # schedules its aclose on the loop, which runs on next idle.
+        del result, agen
+        for _ in range(3):
+            gc.collect()
+            await asyncio.sleep(0.05)
+
+        assert router.admission_controller.in_flight == 0, (
+            "GC-path did not release admission slot. The async-generator "
+            "finalizer hook may not be wired (sys.set_asyncgen_hooks). "
+            "Without it, abandoned streams leak slots until the loop dies."
         )

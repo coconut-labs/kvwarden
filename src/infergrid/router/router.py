@@ -13,10 +13,20 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import os
 import socket
 import time
 from dataclasses import dataclass, field
 from typing import Any
+
+# Hard ceiling for any single streaming response. Guards against client-side
+# slow consumers that would otherwise hold an admission slot indefinitely
+# (engine-side stalls are already bounded by EngineAdapter sock_read /
+# total timeouts in engines/base.py). Default 600s = 10 minutes; override
+# via INFERGRID_STREAM_MAX_DURATION_S for tests or specific deployments.
+_STREAM_MAX_DURATION_S: float = float(
+    os.environ.get("INFERGRID_STREAM_MAX_DURATION_S", "600.0")
+)
 
 import aiohttp
 from aiohttp import web
@@ -514,10 +524,23 @@ class WorkloadRouter:
         chunk_count = 0
         status = "error"  # flipped to "ok" only on clean exhaustion
         try:
-            async for chunk in inner:
-                chunk_count += 1
-                yield chunk
+            # Hard fence: even with admission honest and engine timeouts in
+            # place, a slow client could hold a slot for the entire stream.
+            # Bound it. asyncio.timeout() raises asyncio.TimeoutError which
+            # the wrapper's finally still cleans up.
+            async with asyncio.timeout(_STREAM_MAX_DURATION_S):
+                async for chunk in inner:
+                    chunk_count += 1
+                    yield chunk
             status = "ok"
+        except asyncio.TimeoutError:
+            logger.warning(
+                "stream max-duration exceeded model=%s tenant=%s after %.1fs (chunks=%d)",
+                model_id, tenant_id, _STREAM_MAX_DURATION_S, chunk_count,
+            )
+            status = "timeout"
+            # Re-raise so the outer handle_request can return 504 to client.
+            raise
         finally:
             if hasattr(inner, "aclose"):
                 try:
