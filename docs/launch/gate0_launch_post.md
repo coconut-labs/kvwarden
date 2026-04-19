@@ -8,11 +8,12 @@ Ship decision after: Gate 0.5 (bench harness fix) + Jay signs off on the schedul
 
 ## HN Show title candidates
 
-1. **"Show HN: InferGrid – bare-metal LLM orchestration that stays below the scheduling cliff"**
-2. "Show HN: InferGrid – run two LLMs on one A100 without Kubernetes (and our benchmark broke first)"
-3. "Show HN: We profiled vLLM and SGLang – they've converged, and the real waste is in scheduling"
+1. **"Show HN: InferGrid – we shadow-reviewed our own benchmark and it had been lying for two weeks"**
+2. "Show HN: InferGrid – multi-model LLM serving on one box, and the 5 measurement bugs we caught before spending the H100 budget"
+3. "Show HN: InferGrid – we profiled vLLM and SGLang and the engines have converged; the real product is the orchestrator"
+4. "Show HN: InferGrid – run two LLMs on one A100 without Kubernetes"
 
-Pick #1 for the default; fall back to #2 if we want the contrarian pull.
+Pick #1 for the contrarian/found-and-fixed pull (highest expected engagement now that we have the streaming-bypass + TTFT-v2 stories). #4 is the safe default if we want the pure capability framing. Avoid the original "stays below the scheduling cliff" title until Gate 1 confirms the cliff actually reproduces with honest TTFT measurement — pre-PR-#28 we may have been measuring a network artifact, and the linear dress-rehearsal mock cannot rule that out.
 
 ---
 
@@ -47,10 +48,27 @@ That last point reshaped the whole pitch. The product is no longer "beat SGLang"
 - No OOM, no crash, no need to restart
 - The multi-model bench harness then hung on `alternating | concurrency=1` after the first wave, hit aiohttp's 300s timeout, and never recovered. Deferred to Gate 0.5.
 
-Repo: **github.com/coconut-labs/infergrid**
-Full Gate 0 post-mortem (including the 6-run recovery log): `results/gate0_20260418/GATE0_OUTCOME.md`
+**Then Gate 0.5 (local) reproduced and fixed it** — root cause was the engine stopped returning HTTP response headers; the harness had no idle timeout. We added asymmetric timeouts (sock_read=30s), session reuse, late `response.prepare()`, an engine circuit breaker (R4), a per-bench-phase abort (R5), and a per-engine subprocess log capture so the next "engine went silent" incident leaves evidence. Cut the 301s stall to 33s.
 
-Next up: Gate 0.5 is a local bench-harness fix (no GPU), then Gate 1 is admission-control TTFT on H100 ($15). arXiv preprint around week 4.
+**Then Gate 0.6 (real vLLM, ~$3.17) validated the fix end-to-end.** 75 multi-model requests + 2 smoke = 77 admitted, 0 rejected, 0 stalls, 0 OOMs. Engine stderr captured (234 KB). Throughput at c=1/8/32: 84/270/812 tok/s (alternating two models on one A100; lower than single-model baselines because each engine sees half the load).
+
+**Then we caught two measurement bugs that would have silently corrupted Gate 1.** Both surfaced from a Jay-style shadow review of our own diff:
+
+- **TTFT was lying.** The bench was timing the first SSE `data:` line, not the first non-empty content. Whitespace-only frames (which vLLM emits during warm-up) counted as the first token — `bool(" ")` is True in Python. And on chat-completions endpoints (`delta.content` instead of `text`), TTFT silently collapsed to `total_latency_ms`. Three fixes, one discriminator test that fails loud on the next regression.
+- **Admission control was a no-op for streaming.** `route_request` released the admission slot in `finally` — but for `stream=True`, the await returned the generator object immediately, so the slot freed microseconds after acquire. Our smoke poller (added during the fix) confirmed: 149 samples during a c=32 phase, peak in_flight = 0 with cap = 16. **The Gate 1 hypothesis (Arm A cap=128 vs Arm B cap=1024) was unmeasurable** — both arms would have admitted everything to the engine. Wrapping the iterator so admission releases when the stream actually ends took the post-fix peak in_flight to 16 + queue_depth 16, exactly as expected.
+
+Five more Gate-1 plumbing blockers fell out when we ran the dress rehearsal end-to-end (CPU-only, mock backend) for the first time — bash precedence in our own script, a `len(models) < 2` gate that would have killed single-model Gate 1, tenant-budget config that was parsed but never wired to the manager, missing yaml fields, and aiohttp's default `TCPConnector.limit_per_host=100` clamping c=256 to 100. All fixed; dress rehearsal now exits OVERALL: PASS.
+
+We could have spent the $7-10 H100 budget on garbage data. Instead the H100 spend goes against an experiment that's actually wired correctly.
+
+Repo: **github.com/coconut-labs/infergrid**
+Full reading list:
+- `results/gate0_20260418/GATE0_OUTCOME.md` — Gate 0 post-mortem (+ 6-run recovery log)
+- `results/gate06_20260419/GATE06_OUTCOME.md` — Gate 0.6 validation
+- `results/CORRECTIONS.md` — every misleading number in the artifacts and what it actually means
+- `docs/launch/gate1_runbook.md` — the runbook for the H100 spend, including how to read the result (CONFIRM vs DISCONFIRM vs PLUMBING-REGRESSION)
+
+Next: Gate 1 on H100 SXM5 (~$7-10, ~1.8h, 3-layer cost cap at $12). arXiv preprint draft after.
 
 Happy to discuss anywhere — the "engines have converged, the scheduling is the product" framing feels like the least-crowded corner of this market. Curious what you're seeing.
 
@@ -70,28 +88,45 @@ A: Ollama is LRU model-swap + llama.cpp. We're frequency+recency multi-model + v
 A: Because the engines' default concurrency is at or above the cliff. Most people don't know they're there. Our admission controller holds the line for you.
 
 **Q: When will this be usable?**
-A: `infergrid serve --config ...` works today on any A100 (see PR #19 for reproduction). The bench harness and Gate 1 (admission TTFT validation) are in progress.
+A: `infergrid serve --config ...` works today on any A100 (see PRs #19 and #26 for reproduction). Gate 1 H100 admission-TTFT validation is the next paid run. Production-quality deployment is post-Gate-3.
 
 **Q: vLLM 0.8.5 is ancient. Why?**
 A: That's what the Phase 1 profiling pinned. Upgrade is on the roadmap once Gate 1 data lands. Newer vLLM avoids the compat issues we hit; we have pins in `requirements-gpu.txt` that cover 0.8.5 specifically.
 
+**Q: Your discriminator test catches the bug, but how do you know YOUR fix is right?**
+A: We don't, with certainty. That's why every fix lands with a test that fails LOUD on the unfixed code. The streaming-admission test fails on the pre-fix router with `in_flight == 0` (peak should be > 75% of cap). The TTFT v2 test reports `tokens_out=0` for the chat-shape case on the pre-PR-#31 bench. If a future fix regresses, CI catches it. We can't promise the next bug doesn't exist; we can promise we won't silently re-ship the ones we found.
+
+**Q: "Admission control was a no-op for streaming" sounds like a fundamental design flaw, not a fix-and-move-on bug.**
+A: Yes. It means our PR #29 wasn't a one-line patch — it was a full architectural review of where slots are held vs released, plus tests for GC-path leaks and a max-stream-duration fence. Three follow-up PRs (#30, #32, #33) closed adjacent issues the same review surfaced. The whole thread is in the repo with discriminator tests and CORRECTIONS.md C5.
+
 ---
 
-## X thread outline (4 tweets)
+## X thread outline (5 tweets, found-and-fixed framing)
 
-1. "Hook tweet: 181 multi-model requests on one A100 for 3h52m. Zero OOM. Our own benchmark broke first. <link>"
-2. "The data that killed our original thesis: vLLM–SGLang gap is <2%, not 29%. Engines converged. The real waste is in scheduling quality. Chart."
-3. "Scheduling cliff at c=128→256 on both A100 and H100. Hardware-independent. This is the knob InferGrid holds for you. Chart."
-4. "6-run recovery log → fix PR → system passed → bench hung. Deferred to Gate 0.5 (local repro, no GPU). Gate 1 at ~$15. arXiv drafting. Repo: <link>"
+1. "Hook: We were about to spend $7-10 on an H100 to test our admission controller. Then we ran our own pre-flight script for the first time. The admission controller had been a no-op for streaming traffic. <link>"
+2. "How: route_request released the slot in `finally`, but for streaming the await returned the generator object immediately — slot freed microseconds after acquire. Smoke poller confirmed: 149 samples, peak in_flight=0 with cap=16. PR #29."
+3. "Also fixed: TTFT was timing the first SSE frame, not the first non-empty content. `bool(\" \") == True`, so whitespace-only frames counted as the first token. On chat-completions, TTFT silently collapsed to total_latency. PRs #28 + #31."
+4. "Five more plumbing blockers fell out when the dress rehearsal ran end-to-end for the first time. Bash precedence in our own script, a single-model gate that would've killed Gate 1, tenant config never wired to the manager, missing yaml fields, aiohttp limit_per_host=100 silently clamping c=256."
+5. "Why post about bugs we found in our own work? Because the only way you trust the H100 numbers when they land is if you trust how we found everything else. CORRECTIONS.md is the receipt. Repo: github.com/coconut-labs/infergrid"
 
 ---
 
 ## Timing
 
-Per Phase B roadmap: HN post target **2026-05-13 09:00 PT**. That's ~25 days out. Hold this draft until Gate 0.5 fix lands and at least one partial admission-control datapoint is in hand — otherwise the "system works" claim is weaker than the tweets imply.
+Per Phase B roadmap: HN post target **2026-05-13 09:00 PT**. ~24 days out from 2026-04-19.
 
 **Do not ship until:**
-- [ ] Gate 0.5 bench fix merged
-- [ ] At least one clean concurrency-1 benchmark run showing p50/p99 TTFT
-- [ ] Jay reviews the framing (especially the "we were wrong" opening)
-- [ ] Landing page refresh is live (per Phase B §2)
+- [x] Gate 0.5 bench fix merged (PRs #21-25)
+- [x] Gate 0.6 real-vLLM validation passed (~$3.17, A100-SXM4)
+- [x] Streaming-admission and TTFT measurement bugs caught and fixed pre-launch (PRs #28-33)
+- [x] Gate 1 dress rehearsal exits PASS end-to-end (PR #34)
+- [x] Cost-cap defense in pod bootstrap (PR #35)
+- [ ] Gate 1 H100 result in hand (CONFIRM, DISCONFIRM, or PLUMBING-REGRESSION per `docs/launch/gate1_runbook.md`)
+- [ ] Jay reviews the new framing (the streaming-bypass beat is now the lead, not the 29% number)
+- [ ] PyPI `infergrid` placeholder uploaded (squat-protection before HN visibility)
+- [ ] Landing page refresh live + waitlist Cloudflare Worker deployed (currently `window.WAITLIST_API = ''` silently drops submissions)
+
+**Branching the post on Gate 1 outcome:**
+- **CONFIRM** (Arm A flat across c=128/256, Arm B explodes): keep title #1 OR pivot to a Gate 1 results-driven title; the streaming-bypass story is the supporting beat
+- **DISCONFIRM** (both arms flat): title #1 or #4; lead with the found-and-fixed story, treat the H100 result as "we instrumented honestly and the cliff didn't reproduce — admission's value at this scale is smaller than projected, and that's still publishable"
+- **PLUMBING-REGRESSION** (admission gauge stays at 0 on real vLLM despite the unit tests): hold the post; file an issue on the actual regression first
