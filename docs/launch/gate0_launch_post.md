@@ -31,11 +31,11 @@ I've been building InferGrid — a middleware that sits on top of vLLM and SGLan
 
 I ran the profiling on RunPod A100 SXM and H100 SXM ($18 total). Three concurrency sweeps per engine, 200 requests per level, 2 repeats. Here's what the data actually said:
 
-- **vLLM and SGLang have converged.** At c=128, SGLang hits 5,276 tok/s, vLLM hits 5,334. That's a <2% gap, not 29%.
+- **vLLM and SGLang have converged on throughput.** At c=128, SGLang hits 5,276 tok/s, vLLM hits 5,334. That's a <2% gap, not 29%. (Tail TTFT is a different story — SGLang is ~2.2× lower at c=256. We don't claim convergence there.)
 - **GPUs aren't 81% idle.** They're 95–99% busy. The waste isn't hardware — it's scheduling.
-- **There's a clear scheduling cliff.** Going from c=128 → c=256 gains 2% throughput and costs 1,434% TTFT (vLLM A100). Same shape on H100. Same shape on SGLang. **Hardware-independent.**
+- **There appeared to be a clear scheduling cliff.** Going from c=128 → c=256 gained 2% throughput and cost 1,434% TTFT (vLLM A100). Same shape on H100, same shape on SGLang. We thought hardware-independent — until we caught the TTFT measurement bug below; the magnitude of the cliff with honest measurement is what Gate 1 is testing.
 
-That last point reshaped the whole pitch. The product is no longer "beat SGLang"; it's "stay below the cliff while multiplexing models on one box."
+That last point reshaped the pitch in ~mid-April: the product is no longer "beat SGLang"; it's "stay below the cliff while multiplexing models on one box." Whether that pitch survives Gate 1 with honest TTFT is now the open question, and the post will branch on the result (see `docs/launch/gate1_runbook.md` § "Reading the result").
 
 **So this weekend I ran Gate 0 — the first live GPU bring-up of `infergrid serve`.** Two models, Llama-3.1-8B-Instruct and Qwen2.5-7B-Instruct, co-resident on a single A100-SXM4-80GB. Budget: $4.50. Actual: $5.76, because of five distinct dependency and infrastructure regressions that each bit once (transformers 5.x dropped an attribute vLLM 0.8.5 relies on; numpy 2.4 broke numba; vLLM v1 engine OOMs under co-load; pod lacked SSH port mapping; HF_TOKEN didn't propagate into SSH shells — all fixed in the fix branch, all in the repo).
 
@@ -70,9 +70,27 @@ Full reading list:
 
 Next: Gate 1 on H100 SXM5 (~$7-10, ~1.8h, 3-layer cost cap at $12). arXiv preprint draft after.
 
-Happy to discuss anywhere — the "engines have converged, the scheduling is the product" framing feels like the least-crowded corner of this market. Curious what you're seeing.
+Happy to discuss anywhere — the "engines have converged on throughput, the orchestrator is the product" framing feels like the least-crowded corner of this market. Curious what you're seeing.
 
 — Shrey
+
+---
+
+## What we WON'T claim (limits of this writeup)
+
+If you're going to push back on something, push back on these — we already have:
+
+1. **The Phase 1 throughput numbers (5,334 tok/s vLLM A100, 5,276 SGLang, etc.) are correct in their measured units.** The TTFT numbers from Phase 1, Gate 0, and Gate 0.6 are NOT honest first-token-time — they're SSE-first-frame RTT, which inflates with local TCP queueing in ways real first-token latency doesn't. PR #28 + #31 fixed the harness; everything published before those is in `results/CORRECTIONS.md` C2. Gate 1 is the first run with honest TTFT.
+
+2. **The "8× scheduling cliff at c=256" was measured with the broken TTFT.** That doesn't mean it's not real — it might be — but the magnitude is suspect. If Gate 1 on H100 with honest TTFT comes back flat across c=128/256, that's a real disconfirmation, not a plumbing regression.
+
+3. **`tokens_out` in the router was off by 5-50× before PR #37** (it counted raw socket reads, not SSE frames). Tenant accounting from any pre-PR-#37 run is unreliable. The bench harness has always reported its own ground-truth tokens, so the bench tables are unaffected.
+
+4. **The dress rehearsal mock is linear in latency.** It cannot rule out measurement artifact. Only the H100 result with honest TTFT can.
+
+5. **We have not validated the harness against vLLM-on-H100 with hand-timed-curl as ground truth.** It's on the followup list. If Gate 1 numbers look weird, this is the first thing we'll check.
+
+If your skepticism is in this list, you're directionally right; we just haven't shipped the fix yet. If it's outside this list, please post — that's the value of writing it up before publishing the result.
 
 ---
 
