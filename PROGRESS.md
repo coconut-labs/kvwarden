@@ -1,6 +1,6 @@
 # InferGrid — Project Progress
 
-**Last updated:** April 17, 2026
+**Last updated:** April 19, 2026
 **Repository:** [coconut-labs/infergrid](https://github.com/coconut-labs/infergrid)
 **Author:** Shrey Patel (patelshrey77@gmail.com)
 
@@ -26,7 +26,7 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | Unit tests | 128+ pass (was 124 pre-#29; +4 streaming-admission tests in #29/#32/#33; +1 TCP-fragmentation test in #37) |
 | GPU configurations profiled | 3 (vLLM A100, SGLang A100, vLLM H100) |
 | Live GPU bring-ups | 2 (Gate 0, Gate 0.6 — both on A100-SXM4) |
-| PRs merged | 36 (PRs #1-36 minus #18 closed-superseded) |
+| PRs merged | 39 (PRs #1-39 minus #18 closed-superseded) |
 
 ---
 
@@ -211,30 +211,33 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 
 ## What's Next
 
-### Immediate (Gate 0: ~$4.50)
-- [ ] Provision 1x A100 SXM on RunPod
-- [ ] First-ever GPU execution of `infergrid serve` with 2 models
-- [ ] Verify multi-model demo harness works end-to-end
+(See "Strategic Plan — Post-Gate-1" section above for the current 4-week roadmap. This section preserves the original v0 plan for historical context; it has been superseded by the Little's Law rerun and multi-model contention pivot.)
 
-### Gate 1 (~$15)
-- [ ] 1x H100: admission control TTFT reduction benchmark
-- [ ] 3-model eviction comparison (frequency vs LRU)
-- [ ] Multi-model concurrent throughput on H100
+### Gate 0 — ✅ DONE (2026-04-18, ~$5.76)
+- [x] 1× A100 SXM on RunPod, Llama-8B + Qwen-7B co-load, system PASS
 
-### Gate 2 (~$24)
-- [ ] 2x H100: Llama 70B (TP=2, bf16 original quants)
-- [ ] Heterogeneous serving: 70B + 8B on same cluster
+### Gate 1 — ✅ DONE (2026-04-19, ~$1, PLUMBING PASS / HYPOTHESIS UNDER-POWERED)
+- [x] 1× H100 SXM5, admission ON vs OFF, honest TTFT
+- [x] Plumbing verified; admission engaged cleanly on Arm A
+- Hypothesis verdict deferred to Gate 1.5 (Little's Law caveat — see above)
 
-### Gate 3 (~$16.50 buffer)
-- [ ] Ollama comparison benchmark
-- [ ] Re-runs if data is noisy
-- [ ] Optional: 405B on 4x H100
+### Gate 1.5 — NEXT (~$7-10)
+- [ ] 1× H100 SXM5 SECURE, `--num-requests 4000 --concurrency 64,128,192,256` per arm
+- [ ] Pod-restart between Arm A and Arm B (runbook Section "Gate 1.5 Re-Run")
+- [ ] Three outcome buckets: CONFIRM / robust DISCONFIRM / overload-protection emergence
 
-### After GPU benchmarks
-- [ ] arXiv preprint draft (scheduling cliff + admission control + multi-model)
-- [ ] Demo video recording
+### Gate 2-lite — Wk 2 (~$8)
+- [ ] 1× A100-SXM4, 3 arms (InferGrid vs raw uvicorn vs round-robin)
+- [ ] Llama-3.1-8B + Qwen2.5-7B co-loaded
+- [ ] Two-tenant mixed workload (chat + RAG), 120s sustained
+- [ ] Design doc: `docs/launch/gate2_design.md`
+
+### Launch — Tue 2026-05-12
+- [ ] PyPI `infergrid` placeholder (LAUNCH-BLOCKER, user action)
+- [ ] Cloudflare Worker for waitlist (LAUNCH-BLOCKER, user action)
+- [ ] Quickstart polish
+- [ ] Launch-post reframe (product-led lead, meta-honesty as supporting beat)
 - [ ] HN/Reddit launch
-- [ ] Community signal collection → decide: fundraise or academic path
 
 ---
 
@@ -277,8 +280,10 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | #35 | Cost-cap 3-layer defense in `gate_pod_bootstrap.sh`: MAX_POD_SECS self-destruct timer, /workspace/ABORT sentinel, phase wall-clock budget | Merged | Apr 19, 2026 |
 | #36 | docs: PROGRESS catch-up + Gate 1 runbook | Merged | Apr 19, 2026 |
 | #37 | shadow-review followups: real cost-cap fix (in-pod poweroff is best-effort, not the primary cap; trap kills timer; CPU smoke), router buffered SSE-frame parser (chunk_count was network-fragmentation-unstable; tokens_out now stable), CORRECTIONS C5, doc fixes | Merged | Apr 19, 2026 |
+| #38 | Gate 1 H100 SXM5 raw results (Arm A+B tarballs, GATE1_OUTCOME.md, ~$1 spend) | Merged | Apr 19, 2026 |
+| #39 | Gate 1 OUTCOME Little's Law caveat: 10s bench wall did not sustain cap pressure; headline 1.04× B/A is short-bench under-power, not DISCONFIRM. Softened "FAIL" → "AMBIGUOUS"; points to `--num-requests 4000` rerun (Gate 1.5) | Merged | Apr 19, 2026 |
 
-PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, ship-gated).
+PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, framing-pending-Gate-1.5).
 
 ---
 
@@ -353,10 +358,85 @@ PR #35 added a 3-layer cost-cap defense to `gate_pod_bootstrap.sh` (self-destruc
 | `bash scripts/gate1_dress_rehearsal.sh` (NUM_REQUESTS=300, SKIP_DISCRIMINATOR=1) | ✅ OVERALL: PASS — Arm A peak in_flight=128 + queue_depth=128, Arm B peak in_flight=256 |
 | Cost-cap hardening in pod bootstrap | ✅ 3-layer defense |
 | H100 SXM5 spot price ≤ $4/hr | Verify before provisioning |
-| User greenlight on $7-10 spend | Pending |
+| User greenlight on $7-10 spend | ✅ granted 2026-04-19, executed |
 
 **Gate 1 launch runbook:** `docs/launch/gate1_runbook.md`.
 
 **Hypothesis discriminator:** Arm A TTFT p99 @ c=256 ≤ 2× Arm A @ c=128, AND Arm B TTFT p99 @ c=256 ≥ 4× Arm A @ c=256.
 
 **Caveat to flag in any analysis:** the dress rehearsal's load-aware mock is *linear* in latency (`base + max(0, excess) * per_excess`). If Gate 1 on H100 reports near-identical TTFTs across arms, that's a **disconfirmation of the hypothesis** — the c=128→c=256 cliff Phase 1 saw (185ms → 1293ms, 7×) may have been measurement artifact (pre-PR-#28 TTFT bug). Either outcome is publishable; don't read a flat result as a plumbing failure.
+
+## Gate 1 — Outcome and Little's Law Caveat (2026-04-19)
+
+Gate 1 shipped on H100 SXM5 SECURE ($2.99/hr, ~$1 total). Both arms completed 800/800 requests with 0 failures. Plumbing passed (admission engaged cleanly on Arm A: 272 queued / 854s total wait; open on Arm B). TTFT honest (post-PR #28/#31). Raw numbers:
+
+| | c=128 p99 | c=256 p99 | Ratio |
+|---|---:|---:|---:|
+| Arm A (cap=128) | 3374 ms | 5964 ms | 1.77× |
+| Arm B (cap=1024) | 3426 ms | 6177 ms | 1.80× |
+| **B/A @ c=256** | — | — | **1.04×** |
+
+The naive read (B/A=1.04×, needed ≥4×) looks like DISCONFIRM. **But post-run Little's Law review caught a methodology bug:** the 10s bench wall per `(arm × concurrency)` cell did not produce sustained cap pressure.
+
+- Arm A c=128: `avg_in_flight ≈ throughput × avg_latency / requests_per_cell ≈ 103` — **below** cap=128.
+- Arm A c=256: avg in-flight ≈ 198 over 10.7s wall — cap engaged in bursts, not steady state.
+- Admission histogram: **only 272 of 801 admissions (~34%) queued at all.** Sustained cap+ load would expect >50% queued at c=256.
+
+The 1.04× ratio is therefore **short-bench under-power, not a real DISCONFIRM**. Published as `results/gate1_20260419/GATE1_OUTCOME.md` with a "Methodology caveat (Little's Law)" section; hypothesis row softened from `FAIL` → `AMBIGUOUS` (PR #39).
+
+**Operational finding:** PR #35's in-pod cost-cap (`poweroff`) does NOT free GPU memory reliably — Arm A's vLLM subprocess leaked 67.9 GiB past `pkill -9`, and `nvidia-smi --gpu-reset` is "Not Supported" on containerized pods. Recovery for Gate 1 Arm B required `runpod.stop_pod + resume_pod` (pod overlay fs wipes `/workspace` on restart — re-scp env + bootstrap). **Gate 1.5 runbook bakes pod-restart between arms explicitly.**
+
+## Strategic Plan — Post-Gate-1 (2026-04-19)
+
+Synthesized from advisor + god-planner review of the Gate 1 Little's Law caveat. Full plan in `.claude/agent-memory-local/god-planner/project_4week_plan_apr19.md`.
+
+**Headline:** Gate 1.5 (this week) + Gate 2-lite (next week) → launch Tue 2026-05-12. Total compute budget $30-40 of $50 cap.
+
+### Gate 1.5 — Powered rerun (next)
+
+Same hypothesis, properly sized. Uses `configs/gate1_admission.yaml` + `configs/gate1_admission_off.yaml` unchanged — statistical power comes from sample size, not config.
+
+**Bench args per arm:**
+```
+--concurrency 64,128,192,256  --num-requests 4000
+```
+
+4 concurrency steps × ~1000 req each = clean Little's Law per cell (vs. 400 total split across 2 cells in Gate 1). c=64 and c=192 added to locate the cliff knee, not just stride past it.
+
+**Budget envelope:** ~$7-10 expected (~2.5h pod-wall @ $2.99/hr). $15 hard ceiling. MAX_POD_SECS=5400 per arm.
+
+**Abort rules:**
+- c=64 cell > 18 min → drop c=192 and rerun, keep 3 steps only.
+- Engine bring-up > 15 min with no log progress → `touch /workspace/ABORT`.
+- `infergrid_admission_in_flight` stuck at 0 during c=256 → admission regression, abort.
+- `/workspace/COST_CAP_HIT` appears → manual RunPod-console terminate.
+
+**Pod-restart between arms baked in** (see Gate 1.5 Re-Run section of runbook). Arm A ends → rsync → RunPod.stop_pod + resume_pod → re-scp env + bootstrap → Arm B. Prevents Arm B CUDA-OOM from leaked Arm A context.
+
+**Outcome buckets:**
+1. **CONFIRM** — Arm A flattens, Arm B explodes. Pitch holds.
+2. **Robust DISCONFIRM** — both arms explode similarly at steady state. Admission doesn't help tail TTFT on this hardware/workload. Pivot pitch.
+3. **Overload-protection emergence** — Arm B queues to OOM / 500s; Arm A degrades gracefully. Different, arguably stronger narrative.
+
+### Gate 2-lite — Multi-model contention (the actual InferGrid differentiator)
+
+Gate 0/0.5/0.6/1 all ran single-model under varied admission. InferGrid's actual differentiator is **multi-model orchestration on 1-4 GPUs without K8s** — never benchmarked. Design doc: `docs/launch/gate2_design.md`.
+
+**3 arms on 1× A100-SXM4** (reuse Gate 0.6 bootstrap):
+- Arm 1: InferGrid (Llama-3.1-8B + Qwen2.5-7B co-loaded, admission ON, WorkloadRouter mediates). Config: `configs/gate2_multi_tenant.yaml`.
+- Arm 2: Raw uvicorn serving Llama-3.1-8B only (baseline: what do users get without middleware?).
+- Arm 3: Round-robin WorkloadRouter without admission or KV lifecycle (baseline: what does the InferGrid "thin proxy" part contribute vs full stack?). Config: `configs/gate2_round_robin.yaml`.
+
+**Workload:** two-tenant mixed (chat-style short prompts + RAG-style 8K-prompt bursts), 120s sustained wall. New bench script: `benchmarks/scripts/benchmark_two_tenant.py` (scaffold in this PR; implementation next session).
+
+**Success criterion:** per-tenant p99 TTFT within 1.5× of solo-engine baseline AND no OOMs. Failure criterion: InferGrid ≈ round-robin ≈ raw uvicorn → thin proxy isn't load-bearing, rethink pitch.
+
+**Budget:** $8 ceiling on A100-SXM4 @ ~$1.89/hr × ~4h.
+
+### Week 3-4 — Launch prep
+
+- **LAUNCH-BLOCKER #1 (user):** PyPI `infergrid` placeholder upload (squat protection).
+- **LAUNCH-BLOCKER #2 (user):** Cloudflare Worker deploy for waitlist (`window.WAITLIST_API = ''` in landing page line 447).
+- Quickstart polish (install → 2 models → request in <5 min).
+- Launch-post framing: product-led title ("Run two LLMs on one A100 without K8s") with meta-honesty (shadow-review catches) as supporting beat. PR #20 draft needs reframe after Gate 1.5 lands.
+- **Launch target: Tuesday 2026-05-12** (HN timing).
