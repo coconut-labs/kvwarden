@@ -1,0 +1,144 @@
+# HELP infergrid_requests_total Total number of incoming requests
+# TYPE infergrid_requests_total counter
+infergrid_requests_total{model="meta-llama/Llama-3.1-8B-Instruct",status="ok",tenant="flooder"} 3009.0
+infergrid_requests_total{model="meta-llama/Llama-3.1-8B-Instruct",status="ok",tenant="quiet_user"} 321.0
+# HELP infergrid_requests_created Total number of incoming requests
+# TYPE infergrid_requests_created gauge
+infergrid_requests_created{model="meta-llama/Llama-3.1-8B-Instruct",status="ok",tenant="flooder"} 1.7766308480719817e+09
+infergrid_requests_created{model="meta-llama/Llama-3.1-8B-Instruct",status="ok",tenant="quiet_user"} 1.7766308480882857e+09
+# HELP infergrid_request_latency_seconds End-to-end request latency in seconds
+# TYPE infergrid_request_latency_seconds histogram
+infergrid_request_latency_seconds_bucket{le="0.05",model="meta-llama/Llama-3.1-8B-Instruct"} 0.0
+infergrid_request_latency_seconds_bucket{le="0.1",model="meta-llama/Llama-3.1-8B-Instruct"} 0.0
+infergrid_request_latency_seconds_bucket{le="0.25",model="meta-llama/Llama-3.1-8B-Instruct"} 0.0
+infergrid_request_latency_seconds_bucket{le="0.5",model="meta-llama/Llama-3.1-8B-Instruct"} 0.0
+infergrid_request_latency_seconds_bucket{le="1.0",model="meta-llama/Llama-3.1-8B-Instruct"} 3248.0
+infergrid_request_latency_seconds_bucket{le="2.5",model="meta-llama/Llama-3.1-8B-Instruct"} 3272.0
+infergrid_request_latency_seconds_bucket{le="5.0",model="meta-llama/Llama-3.1-8B-Instruct"} 3299.0
+infergrid_request_latency_seconds_bucket{le="10.0",model="meta-llama/Llama-3.1-8B-Instruct"} 3330.0
+infergrid_request_latency_seconds_bucket{le="30.0",model="meta-llama/Llama-3.1-8B-Instruct"} 3330.0
+infergrid_request_latency_seconds_bucket{le="60.0",model="meta-llama/Llama-3.1-8B-Instruct"} 3330.0
+infergrid_request_latency_seconds_bucket{le="+Inf",model="meta-llama/Llama-3.1-8B-Instruct"} 3330.0
+infergrid_request_latency_seconds_count{model="meta-llama/Llama-3.1-8B-Instruct"} 3330.0
+infergrid_request_latency_seconds_sum{model="meta-llama/Llama-3.1-8B-Instruct"} 2780.759631083347
+# HELP infergrid_request_latency_seconds_created End-to-end request latency in seconds
+# TYPE infergrid_request_latency_seconds_created gauge
+infergrid_request_latency_seconds_created{model="meta-llama/Llama-3.1-8B-Instruct"} 1.7766308480720086e+09
+# HELP infergrid_tokens_generated_total Total output tokens generated
+# TYPE infergrid_tokens_generated_total counter
+infergrid_tokens_generated_total{model="meta-llama/Llama-3.1-8B-Instruct"} 213120.0
+# HELP infergrid_tokens_generated_created Total output tokens generated
+# TYPE infergrid_tokens_generated_created gauge
+infergrid_tokens_generated_created{model="meta-llama/Llama-3.1-8B-Instruct"} 1.7766308480722911e+09
+# HELP infergrid_tokens_input_total Total input tokens processed
+# TYPE infergrid_tokens_input_total counter
+infergrid_tokens_input_total{model="meta-llama/Llama-3.1-8B-Instruct"} 32612.0
+# HELP infergrid_tokens_input_created Total input tokens processed
+# TYPE infergrid_tokens_input_created gauge
+infergrid_tokens_input_created{model="meta-llama/Llama-3.1-8B-Instruct"} 1.7766308480722816e+09
+# HELP infergrid_cache_hits_total Number of KV cache hits
+# TYPE infergrid_cache_hits_total counter
+# HELP infergrid_cache_misses_total Number of KV cache misses
+# TYPE infergrid_cache_misses_total counter
+infergrid_cache_misses_total 0.0
+# HELP infergrid_cache_misses_created Number of KV cache misses
+# TYPE infergrid_cache_misses_created gauge
+infergrid_cache_misses_created 1.776630725966639e+09
+# HELP infergrid_cache_memory_bytes Current cache memory usage in bytes
+# TYPE infergrid_cache_memory_bytes gauge
+# HELP infergrid_models_loaded Number of currently loaded models
+# TYPE infergrid_models_loaded gauge
+infergrid_models_loaded 1.0
+# HELP infergrid_model_evictions_total Total number of model evictions
+# TYPE infergrid_model_evictions_total counter
+infergrid_model_evictions_total 0.0
+# HELP infergrid_model_evictions_created Total number of model evictions
+# TYPE infergrid_model_evictions_created gauge
+infergrid_model_evictions_created 1.7766307259666715e+09
+# HELP infergrid_tenant_requests_total Requests per tenant
+# TYPE infergrid_tenant_requests_total counter
+infergrid_tenant_requests_total{tenant="flooder"} 3009.0
+infergrid_tenant_requests_total{tenant="quiet_user"} 321.0
+# HELP infergrid_tenant_requests_created Requests per tenant
+# TYPE infergrid_tenant_requests_created gauge
+infergrid_tenant_requests_created{tenant="flooder"} 1.7766308480722706e+09
+infergrid_tenant_requests_created{tenant="quiet_user"} 1.7766308480883083e+09
+# HELP infergrid_tenant_requests_rejected_total Requests rejected due to budget limits
+# TYPE infergrid_tenant_requests_rejected_total counter
+infergrid_tenant_requests_rejected_total{reason="budget_exceeded",tenant="flooder"} 6488.0
+# HELP infergrid_tenant_requests_rejected_created Requests rejected due to budget limits
+# TYPE infergrid_tenant_requests_rejected_created gauge
+infergrid_tenant_requests_rejected_created{reason="budget_exceeded",tenant="flooder"} 1.7766308413726115e+09
+# HELP infergrid_tenant_ttft_seconds Time to first token by tenant + model (Prometheus histogram)
+# TYPE infergrid_tenant_ttft_seconds histogram
+infergrid_tenant_ttft_seconds_bucket{le="0.025",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 0.0
+infergrid_tenant_ttft_seconds_bucket{le="0.05",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2934.0
+infergrid_tenant_ttft_seconds_bucket{le="0.075",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2940.0
+infergrid_tenant_ttft_seconds_bucket{le="0.1",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2941.0
+infergrid_tenant_ttft_seconds_bucket{le="0.15",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2943.0
+infergrid_tenant_ttft_seconds_bucket{le="0.25",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2943.0
+infergrid_tenant_ttft_seconds_bucket{le="0.5",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2946.0
+infergrid_tenant_ttft_seconds_bucket{le="1.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2951.0
+infergrid_tenant_ttft_seconds_bucket{le="2.5",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2966.0
+infergrid_tenant_ttft_seconds_bucket{le="5.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 2992.0
+infergrid_tenant_ttft_seconds_bucket{le="10.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 3009.0
+infergrid_tenant_ttft_seconds_bucket{le="30.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 3009.0
+infergrid_tenant_ttft_seconds_bucket{le="60.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 3009.0
+infergrid_tenant_ttft_seconds_bucket{le="+Inf",model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 3009.0
+infergrid_tenant_ttft_seconds_count{model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 3009.0
+infergrid_tenant_ttft_seconds_sum{model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 321.13019634317607
+infergrid_tenant_ttft_seconds_bucket{le="0.025",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 0.0
+infergrid_tenant_ttft_seconds_bucket{le="0.05",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 315.0
+infergrid_tenant_ttft_seconds_bucket{le="0.075",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 316.0
+infergrid_tenant_ttft_seconds_bucket{le="0.1",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 316.0
+infergrid_tenant_ttft_seconds_bucket{le="0.15",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 316.0
+infergrid_tenant_ttft_seconds_bucket{le="0.25",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 316.0
+infergrid_tenant_ttft_seconds_bucket{le="0.5",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 316.0
+infergrid_tenant_ttft_seconds_bucket{le="1.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 317.0
+infergrid_tenant_ttft_seconds_bucket{le="2.5",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 319.0
+infergrid_tenant_ttft_seconds_bucket{le="5.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 319.0
+infergrid_tenant_ttft_seconds_bucket{le="10.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 321.0
+infergrid_tenant_ttft_seconds_bucket{le="30.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 321.0
+infergrid_tenant_ttft_seconds_bucket{le="60.0",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 321.0
+infergrid_tenant_ttft_seconds_bucket{le="+Inf",model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 321.0
+infergrid_tenant_ttft_seconds_count{model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 321.0
+infergrid_tenant_ttft_seconds_sum{model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 26.20455174241215
+# HELP infergrid_tenant_ttft_seconds_created Time to first token by tenant + model (Prometheus histogram)
+# TYPE infergrid_tenant_ttft_seconds_created gauge
+infergrid_tenant_ttft_seconds_created{model="meta-llama/Llama-3.1-8B-Instruct",tenant="flooder"} 1.776630844276534e+09
+infergrid_tenant_ttft_seconds_created{model="meta-llama/Llama-3.1-8B-Instruct",tenant="quiet_user"} 1.7766308469142468e+09
+# HELP infergrid_gpu_memory_used_bytes GPU memory used in bytes
+# TYPE infergrid_gpu_memory_used_bytes gauge
+# HELP infergrid_admission_queue_depth Number of requests waiting in the admission queue
+# TYPE infergrid_admission_queue_depth gauge
+infergrid_admission_queue_depth 0.0
+# HELP infergrid_admission_in_flight Number of requests currently being processed by the engine
+# TYPE infergrid_admission_in_flight gauge
+infergrid_admission_in_flight 0.0
+# HELP infergrid_admission_wait_seconds Time spent waiting for admission
+# TYPE infergrid_admission_wait_seconds histogram
+infergrid_admission_wait_seconds_bucket{le="0.001"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="0.005"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="0.01"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="0.05"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="0.1"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="0.25"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="0.5"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="1.0"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="5.0"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="10.0"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="30.0"} 3330.0
+infergrid_admission_wait_seconds_bucket{le="+Inf"} 3330.0
+infergrid_admission_wait_seconds_count 3330.0
+infergrid_admission_wait_seconds_sum 0.004639648832380772
+# HELP infergrid_admission_wait_seconds_created Time spent waiting for admission
+# TYPE infergrid_admission_wait_seconds_created gauge
+infergrid_admission_wait_seconds_created 1.7766307259668677e+09
+# HELP infergrid_admission_rejected_total Total requests rejected (queue full or timed out)
+# TYPE infergrid_admission_rejected_total counter
+# HELP infergrid_admission_admitted_total Total requests admitted to the engine
+# TYPE infergrid_admission_admitted_total counter
+infergrid_admission_admitted_total 3330.0
+# HELP infergrid_admission_admitted_created Total requests admitted to the engine
+# TYPE infergrid_admission_admitted_created gauge
+infergrid_admission_admitted_created 1.7766307259669185e+09

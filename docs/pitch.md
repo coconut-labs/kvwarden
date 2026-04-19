@@ -2,7 +2,7 @@
 
 ## Problem
 
-When two clients share a single inference engine on a single GPU — the canonical setup for any small team without datacenter infrastructure — the engine has no concept of *who* is asking. A noisy neighbor running 32 requests/sec starves a quiet user running 1 request/sec by **523× at p99 TTFT** (28,716 ms vs 54.9 ms in solo). Vanilla vLLM, vanilla SGLang. The engines don't know about tenants.
+When two clients share a single inference engine on a single GPU — the canonical setup for any small team without datacenter infrastructure — the engine has no concept of *who* is asking. A noisy neighbor running 32 RPS degrades a quiet user running 1 RPS to **29× their solo TTFT at p99** (1,585 ms vs 53.9 ms solo). Vanilla vLLM, vanilla SGLang. The engines don't know about tenants.
 
 Every existing fix is either (a) a Kubernetes-mandatory datacenter orchestrator (Dynamo, llm-d, Mammoth) or (b) Ollama-class single-tenant tooling. The 1-4 GPU, multi-tenant developer segment is unserved.
 
@@ -15,11 +15,11 @@ pip install infergrid
 infergrid serve --config configs/quickstart_fairness.yaml
 ```
 
-A token-bucket rate limit at the budget gate (10-line YAML config) brings the same starved quiet user to **74 ms p99 — within 1.35× of solo baseline** under the same flooder. The quiet user is essentially unaware the flooder exists.
+A token-bucket rate limit at the budget gate (10-line YAML config) brings the same degraded quiet user to **61.5 ms p99 — within 1.14× of solo baseline** under the same flooder. The quiet user is essentially unaware the flooder exists.
 
 ![Quiet-tenant TTFT under noisy-neighbor contention](figures/launch_hero_chart.png)
 
-Source: `results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md` + `SUPPLEMENT_arm5b.md`. Single A100, Llama-3.1-8B, 120s sustained per arm.
+Source: `results/gate2_preprint_v3/` (300 s sustained per arm, vLLM 0.19.1, n=320/321/311 quiet samples). Methodology: hero p99 excludes first 10 s warmup window (single JIT-compile transient; all 29 subsequent steady-state windows have p99 36-65 ms). See [CORRECTIONS C7](../results/CORRECTIONS.md) for the version-pin caveat. Original 5-arm 120 s experiment at vLLM 0.8.5 in `results/gate2_fairness_20260419/`.
 
 InferGrid also ships:
 - **Multi-model lifecycle management** — frequency+recency eviction (not LRU), hot-swap routing, no-K8s
@@ -42,7 +42,7 @@ All require Kubernetes or managed cloud. The 1-4 GPU multi-tenant developer segm
 | Core implementation | 2,872 LOC src + 144 unit tests passing (WorkloadRouter, AdmissionController, TenantManager, CacheManager) |
 | Honest TTFT measurement harness | Rebuilt mid-project after shadow review (PRs #28/#31); see `results/CORRECTIONS.md` |
 | Single-model admission cap claim | **Falsified** by Gate 1.5 (16,000 req H100 SXM5, B/A=1.04× — engines absorb overload as well as a coarse upstream cap does) |
-| Per-tenant fairness claim | **Confirmed** by Gate 2-FAIRNESS Arm 5b: 523× starvation → 74ms p99 (within 1.35× of solo) |
+| Per-tenant fairness claim | **Confirmed** by Gate 2-FAIRNESS Arm 5b (vLLM 0.8.5, 120s): 523× starvation → 74ms p99 (1.35× of solo). **Re-validated by preprint v3 (vLLM 0.19.1, 300s steady-state)**: Arm 1 = 1,585ms, Arm 5b = 61.5ms post-warmup → 26× reduction, **1.14× of solo**. |
 | Total empirical compute spend | ~$13 across 11 GPU runs (A100/H100, RunPod) |
 | Ready-to-ship launch artifacts | Launch post (1559w, advisor-pressure-tested), hero chart PNG, quickstart yaml, tuning guide doc |
 

@@ -8,17 +8,19 @@ InferGrid is middleware that sits on top of vLLM/SGLang and gives a quiet user p
 
 ![Quiet-tenant TTFT under noisy-neighbor contention — three arms compared on log scale, with the per-window trace showing zero warmup transients in the token-bucket arm](docs/launch/figures/launch_hero_chart.png)
 
-Single A100, Llama-3.1-8B, two clients sharing one engine: a flooder at 32 RPS, a quiet user at 1 RPS.
+Single A100-SXM4 80GB, Llama-3.1-8B, vLLM 0.19.1, two clients sharing one engine: a flooder at 32 RPS, a quiet user at 1 RPS, **300 s sustained**.
 
 | | Quiet user TTFT p99 |
 |---|---:|
-| Solo (no contention) | 54.9 ms |
-| Vanilla vLLM under flooder | **28,716 ms** (523× starvation) |
-| InferGrid + token-bucket rate-limit | **74.2 ms** (within 1.35× of solo) |
+| Solo (no contention) | 53.9 ms |
+| InferGrid FIFO under flooder, no rate-limit | **1,585 ms** |
+| InferGrid + token-bucket rate-limit | **61.5 ms** (within **1.14× of solo**) |
 
-Ten lines of YAML. No application code change. The quiet user is essentially unaware the flooder exists.
+Ten lines of YAML. No application code change. **The quiet user is essentially unaware the flooder exists** — within 14% of the no-contention baseline.
 
-Full writeup: [`results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md`](results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md) + [`SUPPLEMENT_arm5b.md`](results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm5b.md).
+p99 figures exclude the first 10 s warmup window (vLLM JIT-compile transient, single-spike outlier; see [CORRECTIONS C7](results/CORRECTIONS.md)). All 29 steady-state windows after t=10 s have quiet p99 between 36 ms and 65 ms.
+
+Full writeup: [`results/gate2_preprint_v3/`](results/gate2_preprint_v3/) and the original 5-arm experimental arc at [`results/gate2_fairness_20260419/`](results/gate2_fairness_20260419/) (vLLM 0.8.5, 120 s — newer steady-state numbers in v3 are more honest for current vLLM users).
 
 ## What InferGrid is and isn't
 
