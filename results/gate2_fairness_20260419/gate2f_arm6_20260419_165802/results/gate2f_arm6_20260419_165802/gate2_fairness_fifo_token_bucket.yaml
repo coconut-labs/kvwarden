@@ -1,0 +1,39 @@
+# Gate 2-FAIRNESS Arm 6 — FIFO + token bucket (isolates DRR contribution).
+#
+# IDENTICAL to configs/gate2_fairness_token_bucket.yaml (Arm 5b) except
+# scheduling=fifo. If Arm 6 quiet TTFT ≈ Arm 5b quiet TTFT, then PR #42's
+# DRR wiring contributed nothing on top of the token-bucket rate-limit and
+# could be considered ornamental for this workload. If Arm 6 is materially
+# worse than Arm 5b, the DRR wiring earns its keep.
+#
+# Same workload as Arm 5b: flooder 32 RPS + quiet 1 RPS, 120s sustained.
+#
+# Pre-committed criterion (informational, not pass/fail — the bet was Arm 5b):
+#   - "DRR contribution material" if Arm 6.quiet_p99 > 1.5× Arm 5b.quiet_p99
+#     (~110 ms threshold given 5b's 74 ms)
+#   - Otherwise: token bucket alone is doing the work; DRR is belt-and-suspenders.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 600
+  rate_limit_burst: 10
+  priority: 1
+  scheduling: fifo   # <-- the ONLY variable vs Arm 5b
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
