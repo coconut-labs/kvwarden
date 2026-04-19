@@ -26,6 +26,44 @@
 set -u
 exec > >(tee -a /workspace/bootstrap.log) 2>&1
 
+# ---- Cost-cap defense in depth (3 layers) ----
+# Spot H100 SXM5 burns ~$4/hr; an unattended runaway pod is the dominant
+# overspend risk. Three independent controls so any one failing still saves
+# the budget.
+#
+# Layer 1: self-destruct timer. After MAX_POD_SECS (default 10800s = 3h ≈
+# $12 ceiling), the pod calls poweroff. Kicked off BEFORE Phase 1 so it
+# fires even if the script itself hangs. Override via env from master.
+MAX_POD_SECS="${MAX_POD_SECS:-10800}"
+(
+  sleep "$MAX_POD_SECS"
+  echo "=== COST CAP HIT: $MAX_POD_SECS seconds elapsed; calling poweroff ==="\
+       >> /workspace/bootstrap.log 2>&1
+  # touch the abort sentinel first so the trap bundles results before halt.
+  touch /workspace/ABORT 2>/dev/null || true
+  sleep 5
+  poweroff 2>/dev/null || halt 2>/dev/null || true
+) &
+COSTCAP_PID=$!
+echo "cost-cap timer pid=$COSTCAP_PID max_pod_secs=$MAX_POD_SECS"
+
+# Layer 2: manual ABORT sentinel. User can `ssh pod 'touch /workspace/ABORT'`
+# to cleanly trigger the existing bundle_and_mark trap. Checked at every
+# polling boundary below.
+abort_check() {
+  if [ -f /workspace/ABORT ]; then
+    echo "=== /workspace/ABORT found — aborting at $(date -u) ==="
+    fail "ABORT sentinel"
+  fi
+}
+
+# Layer 3: phase wall-clock budget. Engine pre-load is the historical
+# failure mode that eats budget (Gate 0 ran 6 retries). If Phase 4
+# (serve start) → now exceeds MAX_POD_SECS/2, we abort BEFORE running the
+# bench: a 90+min engine startup means something is wrong; do not also
+# spend an hour benching a broken setup. Per-phase timestamps written to
+# RDIR/phase_*.ts; checked at the top of Phase 7.
+
 # ---- Args ----
 RUN_NAME=""; CONFIG=""; BENCH_SCRIPT=""; BENCH_ARGS=""
 while [ $# -gt 0 ]; do
@@ -73,14 +111,20 @@ export PYTHONUNBUFFERED=1
 export INFERGRID_ENGINE_LOG_DIR="$ELOG"   # PR #16 per-engine stderr capture
 [ -n "${HF_TOKEN:-}" ] || fail "HF_TOKEN not set"
 
+# Phase timestamp helper (for layer-3 wall-clock budget).
+phase_ts() { date +%s > "$RDIR/phase_$1.ts"; }
+
 # ---- Phase 1: apt + clone main ----
+phase_ts 1
 echo "--- Phase 1: apt + clone ---"
 apt-get update -qq && apt-get install -y -qq git rsync curl jq || fail "apt install"
 cd /workspace; rm -rf infergrid
 git clone --branch main --depth 1 https://github.com/coconut-labs/infergrid.git || fail "git clone"
 cd infergrid; echo "main HEAD: $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)"
+abort_check
 
 # ---- Phase 2: python deps ----
+phase_ts 2
 echo "--- Phase 2: python deps ---"
 python3 -m pip install --quiet --upgrade pip || fail "pip upgrade"
 python3 -m pip install --quiet 'vllm==0.8.5' || fail "vllm install"
@@ -97,10 +141,13 @@ assert tuple(int(x) for x in numpy.__version__.split('.')[:2]) < (2, 3), 'numpy 
 print('PINS OK')" || fail "dep version check"
 
 # ---- Phase 3: HF login ----
+phase_ts 3
 echo "--- Phase 3: HF login ---"
 huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential 2>&1 | tail -3 || fail "hf login"
+abort_check
 
 # ---- Phase 4: serve ----
+phase_ts 4
 echo "--- Phase 4: infergrid serve --config $CONFIG ---"
 nohup bash -c 'while true; do
   nvidia-smi --query-gpu=timestamp,memory.used,memory.total,utilization.gpu,power.draw \
@@ -113,9 +160,11 @@ echo $! > "$RDIR/server.pid"
 SERVER_PID=$(cat "$RDIR/server.pid"); echo "serve pid=$SERVER_PID"
 
 # ---- Phase 5: wait for /v1/models stable ----
+phase_ts 5
 echo "--- Phase 5: waiting for /v1/models (stable count) ---"
 LAST=-1; STABLE=0
 for i in $(seq 1 240); do
+  abort_check
   kill -0 "$SERVER_PID" 2>/dev/null || fail "serve died. tail: $(tail -120 $RDIR/server.log)"
   grep -q "Failed to pre-load model" "$RDIR/server.log" 2>/dev/null \
     && fail "engine pre-load failure: $(grep -B2 -A6 'Failed to pre-load' $RDIR/server.log | head -80)"
@@ -128,6 +177,7 @@ done
 [ "$STABLE" -ge 1 ] || fail "models did not stabilize within 20 min (last N=$LAST)"
 
 # ---- Phase 6: smoke (derive model list from /v1/models) ----
+phase_ts 6
 echo "--- Phase 6: smoke ---"
 MODELS=$(curl -sf http://localhost:8000/v1/models | python3 -c 'import sys,json; [print(m["id"]) for m in json.load(sys.stdin)["data"]]')
 for M in $MODELS; do
@@ -141,8 +191,21 @@ done
 curl -s http://localhost:8000/infergrid/status > "$RDIR/status_before.json" 2>/dev/null || true
 
 # ---- Phase 7: bench (skipped if --bench-script empty) ----
+phase_ts 7
+abort_check
+# Layer-3: if Phase 4→7 ate more than half the pod budget, the engine
+# bring-up went sideways. Don't ALSO burn the bench window on a broken
+# setup — fail fast and let trap bundle the diagnostics.
+if [ -f "$RDIR/phase_4.ts" ]; then
+  P4_START=$(cat "$RDIR/phase_4.ts")
+  ENGINE_BRINGUP_S=$(( $(date +%s) - P4_START ))
+  HALF_BUDGET=$(( MAX_POD_SECS / 2 ))
+  if [ "$ENGINE_BRINGUP_S" -gt "$HALF_BUDGET" ]; then
+    fail "engine+smoke took ${ENGINE_BRINGUP_S}s (> half of MAX_POD_SECS=${MAX_POD_SECS}); aborting before bench"
+  fi
+fi
 if [ -n "$BENCH_SCRIPT" ]; then
-  echo "--- Phase 7: bench ---"
+  echo "--- Phase 7: bench (engine_bringup=${ENGINE_BRINGUP_S:-?}s) ---"
   ARGS="${BENCH_ARGS//RDIR/$RDIR}"
   bash -c "python3 $BENCH_SCRIPT $ARGS 2>&1 | tee $RDIR/bench.log" \
     || echo "WARN: bench non-zero; continuing to capture"
@@ -151,6 +214,7 @@ else
 fi
 
 # ---- Phase 8: capture ----
+phase_ts 8
 echo "--- Phase 8: capture ---"
 curl -s http://localhost:8000/infergrid/status > "$RDIR/status_after.json"  2>/dev/null || true
 curl -s http://localhost:8000/metrics         > "$RDIR/prometheus_dump.txt" 2>/dev/null || true
