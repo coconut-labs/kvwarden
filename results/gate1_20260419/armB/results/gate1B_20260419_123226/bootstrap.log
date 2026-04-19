@@ -1,0 +1,1717 @@
+cost-cap timer pid=594 max_pod_secs=7200
+cost-cap marker file: /workspace/COST_CAP_HIT (master should poll)
+=== Bootstrap start: Sun Apr 19 12:32:29 UTC 2026 RUN_NAME=gate1B_20260419_123226 ===
+loaded /root/.gate_env
+--- Phase 1: apt + clone ---
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+debconf: delaying package configuration, since apt-utils is not installed
+Selecting previously unselected package libpopt0:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 24135 files and directories currently installed.)
+Preparing to unpack .../0-libpopt0_1.18-3build1_amd64.deb ...
+Unpacking libpopt0:amd64 (1.18-3build1) ...
+Selecting previously unselected package rsync.
+Preparing to unpack .../1-rsync_3.2.7-0ubuntu0.22.04.4_amd64.deb ...
+Unpacking rsync (3.2.7-0ubuntu0.22.04.4) ...
+Preparing to unpack .../2-curl_7.81.0-1ubuntu1.23_amd64.deb ...
+Unpacking curl (7.81.0-1ubuntu1.23) over (7.81.0-1ubuntu1.18) ...
+Preparing to unpack .../3-libcurl4_7.81.0-1ubuntu1.23_amd64.deb ...
+Unpacking libcurl4:amd64 (7.81.0-1ubuntu1.23) over (7.81.0-1ubuntu1.18) ...
+Preparing to unpack .../4-git_1%3a2.34.1-1ubuntu1.17_amd64.deb ...
+Unpacking git (1:2.34.1-1ubuntu1.17) over (1:2.34.1-1ubuntu1.11) ...
+Selecting previously unselected package libonig5:amd64.
+Preparing to unpack .../5-libonig5_6.9.7.1-2build1_amd64.deb ...
+Unpacking libonig5:amd64 (6.9.7.1-2build1) ...
+Selecting previously unselected package libjq1:amd64.
+Preparing to unpack .../6-libjq1_1.6-2.1ubuntu3.1_amd64.deb ...
+Unpacking libjq1:amd64 (1.6-2.1ubuntu3.1) ...
+Selecting previously unselected package jq.
+Preparing to unpack .../7-jq_1.6-2.1ubuntu3.1_amd64.deb ...
+Unpacking jq (1.6-2.1ubuntu3.1) ...
+Setting up git (1:2.34.1-1ubuntu1.17) ...
+Setting up libcurl4:amd64 (7.81.0-1ubuntu1.23) ...
+Setting up curl (7.81.0-1ubuntu1.23) ...
+Setting up libonig5:amd64 (6.9.7.1-2build1) ...
+Setting up libpopt0:amd64 (1.18-3build1) ...
+Setting up libjq1:amd64 (1.6-2.1ubuntu3.1) ...
+Setting up jq (1.6-2.1ubuntu3.1) ...
+Setting up rsync (3.2.7-0ubuntu0.22.04.4) ...
+invoke-rc.d: could not determine current runlevel
+invoke-rc.d: policy-rc.d denied execution of start.
+Processing triggers for libc-bin (2.35-0ubuntu3.8) ...
+Cloning into 'infergrid'...
+main HEAD: 0e3b1bd  Merge pull request #37 from coconut-labs/fix/cost-cap-real-and-docs
+--- Phase 2: python deps ---
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+notebook 6.5.5 requires pyzmq<25,>=17, but you have pyzmq 27.1.0 which is incompatible.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+INFO 04-19 12:34:50 [__init__.py:239] Automatically detected platform cuda.
+vllm=0.8.5 transformers=4.57.6 numpy=2.2.6 torch=2.6.0+cu124
+PINS OK
+--- Phase 3: HF login ---
+Your token has been saved to /root/.cache/huggingface/token
+Login successful.
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.
+--- Phase 4: infergrid serve --config configs/gate1_admission_off.yaml ---
+serve pid=1268
+--- Phase 5: waiting for /v1/models (stable count) ---
+READY: 1 models stable after 70s
+--- Phase 6: smoke ---
+  meta-llama/Llama-3.1-8B-Instruct OK: Graphics Processing Units (GPUs) are specialized computer chips designed to quickly process complex graphics and computational tasks.
+--- Phase 7: bench (engine_bringup=69s) ---
+2026-04-19 12:36:02 [INFO] __main__: ======================================================================
+2026-04-19 12:36:02 [INFO] __main__: InferGrid Multi-Model Benchmark Harness
+2026-04-19 12:36:02 [INFO] __main__: ======================================================================
+2026-04-19 12:36:02 [INFO] profiling_utils: Environment info:
+2026-04-19 12:36:02 [INFO] profiling_utils:   python_version: 3.11.10 (main, Sep  7 2024, 18:35:41) [GCC 11.4.0]
+2026-04-19 12:36:02 [INFO] profiling_utils:   platform: Linux-6.8.0-106-generic-x86_64-with-glibc2.35
+2026-04-19 12:36:02 [INFO] profiling_utils:   processor: x86_64
+2026-04-19 12:36:02 [INFO] profiling_utils:   nvidia_driver: 580.126.09
+2026-04-19 12:36:02 [INFO] profiling_utils:   gpu_count: 1
+2026-04-19 12:36:02 [INFO] profiling_utils:   gpu_0_name: NVIDIA H100 80GB HBM3
+2026-04-19 12:36:02 [INFO] profiling_utils:   gpu_0_memory_mb: 81559
+2026-04-19 12:36:02 [INFO] profiling_utils:   random_seed: 42
+2026-04-19 12:36:02 [INFO] __main__: Models: ['meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 12:36:02 [INFO] __main__: Server: http://localhost:8000
+2026-04-19 12:36:02 [INFO] profiling_utils: Engine at http://localhost:8000 is healthy
+2026-04-19 12:36:02 [INFO] __main__: 
+============================================================
+2026-04-19 12:36:02 [INFO] __main__: Workload: concurrent | Concurrency: 128
+2026-04-19 12:36:02 [INFO] __main__: ============================================================
+2026-04-19 12:36:02 [INFO] __main__: === Concurrent Throughput: concurrent ===
+2026-04-19 12:36:02 [INFO] __main__: Schedule length: 400, Models: ['meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 12:36:02 [INFO] profiling_utils: GPU metrics collection started (interval=100ms)
+2026-04-19 12:36:02 [INFO] __main__: Starting multi-model benchmark: 400 requests, concurrency=128, target=http://localhost:8000, models=['meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 12:36:02 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=1 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=3 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=5 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=7 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=9 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=11 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=13 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=15 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=17 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=19 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=21 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=23 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=25 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=26 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=27 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=28 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=29 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=30 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=31 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=32 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=33 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=34 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=35 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=36 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=37 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=38 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=39 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=40 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=41 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=42 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=43 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=44 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=45 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=46 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=47 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=48 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=49 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=50 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=51 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=52 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=53 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=54 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=55 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=56 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=57 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=58 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=59 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=60 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=61 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=62 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=63 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=64 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=65 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=66 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=67 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=68 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=69 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=70 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=71 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=72 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=73 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=74 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=75 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=76 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=77 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=78 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=79 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=80 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=81 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=82 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=83 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=84 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=85 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=86 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=87 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=88 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=89 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=90 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=91 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=92 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=93 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=94 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=95 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=96 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=97 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=98 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=99 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=100 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=101 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=102 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=103 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=104 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=105 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=106 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=107 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=108 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=109 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=110 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=111 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=112 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=113 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=114 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=115 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=116 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=117 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=118 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=119 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=120 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=121 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=122 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=123 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=124 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=125 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=126 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:02 [INFO] __main__: req=127 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=28 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2535 ttft_ms=127
+2026-04-19 12:36:05 [INFO] __main__: req=128 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=46 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2739 ttft_ms=761
+2026-04-19 12:36:05 [INFO] __main__: req=129 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=65 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2740 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=130 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2745 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=131 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=39 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2744 ttft_ms=762
+2026-04-19 12:36:05 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2747 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=132 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=133 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=31 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2746 ttft_ms=763
+2026-04-19 12:36:05 [INFO] __main__: req=134 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=103 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2742 ttft_ms=758
+2026-04-19 12:36:05 [INFO] __main__: req=86 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2744 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=69 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2745 ttft_ms=761
+2026-04-19 12:36:05 [INFO] __main__: req=135 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=136 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=137 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=60 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2748 ttft_ms=762
+2026-04-19 12:36:05 [INFO] __main__: req=42 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2749 ttft_ms=763
+2026-04-19 12:36:05 [INFO] __main__: req=1 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2752 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=138 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=139 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=140 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=64 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2749 ttft_ms=762
+2026-04-19 12:36:05 [INFO] __main__: req=94 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2748 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=93 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2748 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=115 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2747 ttft_ms=759
+2026-04-19 12:36:05 [INFO] __main__: req=141 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=142 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=143 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=144 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=87 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2751 ttft_ms=761
+2026-04-19 12:36:05 [INFO] __main__: req=145 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=11 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2758 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=146 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=104 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2752 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=147 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=41 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2757 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=148 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=30 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2759 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=9 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2761 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=149 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=150 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=43 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2760 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=33 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2760 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=151 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=152 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=106 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2757 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=109 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2757 ttft_ms=760
+2026-04-19 12:36:05 [INFO] __main__: req=90 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2758 ttft_ms=761
+2026-04-19 12:36:05 [INFO] __main__: req=153 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=154 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=155 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=51 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2763 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=96 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2760 ttft_ms=761
+2026-04-19 12:36:05 [INFO] __main__: req=57 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2763 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=107 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2760 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=156 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=157 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=158 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=159 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=113 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2762 ttft_ms=763
+2026-04-19 12:36:05 [INFO] __main__: req=32 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2768 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=116 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2763 ttft_ms=763
+2026-04-19 12:36:05 [INFO] __main__: req=7 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2771 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=45 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2768 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=13 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=160 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=161 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=162 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=163 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=164 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=165 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=58 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=102 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2768 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=47 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2773 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=37 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2773 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=50 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2773 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2776 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=123 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2768 ttft_ms=763
+2026-04-19 12:36:05 [INFO] __main__: req=95 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2770 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=114 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2769 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=105 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2770 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=56 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2774 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=36 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2775 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=166 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=167 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=168 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=169 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=170 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=171 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=172 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=173 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=174 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=175 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=176 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=177 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=49 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2780 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=91 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=89 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=61 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2779 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=35 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2781 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=48 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2780 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=124 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2775 ttft_ms=764
+2026-04-19 12:36:05 [INFO] __main__: req=59 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2780 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=100 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=112 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=29 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2782 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=62 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2780 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=120 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2776 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=99 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2778 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=119 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2785 ttft_ms=773
+2026-04-19 12:36:05 [INFO] __main__: req=85 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2779 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=178 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=179 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=180 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=181 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=182 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=183 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=184 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=185 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=186 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=187 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=188 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=189 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=190 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=191 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=192 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=193 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=194 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=92 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2785 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=34 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2790 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=44 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2789 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=117 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2784 ttft_ms=765
+2026-04-19 12:36:05 [INFO] __main__: req=98 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=88 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=52 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2789 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=66 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2788 ttft_ms=769
+2026-04-19 12:36:05 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2792 ttft_ms=773
+2026-04-19 12:36:05 [INFO] __main__: req=54 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2789 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2793 ttft_ms=774
+2026-04-19 12:36:05 [INFO] __main__: req=63 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2789 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=55 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2789 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=38 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2791 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=101 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=110 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2794 ttft_ms=774
+2026-04-19 12:36:05 [INFO] __main__: req=121 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2785 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=53 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2790 ttft_ms=771
+2026-04-19 12:36:05 [INFO] __main__: req=97 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2787 ttft_ms=768
+2026-04-19 12:36:05 [INFO] __main__: req=5 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2794 ttft_ms=774
+2026-04-19 12:36:05 [INFO] __main__: req=122 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=68 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2790 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=125 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=3 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2795 ttft_ms=775
+2026-04-19 12:36:05 [INFO] __main__: req=40 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2792 ttft_ms=772
+2026-04-19 12:36:05 [INFO] __main__: req=126 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=127 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2786 ttft_ms=766
+2026-04-19 12:36:05 [INFO] __main__: req=111 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2788 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=108 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2788 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=195 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=196 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=197 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=198 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=199 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=200 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=201 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=202 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=203 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=204 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=205 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=206 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=207 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=208 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=209 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=210 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=211 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=212 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=213 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=214 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=215 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=216 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=217 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=218 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=219 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=220 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=221 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=222 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=223 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=224 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=118 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2793 ttft_ms=767
+2026-04-19 12:36:05 [INFO] __main__: req=70 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=123 latency_ms=2796 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=67 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2797 ttft_ms=770
+2026-04-19 12:36:05 [INFO] __main__: req=225 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=226 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:05 [INFO] __main__: req=227 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:07 [INFO] __main__: req=71 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=110 latency_ms=5060 ttft_ms=2609
+2026-04-19 12:36:07 [INFO] __main__: req=228 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:07 [INFO] __main__: req=15 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5309 ttft_ms=2854
+2026-04-19 12:36:07 [INFO] __main__: req=229 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:07 [INFO] __main__: req=72 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5307 ttft_ms=2850
+2026-04-19 12:36:07 [INFO] __main__: req=230 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:07 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5311 ttft_ms=2854
+2026-04-19 12:36:07 [INFO] __main__: req=231 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:07 [INFO] __main__: req=73 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5308 ttft_ms=2850
+2026-04-19 12:36:07 [INFO] __main__: req=232 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=17 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5313 ttft_ms=2854
+2026-04-19 12:36:08 [INFO] __main__: req=233 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=74 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5310 ttft_ms=2850
+2026-04-19 12:36:08 [INFO] __main__: req=234 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5314 ttft_ms=2854
+2026-04-19 12:36:08 [INFO] __main__: req=235 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=75 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5330 ttft_ms=3353
+2026-04-19 12:36:08 [INFO] __main__: req=236 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=19 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5336 ttft_ms=3357
+2026-04-19 12:36:08 [INFO] __main__: req=237 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=76 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5333 ttft_ms=3353
+2026-04-19 12:36:08 [INFO] __main__: req=238 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5337 ttft_ms=3357
+2026-04-19 12:36:08 [INFO] __main__: req=239 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=77 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5334 ttft_ms=3353
+2026-04-19 12:36:08 [INFO] __main__: req=240 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=21 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5338 ttft_ms=3357
+2026-04-19 12:36:08 [INFO] __main__: req=241 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=78 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5335 ttft_ms=3353
+2026-04-19 12:36:08 [INFO] __main__: req=242 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5339 ttft_ms=3357
+2026-04-19 12:36:08 [INFO] __main__: req=243 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=79 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5336 ttft_ms=3353
+2026-04-19 12:36:08 [INFO] __main__: req=244 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=23 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5340 ttft_ms=3357
+2026-04-19 12:36:08 [INFO] __main__: req=245 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=80 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5337 ttft_ms=3354
+2026-04-19 12:36:08 [INFO] __main__: req=246 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5341 ttft_ms=3357
+2026-04-19 12:36:08 [INFO] __main__: req=247 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=81 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5338 ttft_ms=3355
+2026-04-19 12:36:08 [INFO] __main__: req=248 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=25 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5342 ttft_ms=3358
+2026-04-19 12:36:08 [INFO] __main__: req=249 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=82 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5338 ttft_ms=3355
+2026-04-19 12:36:08 [INFO] __main__: req=250 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=26 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5343 ttft_ms=3358
+2026-04-19 12:36:08 [INFO] __main__: req=251 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=83 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5339 ttft_ms=3355
+2026-04-19 12:36:08 [INFO] __main__: req=252 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=27 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5344 ttft_ms=3359
+2026-04-19 12:36:08 [INFO] __main__: req=253 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=84 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5340 ttft_ms=3355
+2026-04-19 12:36:08 [INFO] __main__: req=254 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5347 ttft_ms=3361
+2026-04-19 12:36:08 [INFO] __main__: req=255 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=128 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2809 ttft_ms=823
+2026-04-19 12:36:08 [INFO] __main__: req=256 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=131 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2606 ttft_ms=614
+2026-04-19 12:36:08 [INFO] __main__: req=257 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=132 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2606 ttft_ms=613
+2026-04-19 12:36:08 [INFO] __main__: req=258 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=133 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2606 ttft_ms=613
+2026-04-19 12:36:08 [INFO] __main__: req=259 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=134 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2605 ttft_ms=612
+2026-04-19 12:36:08 [INFO] __main__: req=260 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=135 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2604 ttft_ms=610
+2026-04-19 12:36:08 [INFO] __main__: req=261 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=136 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2604 ttft_ms=610
+2026-04-19 12:36:08 [INFO] __main__: req=262 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=137 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2604 ttft_ms=610
+2026-04-19 12:36:08 [INFO] __main__: req=263 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=138 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2603 ttft_ms=608
+2026-04-19 12:36:08 [INFO] __main__: req=264 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=139 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2603 ttft_ms=608
+2026-04-19 12:36:08 [INFO] __main__: req=265 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=140 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2603 ttft_ms=608
+2026-04-19 12:36:08 [INFO] __main__: req=266 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=141 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2602 ttft_ms=606
+2026-04-19 12:36:08 [INFO] __main__: req=267 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=142 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2602 ttft_ms=606
+2026-04-19 12:36:08 [INFO] __main__: req=268 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=143 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2602 ttft_ms=606
+2026-04-19 12:36:08 [INFO] __main__: req=269 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=144 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2602 ttft_ms=606
+2026-04-19 12:36:08 [INFO] __main__: req=270 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=146 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2599 ttft_ms=603
+2026-04-19 12:36:08 [INFO] __main__: req=271 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=147 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2599 ttft_ms=602
+2026-04-19 12:36:08 [INFO] __main__: req=272 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=148 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2598 ttft_ms=601
+2026-04-19 12:36:08 [INFO] __main__: req=273 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=149 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2597 ttft_ms=600
+2026-04-19 12:36:08 [INFO] __main__: req=274 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=150 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2597 ttft_ms=600
+2026-04-19 12:36:08 [INFO] __main__: req=275 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=151 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2597 ttft_ms=599
+2026-04-19 12:36:08 [INFO] __main__: req=276 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=152 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2597 ttft_ms=598
+2026-04-19 12:36:08 [INFO] __main__: req=277 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=153 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2595 ttft_ms=597
+2026-04-19 12:36:08 [INFO] __main__: req=278 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=154 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2595 ttft_ms=596
+2026-04-19 12:36:08 [INFO] __main__: req=279 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=155 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2595 ttft_ms=596
+2026-04-19 12:36:08 [INFO] __main__: req=280 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=156 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2593 ttft_ms=594
+2026-04-19 12:36:08 [INFO] __main__: req=281 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=157 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2592 ttft_ms=593
+2026-04-19 12:36:08 [INFO] __main__: req=282 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=158 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2592 ttft_ms=593
+2026-04-19 12:36:08 [INFO] __main__: req=283 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=159 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2592 ttft_ms=592
+2026-04-19 12:36:08 [INFO] __main__: req=284 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=160 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2590 ttft_ms=590
+2026-04-19 12:36:08 [INFO] __main__: req=285 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=161 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2589 ttft_ms=591
+2026-04-19 12:36:08 [INFO] __main__: req=286 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=162 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2589 ttft_ms=591
+2026-04-19 12:36:08 [INFO] __main__: req=287 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=163 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2589 ttft_ms=590
+2026-04-19 12:36:08 [INFO] __main__: req=288 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=164 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2589 ttft_ms=590
+2026-04-19 12:36:08 [INFO] __main__: req=289 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=165 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2589 ttft_ms=590
+2026-04-19 12:36:08 [INFO] __main__: req=290 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=129 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2621 ttft_ms=622
+2026-04-19 12:36:08 [INFO] __main__: req=291 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=130 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2619 ttft_ms=620
+2026-04-19 12:36:08 [INFO] __main__: req=292 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=166 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=585
+2026-04-19 12:36:08 [INFO] __main__: req=293 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=167 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=585
+2026-04-19 12:36:08 [INFO] __main__: req=294 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=168 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=585
+2026-04-19 12:36:08 [INFO] __main__: req=295 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=169 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=584
+2026-04-19 12:36:08 [INFO] __main__: req=296 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=170 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=584
+2026-04-19 12:36:08 [INFO] __main__: req=297 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=171 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=584
+2026-04-19 12:36:08 [INFO] __main__: req=298 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=172 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=584
+2026-04-19 12:36:08 [INFO] __main__: req=299 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=173 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2585 ttft_ms=583
+2026-04-19 12:36:08 [INFO] __main__: req=300 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=174 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=583
+2026-04-19 12:36:08 [INFO] __main__: req=301 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=175 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=583
+2026-04-19 12:36:08 [INFO] __main__: req=302 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=176 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2585 ttft_ms=583
+2026-04-19 12:36:08 [INFO] __main__: req=303 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=177 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2585 ttft_ms=583
+2026-04-19 12:36:08 [INFO] __main__: req=304 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=145 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2610 ttft_ms=608
+2026-04-19 12:36:08 [INFO] __main__: req=305 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=178 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=579
+2026-04-19 12:36:08 [INFO] __main__: req=306 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=179 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=579
+2026-04-19 12:36:08 [INFO] __main__: req=307 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=180 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=579
+2026-04-19 12:36:08 [INFO] __main__: req=308 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=181 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=578
+2026-04-19 12:36:08 [INFO] __main__: req=309 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=182 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=578
+2026-04-19 12:36:08 [INFO] __main__: req=310 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=183 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2581 ttft_ms=578
+2026-04-19 12:36:08 [INFO] __main__: req=311 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=184 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=578
+2026-04-19 12:36:08 [INFO] __main__: req=312 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=185 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=578
+2026-04-19 12:36:08 [INFO] __main__: req=313 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=186 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=578
+2026-04-19 12:36:08 [INFO] __main__: req=314 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=187 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2581 ttft_ms=577
+2026-04-19 12:36:08 [INFO] __main__: req=315 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=188 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=119 latency_ms=2581 ttft_ms=577
+2026-04-19 12:36:08 [INFO] __main__: req=316 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=189 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=577
+2026-04-19 12:36:08 [INFO] __main__: req=317 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=190 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=577
+2026-04-19 12:36:08 [INFO] __main__: req=318 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=191 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=577
+2026-04-19 12:36:08 [INFO] __main__: req=319 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=192 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=577
+2026-04-19 12:36:08 [INFO] __main__: req=320 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=193 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=576
+2026-04-19 12:36:08 [INFO] __main__: req=321 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=194 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2581 ttft_ms=576
+2026-04-19 12:36:08 [INFO] __main__: req=322 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=195 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2575 ttft_ms=570
+2026-04-19 12:36:08 [INFO] __main__: req=323 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=196 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2575 ttft_ms=570
+2026-04-19 12:36:08 [INFO] __main__: req=324 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=197 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2575 ttft_ms=570
+2026-04-19 12:36:08 [INFO] __main__: req=325 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=198 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2575 ttft_ms=569
+2026-04-19 12:36:08 [INFO] __main__: req=326 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:08 [INFO] __main__: req=199 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2575 ttft_ms=569
+2026-04-19 12:36:08 [INFO] __main__: req=327 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=200 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5049 ttft_ms=2345
+2026-04-19 12:36:10 [INFO] __main__: req=328 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=201 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5275 ttft_ms=2582
+2026-04-19 12:36:10 [INFO] __main__: req=329 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=202 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5364 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=330 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=203 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5365 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=331 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=204 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5366 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=332 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=205 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5367 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=333 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=206 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5368 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=334 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=207 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5368 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=335 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=208 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5369 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=336 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=209 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5374 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=337 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=210 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5375 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=338 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=211 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5375 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=339 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=212 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5376 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=340 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=213 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5377 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=341 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=214 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5377 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=215 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5378 ttft_ms=3134
+2026-04-19 12:36:10 [INFO] __main__: req=342 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=343 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=216 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5378 ttft_ms=3134
+2026-04-19 12:36:10 [INFO] __main__: req=344 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=217 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5379 ttft_ms=3134
+2026-04-19 12:36:10 [INFO] __main__: req=345 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=218 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5380 ttft_ms=3134
+2026-04-19 12:36:10 [INFO] __main__: req=346 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=219 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5380 ttft_ms=3134
+2026-04-19 12:36:10 [INFO] __main__: req=347 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=221 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=220 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=348 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=349 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=222 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5382 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=350 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=223 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5382 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=351 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=224 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5383 ttft_ms=3135
+2026-04-19 12:36:10 [INFO] __main__: req=225 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5382 ttft_ms=3134
+2026-04-19 12:36:10 [INFO] __main__: req=352 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=353 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=226 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5383 ttft_ms=3133
+2026-04-19 12:36:10 [INFO] __main__: req=227 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5383 ttft_ms=3133
+2026-04-19 12:36:10 [INFO] __main__: req=354 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=355 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=228 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=3121 ttft_ms=871
+2026-04-19 12:36:10 [INFO] __main__: req=356 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=229 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2877 ttft_ms=626
+2026-04-19 12:36:10 [INFO] __main__: req=230 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2875 ttft_ms=624
+2026-04-19 12:36:10 [INFO] __main__: req=231 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2875 ttft_ms=623
+2026-04-19 12:36:10 [INFO] __main__: req=357 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=358 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=359 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=232 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2876 ttft_ms=623
+2026-04-19 12:36:10 [INFO] __main__: req=233 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2875 ttft_ms=622
+2026-04-19 12:36:10 [INFO] __main__: req=234 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2875 ttft_ms=621
+2026-04-19 12:36:10 [INFO] __main__: req=360 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=361 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=362 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=235 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2875 ttft_ms=621
+2026-04-19 12:36:10 [INFO] __main__: req=246 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2849 ttft_ms=594
+2026-04-19 12:36:10 [INFO] __main__: req=248 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2848 ttft_ms=593
+2026-04-19 12:36:10 [INFO] __main__: req=363 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=364 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=365 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=253 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2847 ttft_ms=591
+2026-04-19 12:36:10 [INFO] __main__: req=262 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2838 ttft_ms=581
+2026-04-19 12:36:10 [INFO] __main__: req=265 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2837 ttft_ms=580
+2026-04-19 12:36:10 [INFO] __main__: req=266 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2836 ttft_ms=579
+2026-04-19 12:36:10 [INFO] __main__: req=267 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2836 ttft_ms=579
+2026-04-19 12:36:10 [INFO] __main__: req=366 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=367 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=368 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=369 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=370 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=268 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2838 ttft_ms=579
+2026-04-19 12:36:10 [INFO] __main__: req=269 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2838 ttft_ms=579
+2026-04-19 12:36:10 [INFO] __main__: req=270 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2838 ttft_ms=578
+2026-04-19 12:36:10 [INFO] __main__: req=271 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2838 ttft_ms=578
+2026-04-19 12:36:10 [INFO] __main__: req=272 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2837 ttft_ms=578
+2026-04-19 12:36:10 [INFO] __main__: req=274 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2837 ttft_ms=577
+2026-04-19 12:36:10 [INFO] __main__: req=371 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=372 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=373 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=374 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=375 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=376 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=275 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=577
+2026-04-19 12:36:10 [INFO] __main__: req=276 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=577
+2026-04-19 12:36:10 [INFO] __main__: req=277 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=577
+2026-04-19 12:36:10 [INFO] __main__: req=278 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=576
+2026-04-19 12:36:10 [INFO] __main__: req=279 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2838 ttft_ms=576
+2026-04-19 12:36:10 [INFO] __main__: req=280 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2838 ttft_ms=576
+2026-04-19 12:36:10 [INFO] __main__: req=281 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2838 ttft_ms=576
+2026-04-19 12:36:10 [INFO] __main__: req=377 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=378 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=379 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=380 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=381 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=382 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=383 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=282 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=576
+2026-04-19 12:36:10 [INFO] __main__: req=283 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=285 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=286 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=287 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=574
+2026-04-19 12:36:10 [INFO] __main__: req=288 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=289 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2839 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=290 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2839 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=291 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2839 ttft_ms=575
+2026-04-19 12:36:10 [INFO] __main__: req=384 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=385 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=386 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=387 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=388 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=389 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=390 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=391 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=392 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=292 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2842 ttft_ms=574
+2026-04-19 12:36:10 [INFO] __main__: req=294 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2841 ttft_ms=574
+2026-04-19 12:36:10 [INFO] __main__: req=295 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2841 ttft_ms=574
+2026-04-19 12:36:10 [INFO] __main__: req=296 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=573
+2026-04-19 12:36:10 [INFO] __main__: req=297 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=573
+2026-04-19 12:36:10 [INFO] __main__: req=298 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=573
+2026-04-19 12:36:10 [INFO] __main__: req=299 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=573
+2026-04-19 12:36:10 [INFO] __main__: req=300 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=572
+2026-04-19 12:36:10 [INFO] __main__: req=301 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=572
+2026-04-19 12:36:10 [INFO] __main__: req=302 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=572
+2026-04-19 12:36:10 [INFO] __main__: req=303 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2840 ttft_ms=572
+2026-04-19 12:36:10 [INFO] __main__: req=393 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=394 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=395 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=396 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=397 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=398 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=399 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:10 [INFO] __main__: req=304 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2842 ttft_ms=572
+2026-04-19 12:36:10 [INFO] __main__: req=305 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2842 ttft_ms=572
+2026-04-19 12:36:10 [INFO] __main__: req=306 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=571
+2026-04-19 12:36:10 [INFO] __main__: req=307 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2841 ttft_ms=571
+2026-04-19 12:36:10 [INFO] __main__: req=308 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2842 ttft_ms=571
+2026-04-19 12:36:10 [INFO] __main__: req=309 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2842 ttft_ms=571
+2026-04-19 12:36:10 [INFO] __main__: req=310 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2842 ttft_ms=571
+2026-04-19 12:36:10 [INFO] __main__: req=311 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2841 ttft_ms=570
+2026-04-19 12:36:10 [INFO] __main__: req=312 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=570
+2026-04-19 12:36:10 [INFO] __main__: req=313 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=570
+2026-04-19 12:36:10 [INFO] __main__: req=314 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=570
+2026-04-19 12:36:10 [INFO] __main__: req=315 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=570
+2026-04-19 12:36:10 [INFO] __main__: req=316 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=569
+2026-04-19 12:36:10 [INFO] __main__: req=317 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2841 ttft_ms=569
+2026-04-19 12:36:10 [INFO] __main__: req=318 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2841 ttft_ms=569
+2026-04-19 12:36:10 [INFO] __main__: req=319 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2841 ttft_ms=569
+2026-04-19 12:36:10 [INFO] __main__: req=320 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=569
+2026-04-19 12:36:10 [INFO] __main__: req=321 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=569
+2026-04-19 12:36:10 [INFO] __main__: req=322 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=568
+2026-04-19 12:36:10 [INFO] __main__: req=323 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=568
+2026-04-19 12:36:10 [INFO] __main__: req=324 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=568
+2026-04-19 12:36:10 [INFO] __main__: req=325 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=568
+2026-04-19 12:36:10 [INFO] __main__: req=326 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2840 ttft_ms=568
+2026-04-19 12:36:10 [INFO] __main__: req=236 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2877 ttft_ms=604
+2026-04-19 12:36:13 [INFO] __main__: req=237 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5073 ttft_ms=2586
+2026-04-19 12:36:13 [INFO] __main__: req=238 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5269 ttft_ms=2797
+2026-04-19 12:36:13 [INFO] __main__: req=239 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5379 ttft_ms=2941
+2026-04-19 12:36:13 [INFO] __main__: req=240 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=2940
+2026-04-19 12:36:13 [INFO] __main__: req=241 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=2940
+2026-04-19 12:36:13 [INFO] __main__: req=242 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=2940
+2026-04-19 12:36:13 [INFO] __main__: req=243 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=2938
+2026-04-19 12:36:13 [INFO] __main__: req=244 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=2938
+2026-04-19 12:36:13 [INFO] __main__: req=245 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5381 ttft_ms=2938
+2026-04-19 12:36:13 [INFO] __main__: req=247 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5380 ttft_ms=2937
+2026-04-19 12:36:13 [INFO] __main__: req=249 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5380 ttft_ms=2935
+2026-04-19 12:36:13 [INFO] __main__: req=250 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5380 ttft_ms=2935
+2026-04-19 12:36:13 [INFO] __main__: req=251 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5396 ttft_ms=3427
+2026-04-19 12:36:13 [INFO] __main__: req=252 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5398 ttft_ms=3427
+2026-04-19 12:36:13 [INFO] __main__: req=254 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5398 ttft_ms=3426
+2026-04-19 12:36:13 [INFO] __main__: req=255 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5398 ttft_ms=3426
+2026-04-19 12:36:13 [INFO] __main__: req=256 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5398 ttft_ms=3426
+2026-04-19 12:36:13 [INFO] __main__: req=257 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5392 ttft_ms=3420
+2026-04-19 12:36:13 [INFO] __main__: req=258 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5392 ttft_ms=3420
+2026-04-19 12:36:13 [INFO] __main__: req=259 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5392 ttft_ms=3419
+2026-04-19 12:36:13 [INFO] __main__: req=260 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5392 ttft_ms=3419
+2026-04-19 12:36:13 [INFO] __main__: req=261 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5392 ttft_ms=3419
+2026-04-19 12:36:13 [INFO] __main__: req=263 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5391 ttft_ms=3418
+2026-04-19 12:36:13 [INFO] __main__: req=264 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5391 ttft_ms=3417
+2026-04-19 12:36:13 [INFO] __main__: req=273 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5389 ttft_ms=3415
+2026-04-19 12:36:13 [INFO] __main__: req=284 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5387 ttft_ms=3412
+2026-04-19 12:36:13 [INFO] __main__: req=293 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5385 ttft_ms=3410
+2026-04-19 12:36:13 [INFO] __main__: req=327 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5377 ttft_ms=3401
+2026-04-19 12:36:13 [INFO] __main__: req=328 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2903 ttft_ms=927
+2026-04-19 12:36:13 [INFO] __main__: req=329 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2682 ttft_ms=702
+2026-04-19 12:36:13 [INFO] __main__: req=331 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2592 ttft_ms=611
+2026-04-19 12:36:13 [INFO] __main__: req=332 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2591 ttft_ms=610
+2026-04-19 12:36:13 [INFO] __main__: req=333 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2591 ttft_ms=609
+2026-04-19 12:36:13 [INFO] __main__: req=334 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2590 ttft_ms=608
+2026-04-19 12:36:13 [INFO] __main__: req=335 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2590 ttft_ms=607
+2026-04-19 12:36:13 [INFO] __main__: req=336 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2590 ttft_ms=607
+2026-04-19 12:36:13 [INFO] __main__: req=338 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2584 ttft_ms=601
+2026-04-19 12:36:13 [INFO] __main__: req=339 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2584 ttft_ms=600
+2026-04-19 12:36:13 [INFO] __main__: req=340 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2583 ttft_ms=599
+2026-04-19 12:36:13 [INFO] __main__: req=341 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2583 ttft_ms=598
+2026-04-19 12:36:13 [INFO] __main__: req=342 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2582 ttft_ms=597
+2026-04-19 12:36:13 [INFO] __main__: req=343 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2582 ttft_ms=597
+2026-04-19 12:36:13 [INFO] __main__: req=344 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2582 ttft_ms=596
+2026-04-19 12:36:13 [INFO] __main__: req=345 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=596
+2026-04-19 12:36:13 [INFO] __main__: req=346 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2581 ttft_ms=595
+2026-04-19 12:36:13 [INFO] __main__: req=347 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2581 ttft_ms=595
+2026-04-19 12:36:13 [INFO] __main__: req=348 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2580 ttft_ms=595
+2026-04-19 12:36:13 [INFO] __main__: req=349 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2580 ttft_ms=594
+2026-04-19 12:36:13 [INFO] __main__: req=350 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2580 ttft_ms=594
+2026-04-19 12:36:13 [INFO] __main__: req=351 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2579 ttft_ms=593
+2026-04-19 12:36:13 [INFO] __main__: req=352 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2579 ttft_ms=592
+2026-04-19 12:36:13 [INFO] __main__: req=353 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2579 ttft_ms=592
+2026-04-19 12:36:13 [INFO] __main__: req=354 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2578 ttft_ms=591
+2026-04-19 12:36:13 [INFO] __main__: req=355 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2578 ttft_ms=590
+2026-04-19 12:36:13 [INFO] __main__: req=356 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2578 ttft_ms=590
+2026-04-19 12:36:13 [INFO] __main__: req=357 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2577 ttft_ms=589
+2026-04-19 12:36:13 [INFO] __main__: req=358 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2577 ttft_ms=588
+2026-04-19 12:36:13 [INFO] __main__: req=359 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2577 ttft_ms=588
+2026-04-19 12:36:13 [INFO] __main__: req=360 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2576 ttft_ms=587
+2026-04-19 12:36:13 [INFO] __main__: req=361 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2576 ttft_ms=587
+2026-04-19 12:36:13 [INFO] __main__: req=362 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2576 ttft_ms=586
+2026-04-19 12:36:13 [INFO] __main__: req=363 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2575 ttft_ms=585
+2026-04-19 12:36:13 [INFO] __main__: req=364 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2575 ttft_ms=585
+2026-04-19 12:36:13 [INFO] __main__: req=365 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2575 ttft_ms=585
+2026-04-19 12:36:13 [INFO] __main__: req=366 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2573 ttft_ms=583
+2026-04-19 12:36:13 [INFO] __main__: req=367 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2573 ttft_ms=583
+2026-04-19 12:36:13 [INFO] __main__: req=368 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2574 ttft_ms=583
+2026-04-19 12:36:13 [INFO] __main__: req=369 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2574 ttft_ms=582
+2026-04-19 12:36:13 [INFO] __main__: req=370 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=121 latency_ms=2574 ttft_ms=582
+2026-04-19 12:36:13 [INFO] __main__: req=371 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2572 ttft_ms=580
+2026-04-19 12:36:13 [INFO] __main__: req=372 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2572 ttft_ms=580
+2026-04-19 12:36:13 [INFO] __main__: req=373 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2572 ttft_ms=580
+2026-04-19 12:36:13 [INFO] __main__: req=374 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2572 ttft_ms=580
+2026-04-19 12:36:13 [INFO] __main__: req=375 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2572 ttft_ms=580
+2026-04-19 12:36:13 [INFO] __main__: req=376 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2572 ttft_ms=580
+2026-04-19 12:36:13 [INFO] __main__: req=377 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2571 ttft_ms=578
+2026-04-19 12:36:13 [INFO] __main__: req=378 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2571 ttft_ms=577
+2026-04-19 12:36:13 [INFO] __main__: req=379 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2571 ttft_ms=577
+2026-04-19 12:36:13 [INFO] __main__: req=380 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2571 ttft_ms=577
+2026-04-19 12:36:13 [INFO] __main__: req=381 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2571 ttft_ms=577
+2026-04-19 12:36:13 [INFO] __main__: req=382 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2571 ttft_ms=577
+2026-04-19 12:36:13 [INFO] __main__: req=383 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2571 ttft_ms=577
+2026-04-19 12:36:13 [INFO] __main__: req=384 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=574
+2026-04-19 12:36:13 [INFO] __main__: req=385 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=574
+2026-04-19 12:36:13 [INFO] __main__: req=386 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=574
+2026-04-19 12:36:13 [INFO] __main__: req=387 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=574
+2026-04-19 12:36:13 [INFO] __main__: req=388 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=574
+2026-04-19 12:36:13 [INFO] __main__: req=389 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=574
+2026-04-19 12:36:13 [INFO] __main__: req=390 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2569 ttft_ms=573
+2026-04-19 12:36:13 [INFO] __main__: req=391 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2570 ttft_ms=573
+2026-04-19 12:36:13 [INFO] __main__: req=392 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2570 ttft_ms=573
+2026-04-19 12:36:13 [INFO] __main__: req=393 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2568 ttft_ms=571
+2026-04-19 12:36:13 [INFO] __main__: req=394 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2568 ttft_ms=571
+2026-04-19 12:36:13 [INFO] __main__: req=395 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2568 ttft_ms=571
+2026-04-19 12:36:13 [INFO] __main__: req=396 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2568 ttft_ms=571
+2026-04-19 12:36:13 [INFO] __main__: req=397 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2568 ttft_ms=570
+2026-04-19 12:36:13 [INFO] __main__: req=398 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2568 ttft_ms=570
+2026-04-19 12:36:13 [INFO] __main__: req=399 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2568 ttft_ms=570
+2026-04-19 12:36:13 [INFO] __main__: req=330 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2615 ttft_ms=617
+2026-04-19 12:36:13 [INFO] __main__: req=337 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2605 ttft_ms=606
+2026-04-19 12:36:13 [INFO] profiling_utils: GPU metrics collection stopped (108 samples)
+2026-04-19 12:36:13 [INFO] __main__: Multi-model results saved to /workspace/results/gate1B_20260419_123226/benchmarks/concurrent_c128.csv (400 requests)
+2026-04-19 12:36:13 [INFO] __main__:   Throughput: 4699.8 tok/s | TTFT p50: 612.3ms | TTFT p99: 3425.6ms
+2026-04-19 12:36:13 [INFO] __main__: 
+============================================================
+2026-04-19 12:36:13 [INFO] __main__: Workload: concurrent | Concurrency: 256
+2026-04-19 12:36:13 [INFO] __main__: ============================================================
+2026-04-19 12:36:13 [INFO] __main__: === Concurrent Throughput: concurrent ===
+2026-04-19 12:36:13 [INFO] __main__: Schedule length: 400, Models: ['meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 12:36:13 [INFO] profiling_utils: GPU metrics collection started (interval=100ms)
+2026-04-19 12:36:13 [INFO] __main__: Starting multi-model benchmark: 400 requests, concurrency=256, target=http://localhost:8000, models=['meta-llama/Llama-3.1-8B-Instruct']
+2026-04-19 12:36:13 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=1 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=3 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=5 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=7 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=9 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=11 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=13 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=15 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=17 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=19 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=21 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=23 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=25 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=26 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=27 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=28 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=29 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=30 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=31 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=32 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=33 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=34 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=35 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=36 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=37 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=38 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=39 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=40 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=41 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=42 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=43 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=44 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=45 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=46 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=47 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=48 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=49 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=50 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=51 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=52 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=53 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=54 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=55 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=56 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=57 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=58 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=59 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=60 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=61 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=62 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=63 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=64 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=65 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=66 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=67 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=68 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=69 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=70 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=71 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=72 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=73 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=74 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=75 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=76 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=77 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=78 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=79 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=80 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=81 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=82 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=83 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=84 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=85 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=86 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=87 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=88 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=89 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=90 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=91 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=92 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=93 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=94 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=95 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=96 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=97 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=98 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=99 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=100 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=101 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=102 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=103 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=104 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=105 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=106 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=107 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=108 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=109 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=110 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=111 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=112 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=113 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=114 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=115 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=116 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=117 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=118 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=119 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=120 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=121 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=122 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=123 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=124 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=125 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=126 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=127 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=128 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=129 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=130 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=131 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=132 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=133 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=134 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=135 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=136 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=137 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=138 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=139 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=140 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=141 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=142 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=143 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=144 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=145 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=146 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=147 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=148 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=149 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=150 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=151 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=152 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=153 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=154 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=155 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=156 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=157 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=158 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=159 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=160 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=161 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=162 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=163 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=164 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=165 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=166 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=167 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=168 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=169 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=170 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=171 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=172 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=173 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=174 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=175 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=176 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=177 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=178 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=179 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=180 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=181 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=182 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=183 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=184 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=185 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=186 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=187 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=188 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=189 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=190 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=191 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=192 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=193 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=194 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=195 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=196 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=197 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=198 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=199 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=200 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=201 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=202 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=203 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=204 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=205 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=206 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=207 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=208 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=209 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=210 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=211 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=212 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=213 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=214 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=215 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=216 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=217 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=218 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=219 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=220 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=221 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=222 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=223 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=224 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=225 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=226 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=227 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=228 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=229 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=230 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=231 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=232 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=233 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=234 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=235 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=236 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=237 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=238 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=239 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=240 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=241 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=242 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=243 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=244 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=245 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=246 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=247 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=248 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=249 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=250 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=251 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=252 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=253 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=254 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:13 [INFO] __main__: req=255 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=28 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2765 ttft_ms=787
+2026-04-19 12:36:16 [INFO] __main__: req=256 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=140 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=2735 ttft_ms=750
+2026-04-19 12:36:16 [INFO] __main__: req=257 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=197 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2733 ttft_ms=746
+2026-04-19 12:36:16 [INFO] __main__: req=258 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=253 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2729 ttft_ms=742
+2026-04-19 12:36:16 [INFO] __main__: req=259 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=61 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2744 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=260 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=121 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2741 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=141 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2740 ttft_ms=751
+2026-04-19 12:36:16 [INFO] __main__: req=261 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=262 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=198 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2737 ttft_ms=747
+2026-04-19 12:36:16 [INFO] __main__: req=263 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=254 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2733 ttft_ms=743
+2026-04-19 12:36:16 [INFO] __main__: req=264 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=60 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2748 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=265 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=123 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2744 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=142 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2743 ttft_ms=751
+2026-04-19 12:36:16 [INFO] __main__: req=266 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=267 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=199 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2740 ttft_ms=747
+2026-04-19 12:36:16 [INFO] __main__: req=268 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=255 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2737 ttft_ms=743
+2026-04-19 12:36:16 [INFO] __main__: req=59 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2751 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=269 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=270 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=94 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2749 ttft_ms=755
+2026-04-19 12:36:16 [INFO] __main__: req=271 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=143 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2747 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=200 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2743 ttft_ms=748
+2026-04-19 12:36:16 [INFO] __main__: req=272 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=273 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=58 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2754 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=144 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2748 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=274 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=275 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=67 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2755 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=201 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2745 ttft_ms=748
+2026-04-19 12:36:16 [INFO] __main__: req=276 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=277 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=57 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2757 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=86 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2755 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=145 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2751 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=278 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=279 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=280 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=202 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2748 ttft_ms=748
+2026-04-19 12:36:16 [INFO] __main__: req=56 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2759 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=120 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2755 ttft_ms=754
+2026-04-19 12:36:16 [INFO] __main__: req=281 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=282 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=283 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=146 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2755 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=203 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2750 ttft_ms=748
+2026-04-19 12:36:16 [INFO] __main__: req=55 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2761 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=284 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=285 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=286 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=113 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2759 ttft_ms=755
+2026-04-19 12:36:16 [INFO] __main__: req=147 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2757 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=204 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2752 ttft_ms=749
+2026-04-19 12:36:16 [INFO] __main__: req=54 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2763 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=287 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=288 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=289 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=290 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=102 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2762 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=148 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2759 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=205 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2755 ttft_ms=749
+2026-04-19 12:36:16 [INFO] __main__: req=53 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2766 ttft_ms=760
+2026-04-19 12:36:16 [INFO] __main__: req=65 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2765 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=291 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=292 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=293 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=294 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=295 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=149 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2761 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=206 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2757 ttft_ms=749
+2026-04-19 12:36:16 [INFO] __main__: req=296 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=297 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=52 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2769 ttft_ms=760
+2026-04-19 12:36:16 [INFO] __main__: req=298 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=74 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2768 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=150 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2763 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=299 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=300 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=207 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2760 ttft_ms=749
+2026-04-19 12:36:16 [INFO] __main__: req=51 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=760
+2026-04-19 12:36:16 [INFO] __main__: req=301 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=302 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=63 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=762
+2026-04-19 12:36:16 [INFO] __main__: req=151 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2765 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=303 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=304 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=208 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2762 ttft_ms=751
+2026-04-19 12:36:16 [INFO] __main__: req=50 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2773 ttft_ms=763
+2026-04-19 12:36:16 [INFO] __main__: req=305 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=306 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=100 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=152 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2767 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=209 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2763 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=49 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2775 ttft_ms=763
+2026-04-19 12:36:16 [INFO] __main__: req=307 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=308 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=309 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=310 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=129 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2770 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=153 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2769 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=210 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2765 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=311 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=312 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=313 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=48 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=763
+2026-04-19 12:36:16 [INFO] __main__: req=105 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2774 ttft_ms=760
+2026-04-19 12:36:16 [INFO] __main__: req=154 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2770 ttft_ms=756
+2026-04-19 12:36:16 [INFO] __main__: req=211 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2766 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=314 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=315 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=316 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=317 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=47 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2779 ttft_ms=764
+2026-04-19 12:36:16 [INFO] __main__: req=98 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2776 ttft_ms=760
+2026-04-19 12:36:16 [INFO] __main__: req=155 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2772 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=212 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2768 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=46 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2779 ttft_ms=764
+2026-04-19 12:36:16 [INFO] __main__: req=318 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=319 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=320 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=321 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=322 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=156 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2773 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=213 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2769 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=45 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2781 ttft_ms=764
+2026-04-19 12:36:16 [INFO] __main__: req=122 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2776 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=323 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=324 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=325 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=326 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=157 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2775 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=214 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=752
+2026-04-19 12:36:16 [INFO] __main__: req=44 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2783 ttft_ms=765
+2026-04-19 12:36:16 [INFO] __main__: req=128 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=2777 ttft_ms=759
+2026-04-19 12:36:16 [INFO] __main__: req=158 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2775 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=215 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2771 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=327 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=328 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=329 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=330 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=331 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=332 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=43 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2785 ttft_ms=765
+2026-04-19 12:36:16 [INFO] __main__: req=110 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2780 ttft_ms=760
+2026-04-19 12:36:16 [INFO] __main__: req=159 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=216 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2773 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=42 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2785 ttft_ms=765
+2026-04-19 12:36:16 [INFO] __main__: req=4 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2819 ttft_ms=798
+2026-04-19 12:36:16 [INFO] __main__: req=104 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2781 ttft_ms=761
+2026-04-19 12:36:16 [INFO] __main__: req=333 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=334 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=335 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=336 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=337 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=338 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=339 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=160 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2779 ttft_ms=757
+2026-04-19 12:36:16 [INFO] __main__: req=217 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2775 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=41 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2787 ttft_ms=766
+2026-04-19 12:36:16 [INFO] __main__: req=111 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2783 ttft_ms=761
+2026-04-19 12:36:16 [INFO] __main__: req=161 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2779 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=218 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2775 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=340 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=341 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=342 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=343 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=344 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=345 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=40 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2789 ttft_ms=766
+2026-04-19 12:36:16 [INFO] __main__: req=117 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2784 ttft_ms=761
+2026-04-19 12:36:16 [INFO] __main__: req=162 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=2781 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=219 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=39 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2790 ttft_ms=766
+2026-04-19 12:36:16 [INFO] __main__: req=64 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2788 ttft_ms=764
+2026-04-19 12:36:16 [INFO] __main__: req=163 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2781 ttft_ms=758
+2026-04-19 12:36:16 [INFO] __main__: req=220 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2777 ttft_ms=753
+2026-04-19 12:36:16 [INFO] __main__: req=38 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2819 ttft_ms=795
+2026-04-19 12:36:16 [INFO] __main__: req=346 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=347 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=348 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=349 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=350 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=351 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=352 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=353 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=354 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:16 [INFO] __main__: req=62 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=2791 ttft_ms=765
+2026-04-19 12:36:16 [INFO] __main__: req=355 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:18 [INFO] __main__: req=126 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5351 ttft_ms=2822
+2026-04-19 12:36:18 [INFO] __main__: req=356 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=164 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5503 ttft_ms=3405
+2026-04-19 12:36:19 [INFO] __main__: req=357 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=221 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5500 ttft_ms=3401
+2026-04-19 12:36:19 [INFO] __main__: req=358 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=37 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5543 ttft_ms=3442
+2026-04-19 12:36:19 [INFO] __main__: req=359 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=96 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5511 ttft_ms=3410
+2026-04-19 12:36:19 [INFO] __main__: req=360 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=165 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5507 ttft_ms=3405
+2026-04-19 12:36:19 [INFO] __main__: req=361 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=222 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5504 ttft_ms=3401
+2026-04-19 12:36:19 [INFO] __main__: req=362 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=36 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=123 latency_ms=5550 ttft_ms=3443
+2026-04-19 12:36:19 [INFO] __main__: req=363 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=23 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5553 ttft_ms=3446
+2026-04-19 12:36:19 [INFO] __main__: req=364 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=136 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5516 ttft_ms=3408
+2026-04-19 12:36:19 [INFO] __main__: req=365 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=166 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5515 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=366 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=223 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5512 ttft_ms=3402
+2026-04-19 12:36:19 [INFO] __main__: req=35 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5554 ttft_ms=3444
+2026-04-19 12:36:19 [INFO] __main__: req=367 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=368 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=75 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5523 ttft_ms=3412
+2026-04-19 12:36:19 [INFO] __main__: req=369 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=11 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5559 ttft_ms=3447
+2026-04-19 12:36:19 [INFO] __main__: req=370 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=167 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5519 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=224 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5514 ttft_ms=3402
+2026-04-19 12:36:19 [INFO] __main__: req=371 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=372 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=34 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5558 ttft_ms=3444
+2026-04-19 12:36:19 [INFO] __main__: req=373 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=13 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5561 ttft_ms=3447
+2026-04-19 12:36:19 [INFO] __main__: req=168 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5521 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=374 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=375 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=88 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5527 ttft_ms=3412
+2026-04-19 12:36:19 [INFO] __main__: req=225 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5518 ttft_ms=3402
+2026-04-19 12:36:19 [INFO] __main__: req=376 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=377 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=33 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5561 ttft_ms=3445
+2026-04-19 12:36:19 [INFO] __main__: req=20 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5564 ttft_ms=3447
+2026-04-19 12:36:19 [INFO] __main__: req=378 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=379 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=76 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5531 ttft_ms=3413
+2026-04-19 12:36:19 [INFO] __main__: req=169 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5525 ttft_ms=3407
+2026-04-19 12:36:19 [INFO] __main__: req=380 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=381 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=226 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5521 ttft_ms=3405
+2026-04-19 12:36:19 [INFO] __main__: req=32 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5564 ttft_ms=3448
+2026-04-19 12:36:19 [INFO] __main__: req=382 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=383 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=108 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5531 ttft_ms=3414
+2026-04-19 12:36:19 [INFO] __main__: req=170 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5527 ttft_ms=3410
+2026-04-19 12:36:19 [INFO] __main__: req=227 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5523 ttft_ms=3405
+2026-04-19 12:36:19 [INFO] __main__: req=384 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=385 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=386 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=31 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5567 ttft_ms=3448
+2026-04-19 12:36:19 [INFO] __main__: req=7 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5571 ttft_ms=3451
+2026-04-19 12:36:19 [INFO] __main__: req=387 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=388 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=137 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5533 ttft_ms=3412
+2026-04-19 12:36:19 [INFO] __main__: req=171 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5531 ttft_ms=3410
+2026-04-19 12:36:19 [INFO] __main__: req=228 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5526 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=30 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5569 ttft_ms=3449
+2026-04-19 12:36:19 [INFO] __main__: req=389 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=390 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=391 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=392 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=2 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5575 ttft_ms=3452
+2026-04-19 12:36:19 [INFO] __main__: req=71 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3417
+2026-04-19 12:36:19 [INFO] __main__: req=172 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5533 ttft_ms=3410
+2026-04-19 12:36:19 [INFO] __main__: req=393 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=394 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=395 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=229 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5530 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=81 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5541 ttft_ms=3416
+2026-04-19 12:36:19 [INFO] __main__: req=27 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5574 ttft_ms=3449
+2026-04-19 12:36:19 [INFO] __main__: req=103 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3415
+2026-04-19 12:36:19 [INFO] __main__: req=396 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=397 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=398 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=399 MODEL=meta-llama/Llama-3.1-8B-Instruct START
+2026-04-19 12:36:19 [INFO] __main__: req=173 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5537 ttft_ms=3410
+2026-04-19 12:36:19 [INFO] __main__: req=230 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5533 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=130 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5540 ttft_ms=3413
+2026-04-19 12:36:19 [INFO] __main__: req=1 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5580 ttft_ms=3453
+2026-04-19 12:36:19 [INFO] __main__: req=135 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3413
+2026-04-19 12:36:19 [INFO] __main__: req=174 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5538 ttft_ms=3411
+2026-04-19 12:36:19 [INFO] __main__: req=231 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5534 ttft_ms=3406
+2026-04-19 12:36:19 [INFO] __main__: req=29 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5577 ttft_ms=3450
+2026-04-19 12:36:19 [INFO] __main__: req=25 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5578 ttft_ms=3450
+2026-04-19 12:36:19 [INFO] __main__: req=72 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5546 ttft_ms=3418
+2026-04-19 12:36:19 [INFO] __main__: req=175 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5539 ttft_ms=3411
+2026-04-19 12:36:19 [INFO] __main__: req=232 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5535 ttft_ms=3407
+2026-04-19 12:36:19 [INFO] __main__: req=85 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5546 ttft_ms=3417
+2026-04-19 12:36:19 [INFO] __main__: req=9 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5581 ttft_ms=3453
+2026-04-19 12:36:19 [INFO] __main__: req=101 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5545 ttft_ms=3416
+2026-04-19 12:36:19 [INFO] __main__: req=176 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3411
+2026-04-19 12:36:19 [INFO] __main__: req=233 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5536 ttft_ms=3407
+2026-04-19 12:36:19 [INFO] __main__: req=125 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5544 ttft_ms=3415
+2026-04-19 12:36:19 [INFO] __main__: req=10 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5582 ttft_ms=3453
+2026-04-19 12:36:19 [INFO] __main__: req=138 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5544 ttft_ms=3414
+2026-04-19 12:36:19 [INFO] __main__: req=177 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5543 ttft_ms=3411
+2026-04-19 12:36:19 [INFO] __main__: req=234 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5539 ttft_ms=3407
+2026-04-19 12:36:19 [INFO] __main__: req=109 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5549 ttft_ms=3416
+2026-04-19 12:36:19 [INFO] __main__: req=17 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5586 ttft_ms=3452
+2026-04-19 12:36:19 [INFO] __main__: req=134 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5548 ttft_ms=3414
+2026-04-19 12:36:19 [INFO] __main__: req=178 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5545 ttft_ms=3411
+2026-04-19 12:36:19 [INFO] __main__: req=235 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5541 ttft_ms=3407
+2026-04-19 12:36:19 [INFO] __main__: req=79 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5553 ttft_ms=3418
+2026-04-19 12:36:19 [INFO] __main__: req=6 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5589 ttft_ms=3454
+2026-04-19 12:36:19 [INFO] __main__: req=119 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5551 ttft_ms=3416
+2026-04-19 12:36:19 [INFO] __main__: req=179 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5547 ttft_ms=3412
+2026-04-19 12:36:19 [INFO] __main__: req=236 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5543 ttft_ms=3407
+2026-04-19 12:36:19 [INFO] __main__: req=127 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5551 ttft_ms=3415
+2026-04-19 12:36:19 [INFO] __main__: req=15 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5589 ttft_ms=3453
+2026-04-19 12:36:19 [INFO] __main__: req=89 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5554 ttft_ms=3418
+2026-04-19 12:36:19 [INFO] __main__: req=180 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5548 ttft_ms=3412
+2026-04-19 12:36:19 [INFO] __main__: req=237 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5544 ttft_ms=3408
+2026-04-19 12:36:19 [INFO] __main__: req=115 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5553 ttft_ms=3417
+2026-04-19 12:36:19 [INFO] __main__: req=5 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5592 ttft_ms=3455
+2026-04-19 12:36:19 [INFO] __main__: req=84 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=123 latency_ms=5556 ttft_ms=3419
+2026-04-19 12:36:19 [INFO] __main__: req=181 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5550 ttft_ms=3412
+2026-04-19 12:36:19 [INFO] __main__: req=238 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5546 ttft_ms=3408
+2026-04-19 12:36:19 [INFO] __main__: req=95 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5556 ttft_ms=3418
+2026-04-19 12:36:19 [INFO] __main__: req=16 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5592 ttft_ms=3454
+2026-04-19 12:36:19 [INFO] __main__: req=87 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5557 ttft_ms=3419
+2026-04-19 12:36:19 [INFO] __main__: req=182 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5551 ttft_ms=3413
+2026-04-19 12:36:19 [INFO] __main__: req=239 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5547 ttft_ms=3408
+2026-04-19 12:36:19 [INFO] __main__: req=68 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5559 ttft_ms=3420
+2026-04-19 12:36:19 [INFO] __main__: req=3 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5595 ttft_ms=3455
+2026-04-19 12:36:19 [INFO] __main__: req=91 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5558 ttft_ms=3419
+2026-04-19 12:36:19 [INFO] __main__: req=183 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5552 ttft_ms=3413
+2026-04-19 12:36:19 [INFO] __main__: req=240 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5548 ttft_ms=3408
+2026-04-19 12:36:19 [INFO] __main__: req=118 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5557 ttft_ms=3417
+2026-04-19 12:36:19 [INFO] __main__: req=90 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5560 ttft_ms=3419
+2026-04-19 12:36:19 [INFO] __main__: req=184 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5553 ttft_ms=3413
+2026-04-19 12:36:19 [INFO] __main__: req=241 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5549 ttft_ms=3408
+2026-04-19 12:36:21 [INFO] __main__: req=83 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8007 ttft_ms=5430
+2026-04-19 12:36:21 [INFO] __main__: req=12 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8246 ttft_ms=5643
+2026-04-19 12:36:21 [INFO] __main__: req=139 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8208 ttft_ms=5604
+2026-04-19 12:36:21 [INFO] __main__: req=185 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8206 ttft_ms=5601
+2026-04-19 12:36:21 [INFO] __main__: req=242 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8202 ttft_ms=5597
+2026-04-19 12:36:21 [INFO] __main__: req=92 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8213 ttft_ms=5607
+2026-04-19 12:36:21 [INFO] __main__: req=14 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8251 ttft_ms=5643
+2026-04-19 12:36:21 [INFO] __main__: req=124 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8251 ttft_ms=6138
+2026-04-19 12:36:21 [INFO] __main__: req=186 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8248 ttft_ms=6134
+2026-04-19 12:36:21 [INFO] __main__: req=243 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8244 ttft_ms=6130
+2026-04-19 12:36:21 [INFO] __main__: req=112 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8254 ttft_ms=6139
+2026-04-19 12:36:21 [INFO] __main__: req=24 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8290 ttft_ms=6174
+2026-04-19 12:36:21 [INFO] __main__: req=133 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8259 ttft_ms=6138
+2026-04-19 12:36:21 [INFO] __main__: req=187 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8256 ttft_ms=6134
+2026-04-19 12:36:21 [INFO] __main__: req=244 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8252 ttft_ms=6130
+2026-04-19 12:36:21 [INFO] __main__: req=66 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8265 ttft_ms=6143
+2026-04-19 12:36:21 [INFO] __main__: req=21 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8299 ttft_ms=6176
+2026-04-19 12:36:21 [INFO] __main__: req=132 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8262 ttft_ms=6139
+2026-04-19 12:36:21 [INFO] __main__: req=188 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8259 ttft_ms=6135
+2026-04-19 12:36:21 [INFO] __main__: req=245 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8255 ttft_ms=6131
+2026-04-19 12:36:21 [INFO] __main__: req=80 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8267 ttft_ms=6143
+2026-04-19 12:36:21 [INFO] __main__: req=18 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8302 ttft_ms=6177
+2026-04-19 12:36:21 [INFO] __main__: req=106 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8266 ttft_ms=6141
+2026-04-19 12:36:21 [INFO] __main__: req=189 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=123 latency_ms=8261 ttft_ms=6136
+2026-04-19 12:36:21 [INFO] __main__: req=246 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8257 ttft_ms=6131
+2026-04-19 12:36:21 [INFO] __main__: req=70 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8270 ttft_ms=6144
+2026-04-19 12:36:21 [INFO] __main__: req=82 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8270 ttft_ms=6143
+2026-04-19 12:36:21 [INFO] __main__: req=190 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8263 ttft_ms=6136
+2026-04-19 12:36:21 [INFO] __main__: req=247 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=8260 ttft_ms=6131
+2026-04-19 12:36:21 [INFO] __main__: req=99 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8271 ttft_ms=6142
+2026-04-19 12:36:21 [INFO] __main__: req=19 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8307 ttft_ms=6178
+2026-04-19 12:36:21 [INFO] __main__: req=77 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8273 ttft_ms=6144
+2026-04-19 12:36:21 [INFO] __main__: req=191 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8266 ttft_ms=6136
+2026-04-19 12:36:21 [INFO] __main__: req=248 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8262 ttft_ms=6132
+2026-04-19 12:36:21 [INFO] __main__: req=97 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8273 ttft_ms=6142
+2026-04-19 12:36:21 [INFO] __main__: req=26 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8308 ttft_ms=6176
+2026-04-19 12:36:21 [INFO] __main__: req=131 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8272 ttft_ms=6140
+2026-04-19 12:36:21 [INFO] __main__: req=192 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8269 ttft_ms=6136
+2026-04-19 12:36:21 [INFO] __main__: req=196 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=8269 ttft_ms=6136
+2026-04-19 12:36:21 [INFO] __main__: req=249 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8265 ttft_ms=6132
+2026-04-19 12:36:21 [INFO] __main__: req=93 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8277 ttft_ms=6143
+2026-04-19 12:36:21 [INFO] __main__: req=69 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8279 ttft_ms=6145
+2026-04-19 12:36:21 [INFO] __main__: req=193 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8271 ttft_ms=6136
+2026-04-19 12:36:21 [INFO] __main__: req=250 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8267 ttft_ms=6132
+2026-04-19 12:36:21 [INFO] __main__: req=73 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8280 ttft_ms=6145
+2026-04-19 12:36:21 [INFO] __main__: req=8 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8315 ttft_ms=6179
+2026-04-19 12:36:21 [INFO] __main__: req=114 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8278 ttft_ms=6143
+2026-04-19 12:36:21 [INFO] __main__: req=194 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8273 ttft_ms=6138
+2026-04-19 12:36:21 [INFO] __main__: req=251 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8269 ttft_ms=6133
+2026-04-19 12:36:21 [INFO] __main__: req=78 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8282 ttft_ms=6146
+2026-04-19 12:36:21 [INFO] __main__: req=22 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8316 ttft_ms=6179
+2026-04-19 12:36:21 [INFO] __main__: req=116 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8280 ttft_ms=6143
+2026-04-19 12:36:21 [INFO] __main__: req=195 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8275 ttft_ms=6138
+2026-04-19 12:36:21 [INFO] __main__: req=252 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8271 ttft_ms=6133
+2026-04-19 12:36:21 [INFO] __main__: req=107 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8282 ttft_ms=6144
+2026-04-19 12:36:21 [INFO] __main__: req=0 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8320 ttft_ms=6182
+2026-04-19 12:36:21 [INFO] __main__: req=258 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5543 ttft_ms=3405
+2026-04-19 12:36:21 [INFO] __main__: req=259 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5543 ttft_ms=3404
+2026-04-19 12:36:21 [INFO] __main__: req=260 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5542 ttft_ms=3403
+2026-04-19 12:36:21 [INFO] __main__: req=261 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5541 ttft_ms=3402
+2026-04-19 12:36:21 [INFO] __main__: req=262 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5541 ttft_ms=3402
+2026-04-19 12:36:21 [INFO] __main__: req=263 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5541 ttft_ms=3401
+2026-04-19 12:36:21 [INFO] __main__: req=264 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5541 ttft_ms=3400
+2026-04-19 12:36:21 [INFO] __main__: req=265 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3399
+2026-04-19 12:36:21 [INFO] __main__: req=266 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5540 ttft_ms=3399
+2026-04-19 12:36:21 [INFO] __main__: req=267 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3398
+2026-04-19 12:36:21 [INFO] __main__: req=268 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5543 ttft_ms=3398
+2026-04-19 12:36:21 [INFO] __main__: req=269 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5543 ttft_ms=3397
+2026-04-19 12:36:21 [INFO] __main__: req=270 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5543 ttft_ms=3397
+2026-04-19 12:36:21 [INFO] __main__: req=271 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5542 ttft_ms=3396
+2026-04-19 12:36:21 [INFO] __main__: req=272 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5542 ttft_ms=3395
+2026-04-19 12:36:21 [INFO] __main__: req=273 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5542 ttft_ms=3395
+2026-04-19 12:36:21 [INFO] __main__: req=274 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5541 ttft_ms=3394
+2026-04-19 12:36:21 [INFO] __main__: req=275 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5541 ttft_ms=3393
+2026-04-19 12:36:21 [INFO] __main__: req=276 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3392
+2026-04-19 12:36:21 [INFO] __main__: req=277 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5540 ttft_ms=3392
+2026-04-19 12:36:21 [INFO] __main__: req=278 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5539 ttft_ms=3391
+2026-04-19 12:36:21 [INFO] __main__: req=279 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5539 ttft_ms=3391
+2026-04-19 12:36:21 [INFO] __main__: req=280 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5539 ttft_ms=3390
+2026-04-19 12:36:21 [INFO] __main__: req=281 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5538 ttft_ms=3389
+2026-04-19 12:36:21 [INFO] __main__: req=282 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5538 ttft_ms=3389
+2026-04-19 12:36:21 [INFO] __main__: req=283 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5538 ttft_ms=3389
+2026-04-19 12:36:21 [INFO] __main__: req=284 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5537 ttft_ms=3387
+2026-04-19 12:36:21 [INFO] __main__: req=285 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5537 ttft_ms=3387
+2026-04-19 12:36:21 [INFO] __main__: req=286 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5537 ttft_ms=3387
+2026-04-19 12:36:21 [INFO] __main__: req=287 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5536 ttft_ms=3385
+2026-04-19 12:36:21 [INFO] __main__: req=288 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5536 ttft_ms=3385
+2026-04-19 12:36:21 [INFO] __main__: req=289 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5536 ttft_ms=3385
+2026-04-19 12:36:21 [INFO] __main__: req=290 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5536 ttft_ms=3385
+2026-04-19 12:36:21 [INFO] __main__: req=291 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5535 ttft_ms=3383
+2026-04-19 12:36:21 [INFO] __main__: req=292 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5535 ttft_ms=3383
+2026-04-19 12:36:21 [INFO] __main__: req=293 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5535 ttft_ms=3383
+2026-04-19 12:36:21 [INFO] __main__: req=294 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5535 ttft_ms=3382
+2026-04-19 12:36:21 [INFO] __main__: req=295 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5535 ttft_ms=3382
+2026-04-19 12:36:21 [INFO] __main__: req=296 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=5534 ttft_ms=3382
+2026-04-19 12:36:21 [INFO] __main__: req=297 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5534 ttft_ms=3381
+2026-04-19 12:36:21 [INFO] __main__: req=298 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5534 ttft_ms=3381
+2026-04-19 12:36:21 [INFO] __main__: req=299 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5534 ttft_ms=3380
+2026-04-19 12:36:21 [INFO] __main__: req=300 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5533 ttft_ms=3380
+2026-04-19 12:36:21 [INFO] __main__: req=301 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5533 ttft_ms=3379
+2026-04-19 12:36:24 [INFO] __main__: req=302 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=7838 ttft_ms=5304
+2026-04-19 12:36:24 [INFO] __main__: req=303 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8027 ttft_ms=5575
+2026-04-19 12:36:24 [INFO] __main__: req=304 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5575
+2026-04-19 12:36:24 [INFO] __main__: req=305 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5574
+2026-04-19 12:36:24 [INFO] __main__: req=306 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5574
+2026-04-19 12:36:24 [INFO] __main__: req=307 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8028 ttft_ms=5572
+2026-04-19 12:36:24 [INFO] __main__: req=308 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=8029 ttft_ms=5572
+2026-04-19 12:36:24 [INFO] __main__: req=309 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=8029 ttft_ms=5572
+2026-04-19 12:36:24 [INFO] __main__: req=310 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5572
+2026-04-19 12:36:24 [INFO] __main__: req=311 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5570
+2026-04-19 12:36:24 [INFO] __main__: req=312 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5570
+2026-04-19 12:36:24 [INFO] __main__: req=313 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8029 ttft_ms=5571
+2026-04-19 12:36:24 [INFO] __main__: req=314 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8058 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=315 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8059 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=316 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=317 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8060 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=318 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8059 ttft_ms=6086
+2026-04-19 12:36:24 [INFO] __main__: req=319 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=320 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=321 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=322 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6087
+2026-04-19 12:36:24 [INFO] __main__: req=323 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6086
+2026-04-19 12:36:24 [INFO] __main__: req=324 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8060 ttft_ms=6085
+2026-04-19 12:36:24 [INFO] __main__: req=325 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6085
+2026-04-19 12:36:24 [INFO] __main__: req=326 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8060 ttft_ms=6085
+2026-04-19 12:36:24 [INFO] __main__: req=327 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8059 ttft_ms=6084
+2026-04-19 12:36:24 [INFO] __main__: req=328 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8059 ttft_ms=6084
+2026-04-19 12:36:24 [INFO] __main__: req=329 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6084
+2026-04-19 12:36:24 [INFO] __main__: req=330 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6084
+2026-04-19 12:36:24 [INFO] __main__: req=331 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6084
+2026-04-19 12:36:24 [INFO] __main__: req=332 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6083
+2026-04-19 12:36:24 [INFO] __main__: req=333 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=334 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=335 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=336 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=8064 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=337 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8064 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=338 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=8065 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=339 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6082
+2026-04-19 12:36:24 [INFO] __main__: req=256 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8116 ttft_ms=6132
+2026-04-19 12:36:24 [INFO] __main__: req=257 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8110 ttft_ms=6126
+2026-04-19 12:36:24 [INFO] __main__: req=340 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=125 latency_ms=8065 ttft_ms=6081
+2026-04-19 12:36:24 [INFO] __main__: req=341 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6081
+2026-04-19 12:36:24 [INFO] __main__: req=342 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6080
+2026-04-19 12:36:24 [INFO] __main__: req=343 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6080
+2026-04-19 12:36:24 [INFO] __main__: req=344 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6080
+2026-04-19 12:36:24 [INFO] __main__: req=345 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6080
+2026-04-19 12:36:24 [INFO] __main__: req=346 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=347 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=348 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=349 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=350 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8066 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=351 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=352 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8066 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=353 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8067 ttft_ms=6079
+2026-04-19 12:36:24 [INFO] __main__: req=354 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=8066 ttft_ms=6078
+2026-04-19 12:36:24 [INFO] __main__: req=355 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=8065 ttft_ms=6078
+2026-04-19 12:36:24 [INFO] __main__: req=356 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5502 ttft_ms=3514
+2026-04-19 12:36:24 [INFO] __main__: req=358 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5346 ttft_ms=3358
+2026-04-19 12:36:24 [INFO] __main__: req=359 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5345 ttft_ms=3356
+2026-04-19 12:36:24 [INFO] __main__: req=360 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5345 ttft_ms=3356
+2026-04-19 12:36:24 [INFO] __main__: req=361 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5344 ttft_ms=3355
+2026-04-19 12:36:24 [INFO] __main__: req=362 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5344 ttft_ms=3354
+2026-04-19 12:36:24 [INFO] __main__: req=364 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5339 ttft_ms=3349
+2026-04-19 12:36:24 [INFO] __main__: req=365 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=124 latency_ms=5338 ttft_ms=3348
+2026-04-19 12:36:24 [INFO] __main__: req=366 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5338 ttft_ms=3347
+2026-04-19 12:36:24 [INFO] __main__: req=367 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5337 ttft_ms=3346
+2026-04-19 12:36:24 [INFO] __main__: req=368 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5337 ttft_ms=3346
+2026-04-19 12:36:24 [INFO] __main__: req=369 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5336 ttft_ms=3345
+2026-04-19 12:36:24 [INFO] __main__: req=370 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5336 ttft_ms=3344
+2026-04-19 12:36:24 [INFO] __main__: req=371 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=123 latency_ms=5335 ttft_ms=3344
+2026-04-19 12:36:24 [INFO] __main__: req=372 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5335 ttft_ms=3343
+2026-04-19 12:36:24 [INFO] __main__: req=373 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5335 ttft_ms=3343
+2026-04-19 12:36:24 [INFO] __main__: req=374 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5334 ttft_ms=3342
+2026-04-19 12:36:24 [INFO] __main__: req=375 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5334 ttft_ms=3341
+2026-04-19 12:36:24 [INFO] __main__: req=376 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5333 ttft_ms=3340
+2026-04-19 12:36:24 [INFO] __main__: req=377 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5333 ttft_ms=3340
+2026-04-19 12:36:24 [INFO] __main__: req=378 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5333 ttft_ms=3339
+2026-04-19 12:36:24 [INFO] __main__: req=379 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5333 ttft_ms=3339
+2026-04-19 12:36:24 [INFO] __main__: req=380 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5332 ttft_ms=3338
+2026-04-19 12:36:24 [INFO] __main__: req=381 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5332 ttft_ms=3338
+2026-04-19 12:36:24 [INFO] __main__: req=382 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5331 ttft_ms=3337
+2026-04-19 12:36:24 [INFO] __main__: req=383 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5331 ttft_ms=3336
+2026-04-19 12:36:24 [INFO] __main__: req=384 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5330 ttft_ms=3335
+2026-04-19 12:36:24 [INFO] __main__: req=385 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5330 ttft_ms=3335
+2026-04-19 12:36:24 [INFO] __main__: req=386 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5330 ttft_ms=3335
+2026-04-19 12:36:24 [INFO] __main__: req=387 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5329 ttft_ms=3334
+2026-04-19 12:36:24 [INFO] __main__: req=388 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5329 ttft_ms=3333
+2026-04-19 12:36:24 [INFO] __main__: req=389 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5328 ttft_ms=3332
+2026-04-19 12:36:24 [INFO] __main__: req=390 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5328 ttft_ms=3332
+2026-04-19 12:36:24 [INFO] __main__: req=391 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5328 ttft_ms=3331
+2026-04-19 12:36:24 [INFO] __main__: req=392 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5328 ttft_ms=3331
+2026-04-19 12:36:24 [INFO] __main__: req=393 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5327 ttft_ms=3330
+2026-04-19 12:36:24 [INFO] __main__: req=394 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5327 ttft_ms=3330
+2026-04-19 12:36:24 [INFO] __main__: req=395 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5327 ttft_ms=3330
+2026-04-19 12:36:24 [INFO] __main__: req=396 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5326 ttft_ms=3328
+2026-04-19 12:36:24 [INFO] __main__: req=397 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5326 ttft_ms=3328
+2026-04-19 12:36:24 [INFO] __main__: req=398 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5326 ttft_ms=3328
+2026-04-19 12:36:24 [INFO] __main__: req=399 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5326 ttft_ms=3327
+2026-04-19 12:36:24 [INFO] __main__: req=357 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=126 latency_ms=5360 ttft_ms=3361
+2026-04-19 12:36:24 [INFO] __main__: req=363 MODEL=meta-llama/Llama-3.1-8B-Instruct DONE tokens_out=127 latency_ms=5351 ttft_ms=3352
+2026-04-19 12:36:24 [INFO] profiling_utils: GPU metrics collection stopped (109 samples)
+2026-04-19 12:36:24 [INFO] __main__: Multi-model results saved to /workspace/results/gate1B_20260419_123226/benchmarks/concurrent_c256.csv (400 requests)
+2026-04-19 12:36:24 [INFO] __main__:   Throughput: 4646.6 tok/s | TTFT p50: 3406.0ms | TTFT p99: 6177.1ms
+2026-04-19 12:36:24 [INFO] __main__: 
+======================================================================
+2026-04-19 12:36:24 [INFO] __main__: Multi-model benchmark complete. Results in /workspace/results/gate1B_20260419_123226/benchmarks
+2026-04-19 12:36:24 [INFO] __main__: ======================================================================
+2026-04-19 12:36:24 [INFO] __main__: 
+Key findings:
+2026-04-19 12:36:24 [INFO] __main__:   concurrent (c=128): 4699.8 tok/s, TTFT p50=612.3ms
+2026-04-19 12:36:24 [INFO] __main__:   concurrent (c=256): 4646.6 tok/s, TTFT p50=3406.0ms
+--- Phase 8: capture ---
+--- trap: bundling (status=DONE rc=0) ---
