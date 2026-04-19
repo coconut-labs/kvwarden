@@ -54,14 +54,30 @@ These will be re-measured properly in Gate 1 with a corrected harness path
 that times from request submit to first non-zero-token in the streamed
 content (not first SSE frame).
 
-**Status (2026-04-19, PR #28):** harness fix landed.
-`benchmark_multi_model.py` now sets `first_token_time` only when
-`choices[0].text` is non-empty, and `benchmarks/scripts/test_real_ttft.py`
-is a discriminator that fails-loud if anyone moves the assignment back. On
-the local mock-engine reproducer (`--delay-first-content-s 0.5`) the broken
-code reported TTFT = 52.5 ms; the fixed code reports 553.9 ms. Numbers in
-`switch_latency.json` and `gate06_20260419/` predate this fix and are still
-under-counted by ~30 ms (network RTT). Gate 1 onward will be honest TTFT.
+**Status (2026-04-19, PR #28 + #31):** harness fix landed in two passes.
+
+**v1 (PR #28):** `benchmark_multi_model.py` now sets `first_token_time` only
+when `choices[0].text` is non-empty.
+
+**v2 (PR #31):** PR #28 was incomplete and shipped two more silent failure
+modes that the v1 discriminator did not catch:
+- `bool(" ")` is truthy in Python, so a whitespace-only first chunk (which
+  vLLM/SGLang both emit during warm-up tokenization) was still counted as
+  the first token. Now uses `text.strip()`.
+- Chat-completions endpoints emit `delta.content`, not `text`. The v1 check
+  always saw `""`, so on chat-template engines TTFT silently collapsed to
+  `total_latency_ms` and `tokens_out` was always 0. Now falls back to
+  `choices[0].get("delta", {}).get("content")`.
+- `JSONDecodeError`/`KeyError` in chunk parse used to *increment* `tokens_out`
+  and stamp `first_token_time`. A parse error is not generation progress;
+  v2 `continues` instead.
+
+`benchmarks/scripts/test_real_ttft.py` now has three discriminator cases
+(empty preamble, whitespace preamble, chat-shape token-count). On broken
+code the new whitespace and chat-shape cases fail loud (52 ms vs need >400,
+tokens_out=0 vs need 8). Numbers in `switch_latency.json` and
+`gate06_20260419/` predate both fixes; under-counted by ~30 ms RTT. Gate 1
+onward will be honest TTFT.
 
 ---
 

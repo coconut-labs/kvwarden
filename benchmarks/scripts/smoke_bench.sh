@@ -99,10 +99,12 @@ done
 # ---- 4. Sweep c=1,8,32 ----
 echo "--- sweep c=1,8,32 num=$NUM_REQUESTS ---"
 
-# Background poller: every 50 ms, sample admission gauges. Drops a CSV row
+# Background poller: every 10 ms, sample admission gauges. Drops a CSV row
 # per sample so peak in_flight + peak queue_depth survive the bench wall clock.
 # Gauges go back to 0 between phases, so a final snapshot would lie about
 # whether admission actually engaged. The poller is the only honest signal.
+# 10 ms cadence chosen so we don't alias with mock chunk delay (~6-50 ms);
+# Nyquist on a 50 ms signal needs <25 ms sampling to be honest.
 ADM_CSV="$LOGDIR/admission_trace.csv"
 echo "ts,in_flight,queue_depth,admitted_total,rejected_total" > "$ADM_CSV"
 (
@@ -113,11 +115,11 @@ echo "ts,in_flight,queue_depth,admitted_total,rejected_total" > "$ADM_CSV"
     AT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_admitted_total /{print $2; exit}')
     RT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_rejected_total\{/{sum+=$2} END{print sum+0}')
     printf "%s,%s,%s,%s,%s\n" "$(date +%s.%N)" "${IF:-0}" "${QD:-0}" "${AT:-0}" "${RT:-0}" >> "$ADM_CSV"
-    sleep 0.05
+    sleep 0.01
   done
 ) > "$LOGDIR/poller.log" 2>&1 &
 POLLER_PID=$!
-echo "  poller pid=$POLLER_PID sampling /metrics every 50 ms"
+echo "  poller pid=$POLLER_PID sampling /metrics every 10 ms"
 
 START=$(date +%s)
 python3 benchmarks/scripts/benchmark_multi_model.py \
