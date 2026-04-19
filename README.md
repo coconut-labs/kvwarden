@@ -94,7 +94,7 @@ The [`quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily co
 |---|---|---|
 | WorkloadRouter | Length-bucketed admission queue, length-aware scheduling, model lifecycle (freq+recency, not LRU), OpenAI-compatible HTTP API | `src/infergrid/router/router.py` (655 LOC) |
 | AdmissionController | Concurrency cap with priority queue (lower=served first), Prometheus metrics, sub-ms fast-path | `src/infergrid/router/admission.py` (309 LOC) |
-| CacheManager | KV cache block tracking across GPU/CPU/SSD tiers, weighted eviction (planned LMCache integration) | `src/infergrid/cache/manager.py` (487 LOC) |
+| CacheManager | Per-model cache lifecycle (free-on-unload, snapshot) + tiered-eviction scaffold; LMCache integration planned for per-request KV tracking | `src/infergrid/cache/manager.py` (487 LOC) |
 | TenantManager | Per-tenant budgets, **token-bucket rate limiting** (refill + burst capacity), DRR priority scoring | `src/infergrid/tenant/manager.py` (267 LOC) |
 | Engine Adapters | Subprocess management for vLLM/SGLang, health checks, HTTP proxying | `src/infergrid/engines/` (277 LOC) |
 
