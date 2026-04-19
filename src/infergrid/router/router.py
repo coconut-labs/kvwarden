@@ -406,10 +406,21 @@ class WorkloadRouter:
                 f"Tenant {tenant_id!r} has exceeded its request budget"
             )
 
-        # Determine admission priority from request length bucket
+        # Determine admission priority. Two disciplines:
+        #   "fifo" (default) — length-bucketed priority only (short < long)
+        #   "drr" — deficit round-robin: tenant with more in-flight requests
+        #     waits behind quieter tenants. priority_score() already counts
+        #     this request (try_acquire above incremented active_requests).
         max_tokens = payload.get("max_tokens", 256)
         bucket = classify_request_length(max_tokens)
-        priority = BUCKET_PRIORITY.get(bucket, 1)
+        bucket_priority = BUCKET_PRIORITY.get(bucket, 1)
+        if self.config.tenant_defaults.scheduling == "drr":
+            tenant_record = await self.tenant_manager.get_tenant(tenant_id)
+            tenant_score = tenant_record.priority_score() if tenant_record else 1
+            # Tenant deficit dominates; bucket breaks ties within tenant tier.
+            priority = tenant_score * 100 + bucket_priority
+        else:
+            priority = bucket_priority
 
         # Admission control -- wait for engine capacity
         admitted = await self.admission_controller.acquire(

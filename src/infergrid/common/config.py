@@ -62,7 +62,15 @@ class TenantDefaults:
     max_concurrent_requests: int = 64
     rate_limit_rpm: int = 600  # requests per minute
     max_gpu_memory_gb: float = 40.0
-    priority: int = 1  # higher = more priority
+    # Lower = served first (matches AdmissionController + BUCKET_PRIORITY).
+    # Default 1 = medium tier. Static priority for tenant tiers; combined
+    # with active_requests deficit when scheduling="drr".
+    priority: int = 1
+    # Admission scheduling discipline:
+    #   "fifo" — current behavior, prioritize by request length bucket only
+    #   "drr"  — deficit round-robin: tenants with more active requests
+    #            wait behind quieter tenants (TenantRecord.priority_score)
+    scheduling: str = "fifo"
 
 
 @dataclass

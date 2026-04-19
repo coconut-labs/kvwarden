@@ -91,6 +91,25 @@ class TenantRecord:
         async with self._lock:
             self.usage.active_requests = max(0, self.usage.active_requests - 1)
 
+    def priority_score(self) -> int:
+        """Deficit-Round-Robin priority for the AdmissionController.
+
+        Lower returned value = served first (matches AdmissionController and
+        BUCKET_PRIORITY convention). A tenant that has hogged more in-flight
+        slots gets a higher score and waits behind a quieter tenant. Ties
+        broken by FIFO sequence inside the AdmissionController.
+
+        Formula: ``active_requests * 10 + budget.priority``.
+        - ``active_requests * 10`` is the deficit weight: each in-flight
+          request pushes the tenant's next request 10 priority "rungs" back.
+        - ``budget.priority`` is the per-tenant baseline (lower is more
+          important; default 1). Use it for static tenant tiers.
+
+        Read-only — does not mutate state, no lock required. The
+        ``active_requests`` int read is atomic in CPython.
+        """
+        return self.usage.active_requests * 10 + self.budget.priority
+
     async def record_completion(
         self,
         tokens_in: int = 0,
