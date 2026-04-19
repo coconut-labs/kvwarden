@@ -345,3 +345,50 @@ class TestStreamingAdmission:
         # is the well-behaved path and is what aiohttp does on disconnect.)
         await agen.aclose()
         assert router.admission_controller.in_flight == 0
+
+    async def test_streaming_budget_accounting_uses_real_values(self) -> None:
+        """Regression: tenant.record_completion must reflect the actual stream,
+        not a placeholder logged at handoff time.
+
+        Pre-PR-#32 the route_request body called record_request /
+        record_completion with `latency_s = time-to-generator-object`
+        (microseconds) and `tokens_out = 0`, then released admission. Tenant
+        budget never saw the real stream cost. PR #32 moves the recording
+        into the wrapper's finally with chunk_count and real elapsed.
+        """
+        router = self._make_router_with_slow_stream(
+            max_concurrent=4, chunk_count=5, chunk_delay_s=0.04,
+        )
+
+        tm_calls: list[dict] = []
+
+        async def fake_record_completion(tenant_id, **kwargs):
+            tm_calls.append({"tenant_id": tenant_id, **kwargs})
+
+        router.tenant_manager.record_completion = fake_record_completion  # type: ignore[assignment]
+
+        result = await router.route_request(
+            model_id="m", path="/v1/completions",
+            payload={"prompt": "two words", "stream": True, "max_tokens": 5},
+            stream=True,
+        )
+        chunks: list = []
+        async for c in result:
+            chunks.append(c)
+        # Wrapper iteration is done — finally has run.
+
+        assert len(tm_calls) == 1, f"expected 1 record_completion call, got {len(tm_calls)}"
+        call = tm_calls[0]
+        # Real elapsed: 5 chunks × 40ms ≈ 200ms (≥ 150 ms allows for noise).
+        assert call["gpu_seconds"] >= 0.15, (
+            f"gpu_seconds={call['gpu_seconds']} — accounting recorded the "
+            "handoff time, not the real stream lifetime"
+        )
+        # tokens_out is the chunk count (coarse but non-zero — was 0 pre-fix).
+        assert call["tokens_out"] == 5, (
+            f"tokens_out={call['tokens_out']} — chunk count not recorded"
+        )
+        # tokens_in came from prompt split.
+        assert call["tokens_in"] == 2, (
+            f"tokens_in={call['tokens_in']} — _approx_tokens_in regression"
+        )
