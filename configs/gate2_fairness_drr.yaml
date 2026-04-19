@@ -1,0 +1,37 @@
+# Gate 2-FAIRNESS Arm 3 — InferGrid DRR (the bet).
+#
+# IDENTICAL to configs/gate2_fairness_fifo.yaml except
+# `tenant_defaults.scheduling: drr`. Every other knob is held constant
+# so the TTFT delta is attributable to scheduling discipline alone.
+#
+# DRR (Deficit Round-Robin): AdmissionController priority =
+#   tenant.active_requests * 10 + tenant.budget.priority + bucket_priority
+# Lower = served first. A quiet tenant's score stays low; a flooder
+# accumulates deficit as their active_requests grows.
+#
+# Hypothesis: under flooder=32 RPS vs quiet=1 RPS contention, DRR keeps
+# the quiet tenant's p99 TTFT within 1.5x of the quiet-only baseline.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 999999
+  priority: 1
+  scheduling: drr   # <-- the ONLY variable vs Arm 2
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
