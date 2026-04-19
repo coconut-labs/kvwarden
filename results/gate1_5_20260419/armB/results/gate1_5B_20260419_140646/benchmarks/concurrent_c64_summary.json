@@ -1,0 +1,33 @@
+{
+  "scenario": "dual-model-serving",
+  "workload": "concurrent",
+  "concurrency": 64,
+  "num_requests": 4000,
+  "num_successful": 4000,
+  "num_failed": 0,
+  "ttft_p50_ms": 364.13419246673584,
+  "ttft_p95_ms": 431.23335838317865,
+  "ttft_p99_ms": 624.3876767158508,
+  "total_latency_p50_ms": 2018.073558807373,
+  "total_latency_p99_ms": 2317.0298504829407,
+  "throughput_tok_per_sec": 3994.0956412059736,
+  "per_model": {
+    "Llama-3.1-8B-Instruct": {
+      "num_requests": 4000,
+      "num_cold_starts": 0,
+      "ttft_p50_ms": 364.13419246673584,
+      "ttft_p99_ms": 624.3876767158508,
+      "total_latency_p50_ms": 2018.073558807373,
+      "total_latency_p99_ms": 2317.0298504829407,
+      "tokens_generated": 506693
+    }
+  },
+  "gpu_memory": {
+    "peak_used_mb": 69108.8125,
+    "mean_used_mb": 69107.57253147128,
+    "total_mb": 81559.0,
+    "peak_utilization_pct": 84.73474723819567,
+    "gpu_compute_util_mean": 80.5940204563336
+  },
+  "wall_time_ms": 128094.07067485154
+}

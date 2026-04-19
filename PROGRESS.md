@@ -26,7 +26,7 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | Unit tests | 128+ pass (was 124 pre-#29; +4 streaming-admission tests in #29/#32/#33; +1 TCP-fragmentation test in #37) |
 | GPU configurations profiled | 3 (vLLM A100, SGLang A100, vLLM H100) |
 | Live GPU bring-ups | 2 (Gate 0, Gate 0.6 — both on A100-SXM4) |
-| PRs merged | 39 (PRs #1-39 minus #18 closed-superseded) |
+| PRs merged | 40 (PRs #1-40 minus #18 closed-superseded) |
 
 ---
 
@@ -221,12 +221,17 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 - [x] Plumbing verified; admission engaged cleanly on Arm A
 - Hypothesis verdict deferred to Gate 1.5 (Little's Law caveat — see above)
 
-### Gate 1.5 — NEXT (~$7-10)
-- [ ] 1× H100 SXM5 SECURE, `--num-requests 4000 --concurrency 64,128,192,256` per arm
-- [ ] Pod-restart between Arm A and Arm B (runbook Section "Gate 1.5 Re-Run")
-- [ ] Three outcome buckets: CONFIRM / robust DISCONFIRM / overload-protection emergence
+### Gate 1.5 — ✅ DONE (2026-04-19, ~$1.30 actual, ROBUST DISCONFIRM)
+- [x] 1× H100 SXM5 SECURE, 16000 req/arm × 4 cells × 100s sustained wall
+- [x] Pod-restart between Arm A and Arm B worked cleanly (runpod.stop_pod + resume_pod with gpu_count=1)
+- [x] Plumbing PASS: Arm A had 6444/16001 admits queued (~5h cumulative wait); Arm B all admits ≤1ms
+- [x] Verdict: A_p99(c=256)/A_p99(c=128) = 1.80× (PASS ≤2× criterion); B_p99(c=256)/A_p99(c=256) = 1.04× (FAIL ≥4× criterion). Same ratio as Gate 1's short-bench result, now under sustained cap pressure
+- [x] No CONFIRM, no overload-protection emergence (both arms had 0 failures everywhere)
+- [x] Single-model admission cap is **not load-bearing** for TTFT on this workload/hardware; vLLM scheduler handles overload as well or better
+- [x] At c=192 specifically, cap=128 actively HURTS (p99.9 = 5953 vs 3525, +69% worse than uncapped)
+- [x] Full writeup: `results/gate1_5_20260419/GATE1_5_OUTCOME.md`
 
-### Gate 2-lite — Wk 2 (~$8)
+### Gate 2-lite — Wk 2 (~$8) — NOW LOAD-BEARING for the launch pitch
 - [ ] 1× A100-SXM4, 3 arms (InferGrid vs raw uvicorn vs round-robin)
 - [ ] Llama-3.1-8B + Qwen2.5-7B co-loaded
 - [ ] Two-tenant mixed workload (chat + RAG), 120s sustained
@@ -282,8 +287,9 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | #37 | shadow-review followups: real cost-cap fix (in-pod poweroff is best-effort, not the primary cap; trap kills timer; CPU smoke), router buffered SSE-frame parser (chunk_count was network-fragmentation-unstable; tokens_out now stable), CORRECTIONS C5, doc fixes | Merged | Apr 19, 2026 |
 | #38 | Gate 1 H100 SXM5 raw results (Arm A+B tarballs, GATE1_OUTCOME.md, ~$1 spend) | Merged | Apr 19, 2026 |
 | #39 | Gate 1 OUTCOME Little's Law caveat: 10s bench wall did not sustain cap pressure; headline 1.04× B/A is short-bench under-power, not DISCONFIRM. Softened "FAIL" → "AMBIGUOUS"; points to `--num-requests 4000` rerun (Gate 1.5) | Merged | Apr 19, 2026 |
+| #40 | docs+configs: 4-week plan, Gate 1.5 runbook, Gate 2-lite scaffold (PROGRESS.md Strategic Plan, gate1_runbook.md Gate 1.5 Re-Run section with pod-restart-between-arms, gate2_design.md NEW, gate2_multi_tenant.yaml + gate2_round_robin.yaml NEW, research_roadmap.md cliff claim updated for honest TTFT) | Merged | Apr 19, 2026 |
 
-PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, framing-pending-Gate-1.5).
+PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, framing-pending-Gate-2-lite per Gate 1.5 robust DISCONFIRM).
 
 ---
 
