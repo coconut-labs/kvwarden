@@ -1,0 +1,9 @@
+2026-04-19 20:31:48,871 [INFO] __main__: Bench config: flooder=32.0 RPS, quiet=1.0 RPS, duration=300s, model=meta-llama/Llama-3.1-8B-Instruct, max_tokens=64
+2026-04-19 20:31:48,871 [INFO] __main__: TCPConnector limit=256, limit_per_host=256
+2026-04-19 20:36:49,834 [INFO] __main__: Wrote /workspace/infergrid/results/gate2_preprint_arm1_flooder_20260419_202958/tenant_flooder.csv (9477 rows)
+2026-04-19 20:36:49,838 [INFO] __main__: Wrote /workspace/infergrid/results/gate2_preprint_arm1_flooder_20260419_202958/tenant_quiet_user.csv (321 rows)
+2026-04-19 20:36:49,844 [INFO] __main__: Wrote /workspace/infergrid/results/gate2_preprint_arm1_flooder_20260419_202958/summary.json
+2026-04-19 20:36:49,844 [INFO] __main__: ============================================================
+2026-04-19 20:36:49,844 [INFO] __main__: QUIET TTFT  p50=58.4ms p99=1585.1ms max=2693.9ms (n=321, err=0)
+2026-04-19 20:36:49,844 [INFO] __main__: FLOOD TTFT  p50=57.3ms p99=1617.5ms max=2968.3ms (n=9477, err=0)
+2026-04-19 20:36:49,844 [INFO] __main__: ============================================================

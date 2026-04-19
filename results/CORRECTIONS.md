@@ -192,3 +192,43 @@ starting the bench. Any citation that mixes v1 (Pod 1) and v2 numbers is wrong.
   before /health is 200 will get 503, not a hung 30+ second cold-start.
 - Pre-load failures are now loud, not silent.
 
+---
+
+## C7 — vLLM version delta between original Gate 2-FAIRNESS and v3 preprint
+
+**Where:** Original 5-arm Gate 2-FAIRNESS (`results/gate2_fairness_20260419/`) ran on vLLM **0.8.5**
+(see `gate2f_arm1_*/results/.../engine_logs/*.log` line 1: `vLLM API server version 0.8.5`).
+The pre-launch preprint re-run (`results/gate2_preprint_v3/`) ran on vLLM **0.19.1** —
+the version users will install today.
+
+**What changed:** vLLM 0.8.5 → 0.19.1 spans the v0 → v1 engine transition with significantly
+more aggressive continuous batching and better backpressure handling. Per-window analysis
+of the original Arm 1 (`tenant_quiet_user.csv`) shows TTFT growing monotonically from
+3,129 ms p99 at t=5 s to 28,790 ms p99 at t=115 s — the queue never reached steady state
+in the 120 s window. The 28,716 ms aggregate p99 quoted in the launch hero number was
+real for that bench, but reflected an unbounded queue, not a steady-state behavior.
+
+In the v3 300 s preprint re-run on vLLM 0.19.1, Arm 1 reaches steady state with
+quiet p99 = 1,585 ms (n=321). The per-window p99 stays in 800-2,500 ms range —
+flat, not growing.
+
+**Hero numbers (revised, vLLM 0.19.1, 300 s sustained):**
+
+| Arm | Quiet p99 | Sample size | Note |
+|---|---:|---:|---|
+| Arm 0 (solo) | 53.9 ms | n=320 | Within noise of original 54.9 ms |
+| Arm 1 (FIFO, no rate-limit) | 1,585 ms | n=321 | Steady state on 0.19.1 — 29× of solo |
+| Arm 5b (token bucket) | 61.5 ms post-warmup | n=311 | First 10 s excluded (1 JIT outlier window: 5,818 ms max). Aggregate including warmup: 1,230 ms. Post-warmup: **1.14× of solo**. All 29 steady-state windows have p99 36-65 ms. |
+
+**Action:**
+- All citations of the launch hero number **must** use the v3 numbers (1.14× of solo,
+  26× reduction). The 388× / 523× framing reflected pre-steady-state queue dynamics on
+  an old vLLM version and should not be used in any external communication.
+- The original 5-arm `GATE2_FAIRNESS_OUTCOME.md` is preserved as historical evidence;
+  do not delete or revise its numbers — they were honest for vLLM 0.8.5 in 120 s.
+- The launch chart is regenerated from v3 data via `scripts/generate_launch_chart_v3.py`.
+- Methodology: hero p99 excludes the first 10 s warmup window (vLLM JIT-compile
+  transient — same caveat the original Arm 5 sliding-window arm had).
+- For users pinning to vLLM 0.8.5 (an unusual choice; that version is ~12 months old),
+  the original numbers still apply.
+
