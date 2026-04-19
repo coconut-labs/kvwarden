@@ -7,6 +7,7 @@
 **Cost:** ~$1.00 (two arms × ~10 min each at $2.99/hr; well under the $6 ceiling and the MAX_POD_SECS=7200 budget)
 **Main at pod clone:** `0e3b1bd` — PRs #28-37 all active
 **Model:** `meta-llama/Llama-3.1-8B-Instruct`, bfloat16, max_model_len=4096, gpu_memory_utilization=0.85
+**Status:** Plumbing PASS, hypothesis under-powered. See "Methodology caveat" below — short bench (10s wall per cell) did not produce sustained cap pressure; rerun with `--num-requests 4000` is required before declaring CONFIRM/DISCONFIRM.
 
 ## Raw numbers
 
@@ -61,14 +62,29 @@ Per `docs/launch/gate1_runbook.md` "Plumbing sanity" section:
 
 The experiment is wired correctly. The numbers are honest (real first-token, not SSE first-frame RTT).
 
+## Methodology caveat (Little's Law — added post-hoc by advisor review)
+
+Before reading the hypothesis table, check whether the bench produced sustained cap pressure. By Little's Law (`avg_in_flight = throughput × avg_latency`):
+
+- **Arm A c=128:** 4712.8 tok/s × ~127 tokens / req × (5.29s avg_latency / 10.84s wall) ≈ **~103 avg in-flight** — BELOW cap=128. Cap engaged only in bursts.
+- **Arm A c=256:** ~198 avg in-flight over 10.7s wall. Cap engaged but transient.
+- **Admission histogram:** only **272 of 801** total admissions (~34%) queued at all. Under sustained cap+ pressure we'd expect >50% queued at c=256. Most of the queueing was at c=256 specifically but even there the cap was a brief headwind, not a persistent floor.
+
+**The 10-second bench wall is too short to test the hypothesis.** Each arm × concurrency cell finished in ~10s; TTFT p99 at c=256 is already ~6s, meaning only ~2 RTTs worth of sustained queue depth formed before the run ended. To properly stress admission's tail-latency claim we need ~10× more requests per cell (target ~100s sustained wall at steady-state pressure).
+
+**Correct methodological next step:** rerun Gate 1 with `--num-requests 4000` per cell (est. ~$1-2/arm on H100 SXM5, ~100s wall time per cell at these throughputs). Arm B will still run uncapped; Arm A will have ~10× more time under cap pressure. Three possible outcomes on rerun:
+1. **CONFIRM** — Arm A flattens, Arm B explodes. Original hypothesis survives.
+2. **Robust DISCONFIRM** — both arms explode similarly at steady state. Admission genuinely doesn't help tail TTFT on this hardware/workload shape. Pivot pitch to queue-wait spike avoidance or multi-model resource arbitration.
+3. **Overload-protection story** — Arm B's vLLM queues to OOM or 500s at some request count; Arm A degrades gracefully. This is a different (arguably more compelling) narrative than "Arm A has lower p99".
+
 ## Hypothesis math (pre-committed in the runbook)
 
 | Predicate | Required | Measured | Result |
 |---|---|---|---|
-| `A_p99(c=256) ≤ 2 × A_p99(c=128)` | ≤ 2.00× | 5964.2 / 3374.1 = **1.77×** | PASS |
-| `B_p99(c=256) ≥ 4 × A_p99(c=256)` | ≥ 4.00× | 6177.1 / 5964.2 = **1.04×** | FAIL |
+| `A_p99(c=256) ≤ 2 × A_p99(c=128)` | ≤ 2.00× | 5964.2 / 3374.1 = **1.77×** | PASS (note: under non-sustained pressure, see caveat above) |
+| `B_p99(c=256) ≥ 4 × A_p99(c=256)` | ≥ 4.00× | 6177.1 / 5964.2 = **1.04×** | AMBIGUOUS — bench too short to sustain cap pressure; see caveat above |
 
-Arm A does flatten TTFT p99 within 2× going c=128 → c=256. But Arm B does not explode relative to Arm A; the two arms are statistically indistinguishable (p99 differs by 3.5%).
+Arm A does flatten TTFT p99 within 2× going c=128 → c=256 even at this short wall. Arm B looks statistically indistinguishable from Arm A (p99 differs by 3.5%), but under Little's Law, Arm A was below cap on average at c=128 and only briefly at cap during c=256 — so the test did not actually exercise the hypothesis's premise. The result is **not a DISCONFIRM in the runbook's pre-committed sense**; it is a short-bench under-power. A longer rerun is required before any pitch pivot.
 
 ## Rsync'd artifacts
 
@@ -94,6 +110,6 @@ Each contains:
 
 ## Interpretation
 
-Per the advisor and the runbook's pre-committed rubric: **interpretation is the user's call, not the operator's.** This document reports raw numbers + the pre-committed math. See `docs/launch/gate1_runbook.md` § "Reading the result" for CONFIRM / DISCONFIRM / PLUMBING-REGRESSION decision tree.
+Per the advisor and the runbook's pre-committed rubric: **interpretation is the user's call, not the operator's.** This document reports raw numbers + the pre-committed math + a methodology caveat that surfaced in post-run review. See `docs/launch/gate1_runbook.md` § "Reading the result" for CONFIRM / DISCONFIRM / PLUMBING-REGRESSION decision tree.
 
-The raw numbers land in the DISCONFIRM bucket (B_p99 / A_p99 = 1.04×, needed ≥ 4×). The PLUMBING-REGRESSION bucket is ruled out (both arms completed, admission histogram correct). What this means for the pitch is a question for the launch post, not this OUTCOME doc.
+The naive read of the raw numbers (B_p99 / A_p99 = 1.04×, needed ≥ 4×) would land in the DISCONFIRM bucket. The PLUMBING-REGRESSION bucket is ruled out (both arms completed, admission histogram correct, TTFT honest, admission engaged for streaming). However, the "Methodology caveat" section above shows that the bench did not actually produce the sustained cap pressure that the hypothesis assumes — Arm A was below cap on average at c=128 and only at cap briefly at c=256. A 10× longer rerun (`--num-requests 4000`, ~$1-2/arm) is the next correct step before declaring DISCONFIRM. What any of this means for the pitch is a question for the launch post once the rerun lands, not this OUTCOME doc.
