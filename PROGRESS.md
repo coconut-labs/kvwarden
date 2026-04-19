@@ -22,10 +22,11 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | Tests (tests/) | 2,276 lines across 7 files |
 | Infrastructure (profiling, scripts, benchmarks) | 6,774 lines |
 | Documentation (docs/) | 871 lines |
-| Profiling data points | 416,019 rows across 879 files |
+| Profiling data points | 416,019 + 75 (Gate 0.6) rows across 880+ files |
 | Unit tests | 129 collected, 121 pass, 8 xfail (pre-existing in `test_benchmark_client`) |
 | GPU configurations profiled | 3 (vLLM A100, SGLang A100, vLLM H100) |
-| PRs merged | 12 |
+| Live GPU bring-ups | 2 (Gate 0, Gate 0.6 — both on A100-SXM4) |
+| PRs merged | 25 |
 
 ---
 
@@ -253,3 +254,56 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | #10 | Investor pitch + demo script | Merged | Apr 16, 2026 |
 | #11 | Multi-model benchmark harness | Merged | Apr 16, 2026 |
 | #12 | Update research roadmap with Phase 1 findings | Merged | Apr 17, 2026 |
+| #13 | Comprehensive PROGRESS.md | Merged | Apr 17, 2026 |
+| #14 | Phase 1 multi-GPU profiling raw results (21.7 MB) | Merged | Apr 18, 2026 |
+| #15 | Gate 0 multi-model config (Llama 8B + Qwen 7B, 0.35 mem util) | Merged | Apr 18, 2026 |
+| #16 | Gate 0 compat hardening (transformers<5, numpy<2.3, CLI fix, engine log capture, PYTHONUNBUFFERED) | Merged | Apr 18, 2026 |
+| #17 | Phase B 4-week roadmap | Merged | Apr 18, 2026 |
+| #19 | Gate 0 first-GPU multi-model run results (3.5 MB) | Merged | Apr 18, 2026 |
+| #21 | Gate 0.5 bench harness resilience v1 (session reuse, asymmetric+sock_read timeouts, mock engine, repro) | Merged | Apr 18, 2026 |
+| #22 | R4 engine circuit breaker + late `response.prepare()` | Merged | Apr 18, 2026 |
+| #23 | D3 router request-ID logs + PROGRESS.md test counts + CORRECTIONS.md | Merged | Apr 18, 2026 |
+| #24 | Gate 1 configs (admission ON/OFF) + smoke_bench pre-flight | Merged | Apr 19, 2026 |
+| #25 | R5 harness phase-abort + checked-in `scripts/gate_pod_bootstrap.sh` (D2) | Merged | Apr 19, 2026 |
+| #26 | Gate 0.6 multi-model bench validation on real vLLM | Merged | Apr 19, 2026 |
+
+PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, ship-gated).
+
+---
+
+## Gate 0 — First Live GPU Bring-up (2026-04-18)
+
+A100-SXM4-80GB on RunPod, 3h52m, ~$5.76 spend. Two open-weight LLMs (Llama-3.1-8B + Qwen-2.5-7B) co-resident.
+
+**Verdict: SYSTEM PASS, bench harness deferred.**
+
+Six-run recovery log:
+1. Pod created without SSH port mapping → reprovision with `ports="22/tcp,8000/http"`
+2. `HF_TOKEN` not inherited by SSH sessions → scp `/root/.gate0_env` + bootstrap sources it
+3. `transformers==5.5.4` removed `all_special_tokens_extended` → pin `<5.0` (PR #16)
+4. `numpy==2.4.4` broke numba's import-time check → pin `<2.3` (PR #16)
+5. Qwen co-load OOM under vLLM v1 engine → `VLLM_USE_V1=0` + util 0.40→0.35
+6. Success on system; bench harness stalled on `c=1 alternating` after req ~46 → deferred
+
+181 requests admitted, 0 rejected, 0 OOMs. Both engines `healthy: true` for 3h+. See `results/gate0_20260418/GATE0_OUTCOME.md`.
+
+## Gate 0.5 — Bench Harness Investigation + Fix (2026-04-18, local)
+
+Investigated the stall: router's aiohttp client timed out at 300s waiting for vLLM response headers (76 identical stacks over 3h). Root cause in vLLM itself unknown — Gate 0 ran on a branch predating PR #16's engine log capture.
+
+Fixes shipped (PRs #21, #22, #23, #25): session reuse + asymmetric timeouts + sock_read=30s + late `response.prepare()` + R4 circuit breaker + R5 harness phase-abort + D3 request-ID trace logs + D2 checked-in pod bootstrap + mock engine + local reproducer.
+
+**Reproducer drops a 301s stall to 33s (9x speedup), proven locally.**
+
+## Gate 0.6 — Real vLLM Validation (2026-04-19)
+
+A100-SXM4-80GB, ~2h, ~$3.17 spend. Cloned `main@a610a14` (all PR #16-23 fixes active). 75 bench requests + 2 smoke = 77 admitted, 0 rejected, 0 OOMs, both engines healthy at shutdown. Engine stderr captured per PR #16 (234 KB).
+
+**Throughput** (multi-model alternating, 25 req/concurrency):
+- c=1: 84.0 tok/s
+- c=8: 269.9 tok/s
+- c=32: 812.2 tok/s
+
+(TTFT numbers in artifacts are SSE-frame RTT, not real first-token — see `results/CORRECTIONS.md` C2.)
+
+See `results/gate06_20260419/GATE06_OUTCOME.md`.
