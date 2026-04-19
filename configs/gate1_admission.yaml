@@ -1,0 +1,21 @@
+# Gate 1 — Arm A: admission ON, capped at H100 scheduling cliff (c=128).
+# Per Phase 1 H100 vLLM: c=128 TTFT p50=185ms, c=256 TTFT p50=1293ms (+700%).
+# Hypothesis: max_concurrent=128 keeps Arm A's TTFT p99 within 2x of c=128
+# baseline even when offered load is c=256.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+max_concurrent: 128
+admission_queue_size: 1024
+engine_start_timeout_s: 420
+log_level: INFO
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85   # single model, full H100 80GB available
+    max_model_len: 4096
+    tensor_parallel_size: 1
