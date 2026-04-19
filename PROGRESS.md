@@ -266,6 +266,15 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | #24 | Gate 1 configs (admission ON/OFF) + smoke_bench pre-flight | Merged | Apr 19, 2026 |
 | #25 | R5 harness phase-abort + checked-in `scripts/gate_pod_bootstrap.sh` (D2) | Merged | Apr 19, 2026 |
 | #26 | Gate 0.6 multi-model bench validation on real vLLM | Merged | Apr 19, 2026 |
+| #27 | PROGRESS.md catch-up through Gate 0.6 | Merged | Apr 19, 2026 |
+| #28 | real-TTFT v1 (C2 fix): bench timed first SSE frame, not first non-empty content | Merged | Apr 19, 2026 |
+| #29 | admission-streaming-bypass fix: route_request released slot before stream consumed; cap was a no-op for streaming. Wrapper holds slot for stream lifetime; smoke_bench /metrics poller; 3 unit tests | Merged | Apr 19, 2026 |
+| #30 | aclose inner generator in stream-wrapper finally (closes engine HTTP connection on client abort) | Merged | Apr 19, 2026 |
+| #31 | TTFT v2: `bool(" ")` truthy + chat-completions `delta.content` + JSONDecodeError → continue. 3-case discriminator. Smoke poller 50ms→10ms (Nyquist). Bonus: `scripts/gate1_dress_rehearsal.sh` | Merged | Apr 19, 2026 |
+| #32 | Streaming budget accounting: tenant.record_completion got `gpu_seconds=0.07ms` at handoff pre-fix; now in wrapper finally with real elapsed + chunk count | Merged | Apr 19, 2026 |
+| #33 | Max-stream-duration fence (`INFERGRID_STREAM_MAX_DURATION_S=600`) + GC-path test confirms asyncgen finalizer hook releases slot | Merged | Apr 19, 2026 |
+| #34 | 5 Gate-1 blockers from dress rehearsal: bash REPO_ROOT precedence; bench `len(models)<2` gate; cli.py never wired tenant_defaults to TenantManager; gate1 configs missing tenant_defaults; aiohttp `TCPConnector.limit_per_host=100` clamped c=256 to 100 | Merged | Apr 19, 2026 |
+| #35 | Cost-cap 3-layer defense in `gate_pod_bootstrap.sh`: MAX_POD_SECS self-destruct timer, /workspace/ABORT sentinel, phase wall-clock budget | Merged | Apr 19, 2026 |
 
 PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, ship-gated).
 
@@ -307,3 +316,45 @@ A100-SXM4-80GB, ~2h, ~$3.17 spend. Cloned `main@a610a14` (all PR #16-23 fixes ac
 (TTFT numbers in artifacts are SSE-frame RTT, not real first-token — see `results/CORRECTIONS.md` C2.)
 
 See `results/gate06_20260419/GATE06_OUTCOME.md`.
+
+## Pre-Gate-1 Measurement-Honesty Pass (2026-04-19)
+
+Between Gate 0.6 and Gate 1, two questions surfaced that turned the planned $7-10 H100 spend into a likely waste:
+
+**(1) Was the bench measuring TTFT honestly?** No. PR #28 fixed the obvious case (TTFT was the SSE first-frame, not first non-empty content). A Jay-style shadow review of #28 then surfaced two more silent failure modes: `bool(" ")` is truthy in Python so whitespace-only frames still counted as the first token, and chat-completions endpoints emit `delta.content` not `text` so the v1 check always saw "" and TTFT silently collapsed to total_latency_ms. PR #31 fixed both. The discriminator now has three cases; on pre-fix code, whitespace and chat-shape both fail loudly.
+
+**(2) Was admission control engaged at all for streaming traffic?** No — and this was the bigger find. `route_request` awaited `forward_request`, which for `stream=True` returned the async generator object immediately, then released the admission slot in `finally` — microseconds after acquire. The `smoke_bench` `/metrics` poller (added in #29) confirmed: 149 samples during a c=32 phase reported peak `in_flight=0` with `cap=16`. **The Gate 1 hypothesis (Arm A `cap=128` vs Arm B `cap=1024`) was unmeasurable**: both arms would have admitted all 256 reqs simultaneously and produced identical numbers. PR #29 wraps the iterator so admission releases when the stream truly ends; post-fix smoke shows peak `in_flight=16, queue_depth=16`.
+
+PRs #30, #32, #33 closed three follow-ups Jay flagged in the review of #29: (a) the wrapper didn't `aclose()` the inner engine generator, leaking the engine-side HTTP connection on client abort; (b) accounting was logged at handoff with `gpu_seconds=0.07ms, tokens_out=0`, never corrected post-stream; (c) PR #29's "client abandons mid-stream" caveat had no test and no max-duration fence. All three landed.
+
+PR #34 then surfaced and fixed five separate Gate-1 blockers in one go after the dress-rehearsal script (added in #31) actually ran end-to-end for the first time:
+
+| # | Where | What was wrong |
+|---|---|---|
+| 1 | `scripts/gate1_dress_rehearsal.sh` | Bash precedence bug: `git ... \|\| cd ... && pwd` parsed as `(git \|\| cd) && pwd`, so REPO_ROOT got `pwd` output appended on a newline. |
+| 2 | `benchmarks/scripts/benchmark_multi_model.py` | Hard `len(models) < 2` gate would have killed Gate 1 (single-model Llama). Now workload-aware. |
+| 3 | `src/infergrid/cli.py` | `config.tenant_defaults` was parsed but never passed to `TenantManager()`. Default `max_concurrent=64` rejected c=128+ traffic with 429. |
+| 4 | `configs/gate1_admission*.yaml` | No `tenant_defaults` set — relied on the broken default in #3. |
+| 5 | `benchmarks/scripts/benchmark_multi_model.py` | aiohttp default `TCPConnector.limit_per_host=100` silently clamped c=256 to 100. Pre-fix Arm B reported peak_in_flight=100 (the connector limit, not the engine). |
+
+PR #35 added a 3-layer cost-cap defense to `gate_pod_bootstrap.sh` (self-destruct timer at `MAX_POD_SECS=10800`, `/workspace/ABORT` sentinel, phase wall-clock budget that aborts before bench if engine bring-up ate > MAX/2).
+
+`results/CORRECTIONS.md` updated with C2 v1+v2 history and a new C5 entry (admission was a no-op for streaming pre-#29; Gate 0/0.5/0.6 conclusions stand because they didn't depend on admission engagement, but Gate 1 onward critically does).
+
+## Gate 1 Readiness (2026-04-19)
+
+| Item | State |
+|---|---|
+| `main` contains all measurement-honest fixes | ✅ at `5b64b4c` |
+| Unit tests | ✅ 127 passing |
+| `bash benchmarks/scripts/smoke_bench.sh` | ✅ OVERALL: PASS, peak in_flight=16 |
+| `bash scripts/gate1_dress_rehearsal.sh` (NUM_REQUESTS=300, SKIP_DISCRIMINATOR=1) | ✅ OVERALL: PASS — Arm A peak in_flight=128 + queue_depth=128, Arm B peak in_flight=256 |
+| Cost-cap hardening in pod bootstrap | ✅ 3-layer defense |
+| H100 SXM5 spot price ≤ $4/hr | Verify before provisioning |
+| User greenlight on $7-10 spend | Pending |
+
+**Gate 1 launch runbook:** `docs/launch/gate1_runbook.md`.
+
+**Hypothesis discriminator:** Arm A TTFT p99 @ c=256 ≤ 2× Arm A @ c=128, AND Arm B TTFT p99 @ c=256 ≥ 4× Arm A @ c=256.
+
+**Caveat to flag in any analysis:** the dress rehearsal's load-aware mock is *linear* in latency (`base + max(0, excess) * per_excess`). If Gate 1 on H100 reports near-identical TTFTs across arms, that's a **disconfirmation of the hypothesis** — the c=128→c=256 cliff Phase 1 saw (185ms → 1293ms, 7×) may have been measurement artifact (pre-PR-#28 TTFT bug). Either outcome is publishable; don't read a flat result as a plumbing failure.
