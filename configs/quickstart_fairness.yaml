@@ -1,0 +1,64 @@
+# InferGrid Quickstart — Tenant Fairness on a Single Engine
+#
+# This is the config the launch-post hero number comes from. It runs
+# Llama-3.1-8B-Instruct on a single GPU (A100/H100/80GB) and applies
+# per-tenant token-bucket rate limiting at the budget gate so a noisy
+# neighbor cannot starve a quiet tenant.
+#
+# Empirical anchor (from results/gate2_fairness_20260419/):
+#   Vanilla vLLM under flooder: quiet p99 = 28,716 ms (523× starvation)
+#   This config:                quiet p99 = 74 ms (1.35× of solo baseline)
+#
+# Try it:
+#   infergrid serve --config configs/quickstart_fairness.yaml
+#
+#   curl localhost:8000/v1/completions -H "X-Tenant-ID: noisy" \
+#     -d '{"model":"llama31-8b","prompt":"Hello","max_tokens":64,"stream":true}'
+#   curl localhost:8000/v1/completions -H "X-Tenant-ID: quiet" \
+#     -d '{"model":"llama31-8b","prompt":"Hello","max_tokens":64,"stream":true}'
+#
+#   # Watch the rate-limit fire and the engine queue stay composed:
+#   curl localhost:8000/metrics | grep -E "tenant_rejected|admission_queue_depth"
+#
+# Tuning intuition (full guide: docs/tuning_guide.md):
+#   - rate_limit_rpm = sustained per-tenant ceiling (refill rate × 60)
+#   - rate_limit_burst = how many requests a tenant can spike past steady
+#     state before getting 429'd. Default null = sliding-window-equivalent
+#     (allows full minute's worth before throttling). Set to small value
+#     (e.g., rate_limit_rpm/60 = 1 second) for fairness from t=0.
+#
+# Why these specific numbers:
+#   - max_concurrent: 256 — generous; we are NOT trying to cap the engine
+#     here (that's the wrong lever per Gate 1.5 DISCONFIRM). vLLM will
+#     handle backpressure internally.
+#   - rate_limit_rpm: 600 = 10 RPS sustained per tenant.
+#   - rate_limit_burst: 10 = 1 second of capacity. Tenants can burst 10
+#     requests; the 11th in the same second gets 429. This is the knob
+#     that fixed Arm 5's warmup transient (PR #47).
+#   - scheduling: drr — belt-and-suspenders only. Arm 6 isolation control
+#     showed token bucket alone gets the same p99 within sample noise.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 600          # 10 RPS sustained per tenant
+  rate_limit_burst: 10         # 1 second of burst capacity; engages from t=0
+  priority: 1
+  scheduling: drr
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
