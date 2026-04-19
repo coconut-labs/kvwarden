@@ -1,6 +1,6 @@
 # InferGrid — Project Progress
 
-**Last updated:** April 19, 2026
+**Last updated:** April 19, 2026 (pre-launch sprint, post PR #61)
 **Repository:** [coconut-labs/infergrid](https://github.com/coconut-labs/infergrid)
 **Author:** Shrey Patel (patelshrey77@gmail.com)
 
@@ -8,9 +8,11 @@
 
 ## Project Summary
 
-InferGrid is a middleware orchestration layer for LLM inference that sits on top of vLLM and SGLang. It provides intelligent multi-model serving, admission control, and per-tenant isolation on bare metal — no Kubernetes required.
+InferGrid is a middleware orchestration layer for LLM inference that sits on top of vLLM and SGLang. It provides per-tenant fairness on a shared engine, multi-model lifecycle, and OpenAI-compatible HTTP API on bare metal — no Kubernetes required.
 
-**New thesis (validated by data):** "InferGrid keeps inference engines below their scheduling cliff while managing multi-model lifecycle on bare metal — no Kubernetes, no cluster, one pip install."
+**Validated thesis (Gate 2-FAIRNESS):** Per-tenant token-bucket rate-limiting at the budget gate is the load-bearing mechanism for tenant isolation on a shared inference engine. Empirically: 523× starvation (28,716 ms p99) reduced to 74 ms p99 (within 1.35× of solo baseline) on 1× A100 + Llama-3.1-8B + 32 RPS flooder vs 1 RPS quiet.
+
+**Falsified prior thesis (Gate 1.5):** Single-model admission cap is NOT load-bearing on its own. vLLM's continuous batching absorbs overload as well as a coarse upstream cap does (B/A=1.04× across 16,000 reqs).
 
 ---
 
@@ -18,15 +20,15 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 
 | Metric | Count |
 |--------|:-----:|
-| Source code (src/infergrid/) | 2,872 lines across 18 files |
-| Tests (tests/) | 2,276 lines across 7 files |
-| Infrastructure (profiling, scripts, benchmarks) | 6,774 lines |
-| Documentation (docs/) | 871 lines |
+| Source code (src/infergrid/) | ~3,000 lines across 18 files |
+| Tests (tests/) | ~2,500 lines across 10 files |
+| Infrastructure (profiling, scripts, benchmarks) | 6,774+ lines |
+| Documentation (docs/) | 871+ lines |
 | Profiling data points | 416,019 + 75 (Gate 0.6) rows across 880+ files |
-| Unit tests | 128+ pass (was 124 pre-#29; +4 streaming-admission tests in #29/#32/#33; +1 TCP-fragmentation test in #37) |
+| Unit tests | 153 pass (148 pre-PR-#58 + 2 race + 3 health gating) |
 | GPU configurations profiled | 3 (vLLM A100, SGLang A100, vLLM H100) |
-| Live GPU bring-ups | 2 (Gate 0, Gate 0.6 — both on A100-SXM4) |
-| PRs merged | 48 (PRs #1-48 minus #18 closed-superseded) |
+| Live GPU bring-ups | 4+ (Gate 0, Gate 0.6, Gate 1.5, Gate 2-FAIRNESS, pre-launch sprint) |
+| PRs merged | 61 (#1-61 minus #18 closed-superseded) |
 
 ---
 
@@ -301,8 +303,42 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | #46 | results: Gate 2-FAIRNESS A100-SXM4 5-arm CONFIRM-with-caveat (~$1.40 spend). Hero: 523× starvation → steady-state baseline. Caveat: full-bench p99=5378ms from 30s sliding-window warmup. | Merged | Apr 19, 2026 |
 | #47 | feat(tenant): replace 60s sliding-window rate-limit with token bucket. Backward-compatible (default burst=rpm). Adds rate_limit_burst: int \| None. 144/144 tests passing (135+9 new). Eliminates Arm 5's warmup transient. | Merged | Apr 19, 2026 |
 | #48 | config: Arm 5b token-bucket validation yaml (rate_limit_burst=10). | Merged | Apr 19, 2026 |
+| #49 | results: Gate 2-FAIRNESS Arm 5b SUPPLEMENT — token bucket eliminates the 30s warmup transient; quiet within 1.35× of solo across full bench. | Merged | Apr 19, 2026 |
+| #50 | config: Arm 6 FIFO + token-bucket isolation control. | Merged | Apr 19, 2026 |
+| #51 | docs: tuning_guide.md — when to use admission cap vs DRR vs rate-limit, with empirical evidence. | Merged | Apr 19, 2026 |
+| #52 | results: Gate 2-FAIRNESS Arm 6 SUPPLEMENT — DRR not material on this workload; token bucket alone does the work. | Merged | Apr 19, 2026 |
+| #53 | launch: quickstart_fairness.yaml + hero chart PNG generator + chart asset. | Merged | Apr 19, 2026 |
+| #54 | docs: pivot README + pitch.md to tenant-fairness hero (523× → 74ms). | Merged | Apr 19, 2026 |
+| #55 | feat: per-tenant TTFT histogram + 6-panel Grafana fairness dashboard (Track B of pre-launch sprint). | Merged | Apr 19, 2026 |
+| #56 | feat: N-tenant fairness bench (1 flooder + N quiet) + N=6 config (Track C bench scaffold). | Merged | Apr 19, 2026 |
+| #57 | feat: Track D OOM-under-burst chat+RAG bench + runner. | Merged | Apr 19, 2026 |
+| #58 | fix: serialize concurrent ensure_model_loaded() per-model lock. Caught a TOCTOU race that fork-bombed Pod 1 during Track A v1 (32 RPS cold-start → 6 vLLM procs → GPU OOM). 2 new tests, 150/150 suite. | Merged | Apr 19, 2026 |
+| #59 | fix: gate /health on full pre-load + surface load failures + Pod 1 evidence. /health returns 503 with missing_models until engines ready; pre-load failures log at ERROR. 3 new tests, 153/153 suite. CORRECTIONS C6 documents the Pod 1 fork-bomb. | Merged | Apr 19, 2026 |
+| #60 | docs: README + quickstart wait on /health before requests. Pairs with #59 to make the launch-day demo flow safe. | Merged | Apr 19, 2026 |
+| #61 | fix: track_d_runner waits for GPU memory release between arms (vLLM v1 + pkill leaves 70 GB stuck for 30-90s). | Merged | Apr 19, 2026 |
 
-PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, framing-pending-launch-post-pivot per Gate 2-FAIRNESS hero number).
+PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, retired in favor of `draft/gate0-launch-post` branch + post-launch v2 narrative).
+
+---
+
+## Pre-launch sprint (2026-04-19, ongoing)
+
+Plan stamped at `.claude/agent-memory-local/god-planner/prelaunch_sprint_apr19.md`.
+
+| Track | Status | Notes |
+|---|---|---|
+| A — Track A 3-arm preprint re-run (300s, A100) | Arm 0 ✅ p99=53.9ms; Arm 1 + 5b running on dedicated single-arm pods | v1 fork-bombed Pod 1; v2 partial on Pod 2 hit cross-arm CUDA leak; v3 strategy = one fresh pod per arm in parallel |
+| B — Per-tenant TTFT histogram + Grafana dashboard | ✅ shipped via PR #55 | 4 unit tests, 6-panel dashboard JSON |
+| C — N=6 tenant fairness experiment | Bench + config in main; runner staged at /tmp/run_track_c.sh | Will run on Pod 3 or Pod 4 after Arm 1/Arm 5b finish |
+| D — OOM-under-burst chat+RAG (Llama+Qwen) | Bench + runner in main (#57, #61); pod TBD | Pre-committed null rule: cut from launch if D1 ≈ D2 with no OOM |
+| E — SGLang parity for Arm 5b workload | Optional; gated on SGLang adapter present (✅ adapter exists at src/infergrid/engines/sglang_adapter/) | TBD post-D |
+
+Bug discoveries shipped as fixes (not blockers):
+- **PR #58**: TOCTOU race in `ensure_model_loaded` — fork-bombed Pod 1.
+- **PR #59**: `/health` returned 200 OK while engines cold-loading — launch-day footgun.
+- **PR #61**: Cross-arm CUDA-context leak after `pkill` — strategy pivot to one-arm-per-pod.
+
+Compute spend so far this sprint: ~$3 (Pod 1 broken, Pod 2 stuck, Pod 3 + Pod 4 single-arm). Total within $50 budget.
 
 ---
 
