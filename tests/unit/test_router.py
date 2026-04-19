@@ -395,6 +395,62 @@ class TestStreamingAdmission:
             f"tokens_in={call['tokens_in']} — _approx_tokens_in regression"
         )
 
+    async def test_tokens_out_robust_to_tcp_fragmentation(self) -> None:
+        """Regression: PR #32 used raw chunk_count as the tokens_out proxy.
+        That varied 5-50× with TCP fragmentation because aiohttp's
+        `iter_any()` yields raw socket reads, not SSE frames. PR #37
+        replaces it with a buffered SSE-frame parser. This test forces a
+        worst-case fragmentation: each chunk is one BYTE of the SSE frame.
+        Counting raw chunks would report dozens; the fixed code reports
+        the number of complete `data:` frames (3 here).
+        """
+        cfg = InferGridConfig(
+            port=9999, max_concurrent=4,
+            models=[ModelConfig(model_id="m", engine="vllm")],
+        )
+        router = WorkloadRouter(config=cfg)
+
+        full = (
+            b'data: {"choices":[{"text":"hello"}]}\n\n'
+            b'data: {"choices":[{"text":"world"}]}\n\n'
+            b'data: [DONE]\n\n'
+        )
+
+        async def byte_at_a_time():
+            # Worst-case fragmentation: every byte is a separate chunk.
+            for b in full:
+                await asyncio.sleep(0)
+                yield bytes([b])
+
+        adapter = MagicMock()
+        adapter.is_healthy = True
+        adapter.forward_request = AsyncMock(side_effect=lambda *a, **kw: byte_at_a_time())
+        state = ModelState(config=ModelConfig(model_id="m"), adapter=adapter)
+        router._models["m"] = state
+
+        tm_calls: list[dict] = []
+
+        async def fake_record_completion(tenant_id, **kwargs):
+            tm_calls.append(kwargs)
+
+        router.tenant_manager.record_completion = fake_record_completion  # type: ignore[assignment]
+
+        result = await router.route_request(
+            model_id="m", path="/v1/completions",
+            payload={"prompt": "p", "stream": True, "max_tokens": 5},
+            stream=True,
+        )
+        async for _ in result:
+            pass
+
+        assert len(tm_calls) == 1
+        # 2 content frames (DONE excluded). Pre-fix would have reported
+        # len(full) ≈ 80+ chunks.
+        assert tm_calls[0]["tokens_out"] == 2, (
+            f"tokens_out={tm_calls[0]['tokens_out']} — chunk_count regression. "
+            "Buffered SSE parser must dedupe across TCP fragments."
+        )
+
     async def test_max_stream_duration_releases_slot(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Slow-client guard: a stream that exceeds the configured max
         duration must abort and release the admission slot (PR #33)."""

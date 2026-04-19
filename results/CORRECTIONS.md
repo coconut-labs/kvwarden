@@ -97,6 +97,47 @@ end-to-end latency a client sees.
 
 ---
 
+## C5 — Pre-PR-#29 admission control was a no-op for streaming workloads
+
+**Where:** Any pre-PR-#29 numbers, gauges, or claims about admission
+engagement under streaming load. In particular, `gate0_20260418/` and
+`gate06_20260419/` ran with the broken admission release path.
+
+**What was wrong:** `route_request` released the admission slot in the
+outer `finally`. For `stream=True`, `await forward_request(...)` returned
+the async generator object immediately — slot freed microseconds after
+acquire. Confirmed empirically by the smoke poller: 149 samples during a
+c=32 phase, peak `infergrid_admission_in_flight = 0` with `cap=16`. For
+streaming traffic — i.e. all of our benches — the admission cap was
+effectively infinite.
+
+**Why Gate 0 / Gate 0.5 / Gate 0.6 conclusions still stand:** none of
+those gates' verdicts depended on admission engagement.
+- Gate 0: validated multi-model co-residency; `0 rejected` was correct
+  because we never offered enough load to need admission.
+- Gate 0.5: harness-resilience local fix; admission was not in scope.
+- Gate 0.6: validated bench harness completion on real vLLM; admission
+  was not the variable under test.
+
+**Why Gate 1 onward critically depends on this:** the Arm A vs Arm B
+hypothesis IS admission engagement. Without PR #29 the experiment was
+unmeasurable — both arms would have admitted all 256 reqs simultaneously.
+
+**Status (2026-04-19, PR #29 + #37):**
+- PR #29 wraps the streaming iterator so admission releases at stream end.
+- PR #30 + #32 + #33 closed adjacent leaks and added a max-stream-duration
+  fence.
+- PR #37 fixed a follow-up bug: PR #32's `chunk_count` proxy varied 5-50×
+  with TCP fragmentation (`iter_any()` yields raw socket reads, not SSE
+  frames). Now buffered SSE-frame parsing in the wrapper. Discriminator
+  test enforces it: pre-fix reports `tokens_out=90` for a byte-fragmented
+  3-frame stream; post-fix reports `tokens_out=2`.
+
+Action: any external citation of admission behavior MUST be from a run
+post-PR-#29 (and ideally post-PR-#37 for token accounting).
+
+---
+
 ## C4 — Gate 0 bench ran on a branch predating PR #16's engine log capture
 
 **Where:** Gate 0 was executed against branch `feat/gate0-config` before

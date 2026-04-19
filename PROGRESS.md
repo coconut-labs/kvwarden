@@ -23,10 +23,10 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | Infrastructure (profiling, scripts, benchmarks) | 6,774 lines |
 | Documentation (docs/) | 871 lines |
 | Profiling data points | 416,019 + 75 (Gate 0.6) rows across 880+ files |
-| Unit tests | 129 collected, 121 pass, 8 xfail (pre-existing in `test_benchmark_client`) |
+| Unit tests | 128+ pass (was 124 pre-#29; +4 streaming-admission tests in #29/#32/#33; +1 TCP-fragmentation test in #37) |
 | GPU configurations profiled | 3 (vLLM A100, SGLang A100, vLLM H100) |
 | Live GPU bring-ups | 2 (Gate 0, Gate 0.6 — both on A100-SXM4) |
-| PRs merged | 25 |
+| PRs merged | 36 (PRs #1-36 minus #18 closed-superseded) |
 
 ---
 
@@ -268,13 +268,15 @@ InferGrid is a middleware orchestration layer for LLM inference that sits on top
 | #26 | Gate 0.6 multi-model bench validation on real vLLM | Merged | Apr 19, 2026 |
 | #27 | PROGRESS.md catch-up through Gate 0.6 | Merged | Apr 19, 2026 |
 | #28 | real-TTFT v1 (C2 fix): bench timed first SSE frame, not first non-empty content | Merged | Apr 19, 2026 |
-| #29 | admission-streaming-bypass fix: route_request released slot before stream consumed; cap was a no-op for streaming. Wrapper holds slot for stream lifetime; smoke_bench /metrics poller; 3 unit tests | Merged | Apr 19, 2026 |
+| #29 | admission-streaming-bypass fix: route_request released slot before stream consumed; cap was a no-op for streaming. Wrapper holds slot for stream lifetime; the existing smoke_bench /metrics poller (PR #24) was wired into the pass criteria here as the regression check; 3 unit tests | Merged | Apr 19, 2026 |
 | #30 | aclose inner generator in stream-wrapper finally (closes engine HTTP connection on client abort) | Merged | Apr 19, 2026 |
 | #31 | TTFT v2: `bool(" ")` truthy + chat-completions `delta.content` + JSONDecodeError → continue. 3-case discriminator. Smoke poller 50ms→10ms (Nyquist). Bonus: `scripts/gate1_dress_rehearsal.sh` | Merged | Apr 19, 2026 |
 | #32 | Streaming budget accounting: tenant.record_completion got `gpu_seconds=0.07ms` at handoff pre-fix; now in wrapper finally with real elapsed + chunk count | Merged | Apr 19, 2026 |
 | #33 | Max-stream-duration fence (`INFERGRID_STREAM_MAX_DURATION_S=600`) + GC-path test confirms asyncgen finalizer hook releases slot | Merged | Apr 19, 2026 |
 | #34 | 5 Gate-1 blockers from dress rehearsal: bash REPO_ROOT precedence; bench `len(models)<2` gate; cli.py never wired tenant_defaults to TenantManager; gate1 configs missing tenant_defaults; aiohttp `TCPConnector.limit_per_host=100` clamped c=256 to 100 | Merged | Apr 19, 2026 |
 | #35 | Cost-cap 3-layer defense in `gate_pod_bootstrap.sh`: MAX_POD_SECS self-destruct timer, /workspace/ABORT sentinel, phase wall-clock budget | Merged | Apr 19, 2026 |
+| #36 | docs: PROGRESS catch-up + Gate 1 runbook | Merged | Apr 19, 2026 |
+| #37 | shadow-review followups: real cost-cap fix (in-pod poweroff is best-effort, not the primary cap; trap kills timer; CPU smoke), router buffered SSE-frame parser (chunk_count was network-fragmentation-unstable; tokens_out now stable), CORRECTIONS C5, doc fixes | Merged | Apr 19, 2026 |
 
 PR #18 closed (conflict-dead, superseded by #19). PR #20 open as DRAFT (Gate 0 launch post, ship-gated).
 

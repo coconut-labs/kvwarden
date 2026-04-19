@@ -32,20 +32,38 @@ exec > >(tee -a /workspace/bootstrap.log) 2>&1
 # the budget.
 #
 # Layer 1: self-destruct timer. After MAX_POD_SECS (default 10800s = 3h ≈
-# $12 ceiling), the pod calls poweroff. Kicked off BEFORE Phase 1 so it
-# fires even if the script itself hangs. Override via env from master.
+# $12 ceiling), the pod tries to halt itself. KNOWN LIMITATION: containerized
+# pods (RunPod default) almost never grant SYS_BOOT, so `poweroff`/`halt` are
+# no-ops. We try them anyway, plus `kill -KILL -1` to take down PID 1, and
+# write a STARK marker file `/workspace/COST_CAP_HIT` that the master should
+# poll for. The runbook (docs/launch/gate1_runbook.md) instructs the operator
+# to manually terminate the pod from the RunPod console if this marker shows
+# up — this is the ACTUAL cost ceiling. The in-pod attempts are defense in
+# depth, not the primary control.
 MAX_POD_SECS="${MAX_POD_SECS:-10800}"
 (
   sleep "$MAX_POD_SECS"
-  echo "=== COST CAP HIT: $MAX_POD_SECS seconds elapsed; calling poweroff ==="\
-       >> /workspace/bootstrap.log 2>&1
-  # touch the abort sentinel first so the trap bundles results before halt.
+  {
+    echo "==================================================================="
+    echo "=== !!! COST CAP HIT: $MAX_POD_SECS seconds elapsed at $(date -u) !!! ==="
+    echo "=== Pod must be terminated MANUALLY from RunPod console if these  ==="
+    echo "=== self-destruct attempts fail (likely on a containerized pod).  ==="
+    echo "==================================================================="
+  } >> /workspace/bootstrap.log 2>&1
+  # Touch the marker FIRST so master-side polling can see it before any
+  # in-pod actions land or fail.
+  touch /workspace/COST_CAP_HIT 2>/dev/null || true
+  # Also touch the abort sentinel so a clean trap can still bundle results.
   touch /workspace/ABORT 2>/dev/null || true
-  sleep 5
-  poweroff 2>/dev/null || halt 2>/dev/null || true
+  # Give the trap 30s to tar 200MB+ before we try to take the pod down.
+  # 5s was borderline; 30s costs ~$0.025 and protects the diagnostics.
+  sleep 30
+  poweroff 2>/dev/null || halt 2>/dev/null || systemctl poweroff 2>/dev/null \
+    || kill -KILL -1 2>/dev/null || true
 ) &
 COSTCAP_PID=$!
 echo "cost-cap timer pid=$COSTCAP_PID max_pod_secs=$MAX_POD_SECS"
+echo "cost-cap marker file: /workspace/COST_CAP_HIT (master should poll)"
 
 # Layer 2: manual ABORT sentinel. User can `ssh pod 'touch /workspace/ABORT'`
 # to cleanly trigger the existing bundle_and_mark trap. Checked at every
@@ -90,6 +108,12 @@ echo "=== Bootstrap start: $(date -u) RUN_NAME=$RUN_NAME ==="
 bundle_and_mark() {
   local rc=$?
   echo "--- trap: bundling (status=$STATUS rc=$rc) ---"
+  # Kill the cost-cap subshell first. Without this, a normal-exit run
+  # leaves the timer counting and it eventually fires mid-rsync (or worse,
+  # after the master has terminated the pod, but RunPod restarted it).
+  if [ -n "${COSTCAP_PID:-}" ]; then
+    kill "$COSTCAP_PID" 2>/dev/null || true
+  fi
   kill "$(cat $RDIR/server.pid 2>/dev/null)"     2>/dev/null || true
   kill "$(cat $RDIR/gpu_trace.pid 2>/dev/null)" 2>/dev/null || true
   sleep 2; pkill -9 -f "vllm.entrypoints" 2>/dev/null || true

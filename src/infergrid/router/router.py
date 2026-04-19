@@ -514,14 +514,21 @@ class WorkloadRouter:
         this, an aborted client leaves the engine connection open and the
         engine keeps generating tokens until the inner generator is GC'd.
 
-        chunk_count is a coarse proxy for tokens_out: each SSE chunk is
-        usually one token (in /v1/completions) or a delta frame (in
-        /v1/chat/completions). The bench harness reports ground-truth
-        token counts; the router uses chunk_count for tenant budget +
-        Prometheus only. Wrong by a small constant factor on chat APIs;
-        not wrong by orders of magnitude as the pre-PR-#32 zero was.
+        Token accounting: the inner iterator yields raw socket reads from
+        `aiohttp.resp.content.iter_any()`, NOT SSE frames. One read can
+        contain many frames (localhost) or one frame can span many reads
+        (slow network). Counting raw chunks therefore varies with TCP
+        fragmentation by 5-50× — that breaks tenant budget. We buffer and
+        split on the SSE record terminator (`\\n\\n`), then count `data:`
+        frames that aren't `[DONE]`. Off by ~2-3 frames per stream
+        (role/finish_reason envelopes), but stable across network
+        conditions. The bench harness still reports ground-truth tokens
+        with full JSON parse; the router uses sse_frames for tenant budget
+        + Prometheus.
         """
-        chunk_count = 0
+        sse_frames = 0
+        chunk_count = 0  # raw socket reads, observability only
+        buf = b""
         status = "error"  # flipped to "ok" only on clean exhaustion
         try:
             # Hard fence: even with admission honest and engine timeouts in
@@ -531,12 +538,23 @@ class WorkloadRouter:
             async with asyncio.timeout(_STREAM_MAX_DURATION_S):
                 async for chunk in inner:
                     chunk_count += 1
+                    buf += chunk
+                    while b"\n\n" in buf:
+                        frame, buf = buf.split(b"\n\n", 1)
+                        # Tolerate \r\n line endings; strip is safe here.
+                        line = frame.strip()
+                        if not line.startswith(b"data: "):
+                            continue
+                        body = line[6:]
+                        if body == b"[DONE]":
+                            continue
+                        sse_frames += 1
                     yield chunk
             status = "ok"
         except asyncio.TimeoutError:
             logger.warning(
-                "stream max-duration exceeded model=%s tenant=%s after %.1fs (chunks=%d)",
-                model_id, tenant_id, _STREAM_MAX_DURATION_S, chunk_count,
+                "stream max-duration exceeded model=%s tenant=%s after %.1fs (chunks=%d frames=%d)",
+                model_id, tenant_id, _STREAM_MAX_DURATION_S, chunk_count, sse_frames,
             )
             status = "timeout"
             # Re-raise so the outer handle_request can return 504 to client.
@@ -556,10 +574,10 @@ class WorkloadRouter:
                     status=status,
                     latency_s=elapsed_real,
                     tokens_in=tokens_in,
-                    tokens_out=chunk_count,
+                    tokens_out=sse_frames,
                 )
                 await self.tenant_manager.record_completion(
-                    tenant_id, tokens_in=tokens_in, tokens_out=chunk_count,
+                    tenant_id, tokens_in=tokens_in, tokens_out=sse_frames,
                     gpu_seconds=elapsed_real,
                 )
             except Exception as exc:

@@ -4,7 +4,7 @@
 
 **Hardware:** 1× NVIDIA H100 SXM5 80GB on RunPod (SECURE pod).
 **Wall:** ~1.8h.
-**Cost:** ~$7-10 expected; hard ceiling ~$12 via PR #35's `MAX_POD_SECS=10800` self-destruct timer.
+**Cost:** ~$5-6 expected on H100 SXM5 SECURE on-demand at $2.99/hr × ~1.8h. The `MAX_POD_SECS=10800` (3h) timer caps pod-side bootstrap effort, but **the in-pod `poweroff` call is best-effort** — RunPod containers usually don't grant `SYS_BOOT`, so the actual cost ceiling depends on YOU manually terminating the pod from the RunPod console after the timer fires (the pod writes `/workspace/COST_CAP_HIT` as a marker; poll for it). Treat in-pod cost-cap as defense in depth, not the primary control. **Set yourself a calendar alarm at 2h after pod creation as the real ceiling.**
 **main tip required:** `5b64b4c` or later.
 
 ---
@@ -143,7 +143,8 @@ B_vs_A  = B_p99(c=256) / A_p99(c=256)
 |---|---|---|
 | `Failed to pre-load model` in `server.log` within 5 min | HF_TOKEN missing or invalid on pod | Re-scp `/root/.gate_env`, restart bootstrap |
 | Engine bring-up exceeds 90 min | OOM during model load OR vLLM v1 incompatibility | Check `/workspace/results/*/engine_logs/`. PR #16's `VLLM_USE_V1=0` should already be set; if OOM, lower `gpu_memory_utilization` in the config |
-| Cost-cap timer fires (`COST CAP HIT` in bootstrap.log) | Script took longer than `MAX_POD_SECS=10800` | Pod will poweroff after touching ABORT. Check what stage the script was in via `phase_*.ts` files in the run dir |
+| Cost-cap timer fires (`COST CAP HIT` in bootstrap.log, `/workspace/COST_CAP_HIT` exists) | Script took longer than `MAX_POD_SECS=10800` | **Manually terminate from the RunPod console** — in-pod poweroff usually fails on containerized pods. Bundle is already tarred (trap fired before the timer's poweroff attempt). Rsync results, then terminate. |
+| Phase 4 silent-hang (no log progress for 10+ min, but `bootstrap.log` not advancing) | vLLM engine stuck during weight load — happened in Gate 0.5 | `ssh pod 'tail -n 200 /workspace/results/*/engine_logs/*.stderr'` for the actual stack. Common causes: model download stalled (HF rate limit), CUDA context init deadlock, or KV cache sizing OOM. If no progress in 15 min, `ssh pod 'touch /workspace/ABORT'` to clean-bundle and exit. |
 | Bench reports many 429s | `tenant_defaults` regression. Should be 1024 max_concurrent_requests in the gate1 yaml | `grep tenant_defaults configs/gate1_admission*.yaml` to verify |
 | All 4 ttft_p99 values come back as -1 | Bench summary JSON malformed | Read the bench.log inside the tarball; PR #34's R5 phase-abort may have triggered |
 
