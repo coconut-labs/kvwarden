@@ -1,0 +1,48 @@
+# Gate 2-FAIRNESS Arm 5 — DRR + per-tenant rate limit (the real fix).
+#
+# Diagnostic arm added after Arms 3 (cap=256, DRR no-op) and Arm 4
+# (cap=16, DRR fired but vLLM internal queue still dominated).
+# Per advisor: the right fairness lever is REJECTING the flooder at the
+# tenant-budget layer, not reordering at the admission queue.
+#
+# Mechanism: tenant_defaults.rate_limit_rpm=600 = 10 RPS cap per tenant.
+# - quiet at 1 RPS = 60 req/min — never hits cap
+# - flooder at 32 RPS = 1920 req/min — gets 429'd at 600 RPM (10 RPS)
+# Aggregate offered to vLLM drops from 33 RPS to ~11 RPS — engine no
+# longer saturates, quiet's p99 should approach the Arm 0 baseline.
+#
+# max_concurrent kept at 256 (back to non-binding) — this arm's fairness
+# mechanism is rate-limiting at budget, not admission queue reordering.
+# scheduling=drr kept as belt-and-suspenders; the heavy lifting is
+# at the rate-limit gate, not the priority queue.
+#
+# Pre-committed Arm 5 criterion:
+#   PASS:    quiet_p99 ≤ 110ms (2× Arm 0 baseline) AND flooder gets 429'd
+#            (verify: tenant_rejected in server.log, count_err > 0 on flooder)
+#   DISCONFIRM: quiet > 275ms (5× baseline) despite flooder throttled
+#               → fundamental limit of InferGrid's current architecture
+#   PLUMBING:   quiet ALSO getting 429s → rate limit applied to wrong tenant
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 600   # <-- the lever: 10 RPS per tenant
+  priority: 1
+  scheduling: drr   # belt-and-suspenders; rate limit does the real work
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
