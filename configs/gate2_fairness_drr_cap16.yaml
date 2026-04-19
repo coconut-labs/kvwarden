@@ -1,0 +1,37 @@
+# Gate 2-FAIRNESS Arm 4 — DRR with tight admission cap (max_concurrent: 16).
+#
+# Diagnostic arm added after Arm 3 (cap=256) DISCONFIRM'd. Arm 3's
+# prometheus dump showed admission NEVER engaged (all 3841 admits ≤1ms)
+# because cap=256 was far above the ~33 RPS offered — so DRR had nothing
+# to reorder. Arm 4 drops the cap to 16 so InferGrid's admission queue
+# becomes the binding layer; DRR should then rescue the quiet tenant.
+#
+# Pre-committed Arm 4 criterion:
+#   PASS if quiet_p99 / flooder_p99 ≤ 0.25 AND quiet_p99 ≤ 10× Arm 0 (≤549ms)
+# (per advisor: the ≤1.5× baseline from the original runbook was for a
+# different theory; at cap=16 realistic prediction is ~400-800ms p99 — a
+# ~60× improvement over Arm 1's 523× starvation is still hero-worthy).
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 16
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 999999
+  priority: 1
+  scheduling: drr   # <-- the ONLY variable vs Arm 2
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
