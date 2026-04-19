@@ -150,3 +150,45 @@ root cause.
 main (post-PR #16) so the engine logs are preserved.
 
 ---
+
+## C6 — Pre-PR-#58 cold-start fork-bomb invalidated the first Track A re-run
+
+**Where:** `results/gate2_preprint_pod1_evidence/gate2_preprint_20260419_195055/arm1_flooder_*/`
+(Pod `8ldnojj8xq8abg`, terminated). Track A v1 attempted on 2026-04-19.
+
+**What we observed:**
+- Arm 0 (solo, no flooder) completed cleanly: `quiet_user.ttft_p99_ms = 62.5` (n=321).
+- Arm 1 (vanilla vLLM under 32 RPS flooder) reported `count_ok = 0, count_err = 303` for the
+  quiet tenant. `server.log` showed repeated `TimeoutError: vLLM server did not become healthy
+  within 420s` and the bench process died with `RuntimeError: can't start new thread`. `ps aux`
+  on the pod showed 6+ simultaneous `vllm.entrypoints.openai.api_server` processes.
+
+**Root cause:** `WorkloadRouter.ensure_model_loaded()` had a TOCTOU race. After the inter-arm
+`pkill -9 -f vllm`, the next arm's first request found the model cache empty; with N concurrent
+in-flight requests at 32 RPS, every request raced into `load_model()` which spawned its own
+engine subprocess. Each subprocess held `gpu_memory_utilization=0.85` × 80 GB ≈ 68 GB of GPU
+memory; 6+ engines instantly OOM'd the GPU and none became healthy.
+
+A second compounding bug: `handle_health()` returned `200 OK` unconditionally, so the runner's
+warmup loop ("wait for /health") returned immediately while the engines were still cold,
+allowing the bench to start flooding before any engine was ready.
+
+**Fix (landed):**
+- PR #58 (`fix/ensure-model-loaded-race`) introduces per-model `asyncio.Lock` so concurrent
+  `ensure_model_loaded()` callers serialize through one `load_model()` invocation.
+- PR for `fix/eager-load-and-health` makes `handle_health` return 503 with `missing_models`
+  until every configured model is in `_models`, and surfaces pre-load failures with
+  `logger.error` (instead of swallowing them silently).
+
+**Action for citations:** the only Pod 1 number that is preserved as evidence is the
+documentation of the bug itself (server.log + summary.json). Track A's preprint numbers
+**must** come from the v2 re-run on Pod 2 (`gate2_preprint_20260419_201158/`) where the
+race fix was in effect and the runner does an explicit sequential warmup curl before
+starting the bench. Any citation that mixes v1 (Pod 1) and v2 numbers is wrong.
+
+**Lessons captured for the launch quickstart:**
+- The README quickstart implied "pip install / `infergrid serve` / curl" works immediately.
+  After this fix, `/health` is the correct readiness probe; users who curl /v1/completions
+  before /health is 200 will get 503, not a hung 30+ second cold-start.
+- Pre-load failures are now loud, not silent.
+

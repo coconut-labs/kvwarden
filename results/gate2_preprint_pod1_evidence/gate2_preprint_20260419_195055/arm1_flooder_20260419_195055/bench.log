@@ -1,0 +1,30 @@
+2026-04-19 19:58:49,690 [INFO] __main__: Bench config: flooder=32.0 RPS, quiet=1.0 RPS, duration=300s, model=meta-llama/Llama-3.1-8B-Instruct, max_tokens=64
+2026-04-19 19:58:49,690 [INFO] __main__: TCPConnector limit=256, limit_per_host=256
+2026-04-19 20:04:47,482 [INFO] __main__: Wrote /workspace/infergrid/results/gate2_preprint_20260419_195055/arm1_flooder_20260419_195055/tenant_flooder.csv (3387 rows)
+2026-04-19 20:04:47,489 [INFO] __main__: Wrote /workspace/infergrid/results/gate2_preprint_20260419_195055/arm1_flooder_20260419_195055/tenant_quiet_user.csv (303 rows)
+2026-04-19 20:04:47,493 [INFO] __main__: Wrote /workspace/infergrid/results/gate2_preprint_20260419_195055/arm1_flooder_20260419_195055/summary.json
+2026-04-19 20:04:47,493 [INFO] __main__: ============================================================
+2026-04-19 20:04:47,493 [INFO] __main__: QUIET TTFT  p50=-1ms p99=-1ms max=-1ms (n=0, err=303)
+2026-04-19 20:04:47,493 [INFO] __main__: FLOOD TTFT  p50=-1ms p99=-1ms max=-1ms (n=0, err=3387)
+2026-04-19 20:04:47,493 [INFO] __main__: ============================================================
+Traceback (most recent call last):
+  File "/workspace/infergrid/benchmarks/scripts/benchmark_two_tenant_single_model.py", line 321, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/workspace/infergrid/benchmarks/scripts/benchmark_two_tenant_single_model.py", line 317, in main
+    return asyncio.run(main_async(args))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/runners.py", line 189, in run
+    with Runner(debug=debug) as runner:
+  File "/usr/lib/python3.11/asyncio/runners.py", line 63, in __exit__
+    self.close()
+  File "/usr/lib/python3.11/asyncio/runners.py", line 73, in close
+    loop.run_until_complete(loop.shutdown_default_executor())
+  File "/usr/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/base_events.py", line 572, in shutdown_default_executor
+    thread.start()
+  File "/usr/lib/python3.11/threading.py", line 964, in start
+    _start_new_thread(self._bootstrap, ())
+RuntimeError: can't start new thread

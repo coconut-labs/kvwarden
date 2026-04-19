@@ -236,20 +236,32 @@ class WorkloadRouter:
                 )
                 self._workers.append(task)
 
-        # Pre-load configured models
+        # Pre-load configured models. Sequentially — concurrent
+        # adapter.start() calls would compete for GPU memory.
+        load_failures: list[tuple[str, str]] = []
         for model_cfg in self.config.models:
             try:
                 await self.load_model(model_cfg)
             except Exception as exc:
                 logger.error(
-                    "Failed to pre-load model %s: %s", model_cfg.model_id, exc
+                    "Pre-load FAILED for %s: %s", model_cfg.model_id, exc
                 )
+                load_failures.append((model_cfg.model_id, str(exc)))
 
-        logger.info(
-            "WorkloadRouter started with %d models, %d queue workers",
-            len(self._models),
-            len(self._workers),
-        )
+        if load_failures:
+            # Surface pre-load failures loudly. /health will report the
+            # missing models as 503 so a load-balancer / launch-day demo
+            # never sends real traffic to a half-loaded server.
+            logger.error(
+                "WorkloadRouter started with %d/%d models loaded; failures: %s",
+                len(self._models), len(self.config.models), load_failures,
+            )
+        else:
+            logger.info(
+                "WorkloadRouter started with %d models, %d queue workers",
+                len(self._models),
+                len(self._workers),
+            )
 
     async def stop(self) -> None:
         """Stop all queue workers and engine subprocesses."""
@@ -835,8 +847,25 @@ class WorkloadRouter:
         })
 
     async def handle_health(self, request: web.Request) -> web.Response:
-        """Handle GET /health."""
-        return web.json_response({"status": "ok"})
+        """Handle GET /health.
+
+        Returns 200 only when every configured model has a live engine
+        adapter loaded. Returns 503 + a JSON breakdown otherwise. The
+        503 path matters for launch-day flow: if /health returned 200
+        while engines were still cold, the first benchmark request
+        triggered a fork-bomb before the per-model lock fix landed.
+        Healthy pre-warmup now also gates the first incoming request.
+        """
+        configured = {m.model_id for m in self.config.models}
+        loaded = set(self._models.keys())
+        missing = sorted(configured - loaded)
+        if missing:
+            return web.json_response(
+                {"status": "loading", "missing_models": missing,
+                 "loaded_models": sorted(loaded)},
+                status=503,
+            )
+        return web.json_response({"status": "ok", "loaded_models": sorted(loaded)})
 
     # ------------------------------------------------------------------
     # Status / introspection

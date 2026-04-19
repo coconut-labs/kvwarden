@@ -1,0 +1,304 @@
+tenant,request_id,submit_time,ttft_ms,total_latency_ms,tokens_out,error
+quiet_user,116,1776628861.4823341,0.0,60100.111961364746,0,timeout
+quiet_user,0,1776628729.6905603,0.0,60892.58623123169,0,timeout
+quiet_user,105,1776628843.2821522,0.0,60300.20451545715,0,timeout
+quiet_user,133,1776628869.3849506,0.0,55104.72750663757,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,33,1776628765.282183,0.0,60300.51898956299,0,timeout
+quiet_user,77,1776628805.7825499,0.0,60799.792766571045,0,timeout
+quiet_user,103,1776628836.183609,0.0,60398.72741699219,0,timeout
+quiet_user,178,1776628905.0846314,0.0,60497.663259506226,0,timeout
+quiet_user,203,1776628927.082267,0.0,59802.43110656738,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 339 queued"", ""queue_depth"": 339, ""in_flight"": 256}"
+quiet_user,224,1776628944.3089347,0.0,53374.186754226685,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 373 queued"", ""queue_depth"": 373, ""in_flight"": 256}"
+quiet_user,54,1776628788.082062,0.0,36302.690744400024,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,191,1776628916.1820354,0.0,60400.23469924927,0,timeout
+quiet_user,113,1776628858.9823668,0.0,60603.10864448547,0,timeout
+quiet_user,162,1776628892.882186,0.0,60700.37007331848,0,timeout
+quiet_user,208,1776628931.7822862,0.0,57100.14271736145,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 255 queued"", ""queue_depth"": 255, ""in_flight"": 256}"
+quiet_user,202,1776628926.7865427,0.0,60097.53227233887,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 339 queued"", ""queue_depth"": 339, ""in_flight"": 256}"
+quiet_user,119,1776628862.682301,0.0,60900.23159980774,0,timeout
+quiet_user,230,1776628949.3822193,0.0,60200.278759002686,0,timeout
+quiet_user,29,1776628761.782636,0.0,21705.40142059326,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,31,1776628763.7822547,0.0,22700.428009033203,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,121,1776628863.9865074,0.0,55401.18312835693,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,199,1776628923.782238,0.0,60799.91865158081,0,timeout
+quiet_user,221,1776628940.6822586,0.0,55803.79009246826,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 248 queued"", ""queue_depth"": 248, ""in_flight"": 256}"
+quiet_user,231,1776628949.7820868,0.0,60800.89354515076,0,timeout
+quiet_user,91,1776628822.1820362,0.0,60400.22683143616,0,timeout
+quiet_user,144,1776628878.9822867,0.0,60600.3143787384,0,timeout
+quiet_user,171,1776628898.3819988,0.0,60200.97494125366,0,timeout
+quiet_user,132,1776628869.2822943,0.0,55207.334995269775,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,154,1776628889.482084,0.0,60100.31509399414,0,timeout
+quiet_user,60,1776628793.882226,0.0,60700.416803359985,0,timeout
+quiet_user,24,1776628754.0821729,0.0,11704.93459701538,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,63,1776628795.182043,0.0,60400.794982910156,0,timeout
+quiet_user,69,1776628799.583312,0.0,60999.33481216431,0,timeout
+quiet_user,110,1776628853.1854146,0.0,60396.751403808594,0,timeout
+quiet_user,141,1776628874.2822433,0.0,60300.451040267944,0,timeout
+quiet_user,151,1776628885.182256,0.0,60400.614976882935,0,timeout
+quiet_user,173,1776628901.5853658,0.0,60997.48873710632,0,timeout
+quiet_user,206,1776628928.4820879,0.0,58600.43501853943,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 339 queued"", ""queue_depth"": 339, ""in_flight"": 256}"
+quiet_user,15,1776628742.582034,0.0,9406.562566757202,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,28,1776628761.3824067,0.0,21400.505304336548,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,44,1776628778.882277,0.0,60700.151443481445,0,timeout
+quiet_user,100,1776628835.2821143,0.0,60300.00162124634,0,timeout
+quiet_user,26,1776628756.6823785,0.0,18199.769973754883,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,134,1776628869.682249,0.0,54808.28356742859,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,149,1776628883.5828156,0.0,60999.62115287781,0,timeout
+quiet_user,186,1776628910.082357,0.0,60500.13542175293,0,timeout
+quiet_user,204,1776628927.1822097,0.0,59703.30333709717,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 339 queued"", ""queue_depth"": 339, ""in_flight"": 256}"
+quiet_user,57,1776628791.0820959,0.0,62007.32350349426,0,timeout
+quiet_user,174,1776628901.9823585,0.0,60600.20661354065,0,timeout
+quiet_user,72,1776628801.2824364,0.0,60300.304889678955,0,timeout
+quiet_user,166,1776628896.382334,0.0,60200.06442070007,0,timeout
+quiet_user,187,1776628911.6824121,0.0,60899.83344078064,0,timeout
+quiet_user,209,1776628932.5822031,0.0,56300.26841163635,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 255 queued"", ""queue_depth"": 255, ""in_flight"": 256}"
+quiet_user,153,1776628885.9821594,0.0,60600.850105285645,0,timeout
+quiet_user,227,1776628945.9820247,0.0,55410.95423698425,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 246 queued"", ""queue_depth"": 246, ""in_flight"": 256}"
+quiet_user,41,1776628776.482302,0.0,60100.255727767944,0,timeout
+quiet_user,59,1776628793.182594,0.0,60400.397300720215,0,timeout
+quiet_user,148,1776628882.9823833,0.0,60600.398540496826,0,timeout
+quiet_user,3,1776628734.3965762,0.0,60186.49244308472,0,timeout
+quiet_user,48,1776628781.2821681,0.0,60300.49109458923,0,timeout
+quiet_user,155,1776628889.7823846,0.0,60800.416707992554,0,timeout
+quiet_user,238,1776628956.8821473,0.0,60700.11115074158,0,timeout
+quiet_user,51,1776628784.8941333,0.0,60995.82505226135,0,timeout
+quiet_user,30,1776628763.0824635,0.0,21811.944007873535,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,90,1776628821.8826425,0.0,60699.54586029053,0,timeout
+quiet_user,246,1776628970.4823782,0.0,60099.881410598755,0,timeout
+quiet_user,4,1776628735.082093,0.0,60500.28133392334,0,timeout
+quiet_user,107,1776628847.5908318,0.0,60991.39332771301,0,timeout
+quiet_user,138,1776628872.8876238,0.0,60695.09696960449,0,timeout
+quiet_user,207,1776628931.2821448,0.0,57600.236892700195,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 255 queued"", ""queue_depth"": 255, ""in_flight"": 256}"
+quiet_user,71,1776628800.4824166,0.0,60099.9276638031,0,timeout
+quiet_user,212,1776628935.682139,0.0,60704.31208610535,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 248 queued"", ""queue_depth"": 248, ""in_flight"": 256}"
+quiet_user,235,1776628952.4821448,0.0,60100.14081001282,0,timeout
+quiet_user,237,1776628954.3820434,0.0,60200.47736167908,0,timeout
+quiet_user,147,1776628881.1823454,0.0,60400.18033981323,0,timeout
+quiet_user,182,1776628909.0823784,0.0,60500.006675720215,0,timeout
+quiet_user,222,1776628942.9823227,0.0,53602.120876312256,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 249 queued"", ""queue_depth"": 249, ""in_flight"": 256}"
+quiet_user,106,1776628844.0824058,0.0,60499.75657463074,0,timeout
+quiet_user,109,1776628853.0901332,0.0,60492.10810661316,0,timeout
+quiet_user,10,1776628740.0824325,0.0,8804.325342178345,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,46,1776628779.0823107,0.0,60500.45299530029,0,timeout
+quiet_user,52,1776628785.185,0.0,60704.832315444946,0,timeout
+quiet_user,165,1776628895.582542,0.0,61000.245571136475,0,timeout
+quiet_user,85,1776628815.7823076,0.0,60799.85976219177,0,timeout
+quiet_user,64,1776628796.6823556,0.0,60900.426387786865,0,timeout
+quiet_user,177,1776628904.6823423,0.0,60899.84035491943,0,timeout
+quiet_user,188,1776628913.0846136,0.0,60497.77603149414,0,timeout
+quiet_user,242,1776628962.6822958,0.0,60900.43616294861,0,timeout
+quiet_user,143,1776628875.9824102,0.0,60599.96438026428,0,timeout
+quiet_user,169,1776628897.8823218,0.0,60700.403451919556,0,timeout
+quiet_user,37,1776628769.082429,0.0,35204.41508293152,0,"HTTP 500: {""error"": ""internal error: can't start new thread""}"
+quiet_user,45,1776628778.9822502,0.0,60600.68345069885,0,timeout
+quiet_user,56,1776628789.58232,0.0,61008.28790664673,0,timeout
+quiet_user,180,1776628906.1823308,0.0,60399.86610412598,0,timeout
+quiet_user,78,1776628805.982313,0.0,60600.06809234619,0,timeout
+quiet_user,201,1776628926.1843588,0.0,60397.91488647461,0,timeout
+quiet_user,43,1776628776.9823568,0.0,37901.700496673584,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,137,1776628872.7820473,0.0,60800.71210861206,0,timeout
+quiet_user,197,1776628921.882147,0.0,60700.22654533386,0,timeout
+quiet_user,73,1776628802.482341,0.0,60100.43239593506,0,timeout
+quiet_user,115,1776628861.0822506,0.0,60500.10585784912,0,timeout
+quiet_user,193,1776628917.7824247,0.0,60799.896240234375,0,timeout
+quiet_user,205,1776628927.5820577,0.0,61000.415563583374,0,timeout
+quiet_user,117,1776628861.5850844,0.0,60997.24888801575,0,timeout
+quiet_user,176,1776628903.8821476,0.0,60700.25372505188,0,timeout
+quiet_user,99,1776628833.6878731,0.0,60894.60468292236,0,timeout
+quiet_user,101,1776628835.6824687,0.0,60899.98722076416,0,timeout
+quiet_user,192,1776628916.3823452,0.0,60199.981689453125,0,timeout
+quiet_user,194,1776628917.9822686,0.0,60600.00014305115,0,timeout
+quiet_user,17,1776628744.8824372,0.0,10199.772119522095,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,68,1776628799.3820584,0.0,60200.27756690979,0,timeout
+quiet_user,18,1776628745.682042,0.0,10206.741333007812,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,88,1776628818.382104,0.0,60200.70433616638,0,timeout
+quiet_user,108,1776628850.5920777,0.0,60990.19646644592,0,timeout
+quiet_user,125,1776628866.4822426,0.0,58001.707315444946,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,35,1776628768.2824059,0.0,33400.09522438049,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,118,1776628861.6822603,0.0,60900.55775642395,0,timeout
+quiet_user,210,1776628933.9833841,0.0,54903.79738807678,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 255 queued"", ""queue_depth"": 255, ""in_flight"": 256}"
+quiet_user,225,1776628944.8820302,0.0,52801.48386955261,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 373 queued"", ""queue_depth"": 373, ""in_flight"": 256}"
+quiet_user,65,1776628796.9821115,0.0,60600.63624382019,0,timeout
+quiet_user,223,1776628943.082362,0.0,53503.10730934143,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 249 queued"", ""queue_depth"": 249, ""in_flight"": 256}"
+quiet_user,233,1776628952.0822246,0.0,60500.43439865112,0,timeout
+quiet_user,13,1776628742.1823986,0.0,9403.478622436523,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,19,1776628750.1825294,0.0,8499.730825424194,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,8,1776628739.3875608,0.0,7894.896984100342,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,92,1776628823.1821694,0.0,60400.01082420349,0,timeout
+quiet_user,136,1776628872.6825178,0.0,60900.16174316406,0,timeout
+quiet_user,98,1776628833.2823546,0.0,60299.87907409668,0,timeout
+quiet_user,156,1776628890.0823145,0.0,60500.07176399231,0,timeout
+quiet_user,184,1776628909.5826366,0.0,60999.79829788208,0,timeout
+quiet_user,82,1776628807.5823233,0.0,60999.87006187439,0,timeout
+quiet_user,152,1776628885.8823795,0.0,60700.854778289795,0,timeout
+quiet_user,27,1776628757.8821557,0.0,19404.463529586792,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,226,1776628945.7049496,0.0,60986.67573928833,0,timeout
+quiet_user,62,1776628794.8821588,0.0,60700.406551361084,0,timeout
+quiet_user,129,1776628868.1823764,0.0,56304.90589141846,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,179,1776628905.4822009,0.0,60100.048303604126,0,timeout
+quiet_user,185,1776628909.690475,0.0,60892.061948776245,0,timeout
+quiet_user,234,1776628952.1823435,0.0,60400.14553070068,0,timeout
+quiet_user,97,1776628831.5838284,0.0,60998.36206436157,0,timeout
+quiet_user,50,1776628784.0825543,0.0,34399.68991279602,0,"HTTP 500: {""error"": ""internal error: can't start new thread""}"
+quiet_user,79,1776628806.0820668,0.0,60500.20933151245,0,timeout
+quiet_user,80,1776628806.782084,0.0,60900.304317474365,0,timeout
+quiet_user,157,1776628890.282006,0.0,60300.97007751465,0,timeout
+quiet_user,168,1776628897.7823846,0.0,60800.036668777466,0,timeout
+quiet_user,198,1776628922.882022,0.0,60700.36172866821,0,timeout
+quiet_user,34,1776628767.3824987,0.0,60200.69980621338,0,timeout
+quiet_user,58,1776628792.8821914,0.0,60701.03311538696,0,timeout
+quiet_user,104,1776628841.482352,0.0,60100.20565986633,0,timeout
+quiet_user,213,1776628936.8821807,0.0,59601.25708580017,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 248 queued"", ""queue_depth"": 248, ""in_flight"": 256}"
+quiet_user,32,1776628764.7822125,0.0,25402.98295021057,0,"HTTP 500: {""error"": ""internal error: can't start new thread""}"
+quiet_user,40,1776628771.882215,0.0,55801.20801925659,0,"HTTP 500: {""error"": ""internal error: can't start new thread""}"
+quiet_user,83,1776628811.382711,0.0,60199.596643447876,0,timeout
+quiet_user,126,1776628867.1822634,0.0,57303.19023132324,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,189,1776628914.4822474,0.0,60100.008726119995,0,timeout
+quiet_user,200,1776628923.8822193,0.0,60700.00958442688,0,timeout
+quiet_user,214,1776628937.782377,0.0,58300.11487007141,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 245 queued"", ""queue_depth"": 245, ""in_flight"": 256}"
+quiet_user,55,1776628789.2820592,0.0,61307.74259567261,0,timeout
+quiet_user,89,1776628819.4823034,0.0,60099.8797416687,0,timeout
+quiet_user,181,1776628908.4823577,0.0,60099.83539581299,0,timeout
+quiet_user,11,1776628740.2821133,0.0,8900.338172912598,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,130,1776628868.3874726,0.0,56100.4683971405,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,172,1776628898.7823815,0.0,60799.999713897705,0,timeout
+quiet_user,127,1776628867.683114,0.0,56802.826166152954,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,86,1776628817.0824091,0.0,60499.93562698364,0,timeout
+quiet_user,123,1776628864.6821685,0.0,59606.21619224548,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,228,1776628948.0824935,0.0,60500.34427642822,0,timeout
+quiet_user,229,1776628949.0823495,0.0,60499.921798706055,0,timeout
+quiet_user,160,1776628891.6823835,0.0,60900.40445327759,0,timeout
+quiet_user,16,1776628744.4820893,0.0,9900.910377502441,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,163,1776628894.58323,0.0,60999.57180023193,0,timeout
+quiet_user,96,1776628830.8821335,0.0,60700.14309883118,0,timeout
+quiet_user,39,1776628771.6820214,0.0,40400.413274765015,0,"HTTP 500: {""error"": ""internal error: can't start new thread""}"
+quiet_user,42,1776628776.6822882,0.0,60900.55584907532,0,timeout
+quiet_user,14,1776628742.282331,0.0,9500.504970550537,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,164,1776628895.0821264,0.0,60500.45347213745,0,timeout
+quiet_user,94,1776628829.7821982,0.0,60800.111532211304,0,timeout
+quiet_user,220,1776628940.48226,0.0,56003.6199092865,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 248 queued"", ""queue_depth"": 248, ""in_flight"": 256}"
+quiet_user,75,1776628803.1820378,0.0,60804.389238357544,0,timeout
+quiet_user,124,1776628865.2823079,0.0,59100.36396980286,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,219,1776628940.0845125,0.0,56400.36940574646,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 248 queued"", ""queue_depth"": 248, ""in_flight"": 256}"
+quiet_user,38,1776628769.2821474,0.0,60300.469636917114,0,timeout
+quiet_user,95,1776628830.1819766,0.0,60400.298833847046,0,timeout
+quiet_user,150,1776628885.082019,0.0,60500.396490097046,0,timeout
+quiet_user,183,1776628909.2823615,0.0,60300.08912086487,0,timeout
+quiet_user,142,1776628875.282327,0.0,60300.31991004944,0,timeout
+quiet_user,232,1776628951.882232,0.0,60700.47044754028,0,timeout
+quiet_user,145,1776628880.0823758,0.0,60500.216484069824,0,timeout
+quiet_user,167,1776628897.6822896,0.0,60900.47574043274,0,timeout
+quiet_user,5,1776628736.0820658,0.0,60500.481843948364,0,timeout
+quiet_user,131,1776628868.6835704,0.0,55804.45718765259,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,7,1776628737.4837766,0.0,60098.575592041016,0,timeout
+quiet_user,245,1776628968.7824802,0.0,60800.336599349976,0,timeout
+quiet_user,1,1776628730.027844,0.0,60555.214405059814,0,timeout
+quiet_user,36,1776628768.4823842,0.0,60100.31461715698,0,timeout
+quiet_user,93,1776628823.4826252,0.0,60099.62701797485,0,timeout
+quiet_user,190,1776628916.0822039,0.0,60499.985694885254,0,timeout
+quiet_user,241,1776628959.9820871,0.0,60600.65412521362,0,timeout
+quiet_user,22,1776628752.2835486,0.0,9198.781967163086,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,81,1776628807.1824358,0.0,60500.001192092896,0,timeout
+quiet_user,84,1776628813.8892252,0.0,60692.92140007019,0,timeout
+quiet_user,240,1776628958.7854455,0.0,60797.41668701172,0,timeout
+quiet_user,74,1776628802.7891948,0.0,61196.616888046265,0,timeout
+quiet_user,175,1776628903.387517,0.0,60195.14846801758,0,timeout
+quiet_user,20,1776628750.2826335,0.0,8703.505277633667,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,49,1776628781.584527,0.0,60998.233795166016,0,timeout
+quiet_user,111,1776628853.4854617,0.0,60096.83609008789,0,timeout
+quiet_user,159,1776628891.58267,0.0,61000.01096725464,0,timeout
+quiet_user,216,1776628938.5830283,0.0,30299.270629882812,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 405 queued"", ""queue_depth"": 405, ""in_flight"": 256}"
+quiet_user,25,1776628756.1826835,0.0,17406.139850616455,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,217,1776628938.9820251,0.0,57202.791929244995,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 245 queued"", ""queue_depth"": 245, ""in_flight"": 256}"
+quiet_user,70,1776628800.0827677,0.0,60499.73154067993,0,timeout
+quiet_user,23,1776628752.482657,0.0,9299.572944641113,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,53,1776628786.7823904,0.0,34801.477909088135,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,112,1776628853.982396,0.0,60599.93314743042,0,timeout
+quiet_user,47,1776628780.9826636,0.0,60599.894523620605,0,timeout
+quiet_user,67,1776628799.0822902,0.0,60500.20170211792,0,timeout
+quiet_user,120,1776628863.4823241,0.0,60100.499629974365,0,timeout
+quiet_user,170,1776628898.282016,0.0,60300.86970329285,0,timeout
+quiet_user,76,1776628805.0821726,0.0,60500.28109550476,0,timeout
+quiet_user,195,1776628920.5832982,0.0,37405.17735481262,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 398 queued"", ""queue_depth"": 398, ""in_flight"": 256}"
+quiet_user,6,1776628736.9821935,0.0,60600.465297698975,0,timeout
+quiet_user,12,1776628741.282018,0.0,9003.384590148926,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,122,1776628864.2823803,0.0,60002.17056274414,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,211,1776628934.4826658,0.0,54405.74073791504,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 255 queued"", ""queue_depth"": 255, ""in_flight"": 256}"
+quiet_user,236,1776628952.9823275,0.0,60600.28004646301,0,timeout
+quiet_user,2,1776628733.2825856,0.0,60299.739599227905,0,timeout
+quiet_user,140,1776628873.2822688,0.0,60300.13298988342,0,timeout
+quiet_user,114,1776628860.882256,0.0,60700.39939880371,0,timeout
+quiet_user,218,1776628939.18231,0.0,57003.39365005493,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 245 queued"", ""queue_depth"": 245, ""in_flight"": 256}"
+quiet_user,239,1776628956.9822257,0.0,60600.16179084778,0,timeout
+quiet_user,243,1776628964.3823729,0.0,60200.22678375244,0,timeout
+quiet_user,87,1776628817.3823874,0.0,60200.03819465637,0,timeout
+quiet_user,244,1776628968.5823288,0.0,32810.9085559845,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 246 queued"", ""queue_depth"": 246, ""in_flight"": 256}"
+quiet_user,21,1776628751.8824716,0.0,9004.800081253052,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,139,1776628872.982222,0.0,60600.37970542908,0,timeout
+quiet_user,61,1776628793.9822433,0.0,60600.01540184021,0,timeout
+quiet_user,66,1776628798.1848502,0.0,60397.7210521698,0,timeout
+quiet_user,102,1776628835.982306,0.0,60600.09813308716,0,timeout
+quiet_user,146,1776628880.583755,0.0,60998.807430267334,0,timeout
+quiet_user,9,1776628739.8823805,0.0,8499.845027923584,0,"HTTP 500: {""error"": ""internal error: [Errno 11] Resource temporarily unavailable""}"
+quiet_user,128,1776628868.087391,0.0,56399.50442314148,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 282 queued"", ""queue_depth"": 282, ""in_flight"": 256}"
+quiet_user,135,1776628872.382255,0.0,53801.32699012756,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 254 queued"", ""queue_depth"": 254, ""in_flight"": 256}"
+quiet_user,158,1776628890.482334,0.0,60100.600719451904,0,timeout
+quiet_user,161,1776628891.9821627,0.0,60600.45528411865,0,timeout
+quiet_user,196,1776628920.9820354,0.0,60600.1079082489,0,timeout
+quiet_user,215,1776628937.9823754,0.0,58100.242137908936,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 245 queued"", ""queue_depth"": 245, ""in_flight"": 256}"
+quiet_user,248,1776628970.9827178,0.0,60600.07619857788,0,timeout
+quiet_user,247,1776628970.5835142,0.0,60999.43995475769,0,timeout
+quiet_user,249,1776628971.982122,0.0,60600.576400756836,0,timeout
+quiet_user,250,1776628973.082608,0.0,60499.675273895264,0,timeout
+quiet_user,252,1776628973.982389,0.0,60600.09264945984,0,timeout
+quiet_user,251,1776628973.682403,0.0,60900.31337738037,0,timeout
+quiet_user,253,1776628974.9823635,0.0,60600.242137908936,0,timeout
+quiet_user,254,1776628975.8821707,0.0,60700.38986206055,0,timeout
+quiet_user,255,1776628977.382046,0.0,60200.29139518738,0,timeout
+quiet_user,257,1776628978.082199,0.0,60500.312089920044,0,timeout
+quiet_user,256,1776628977.6823673,0.0,60900.31409263611,0,timeout
+quiet_user,258,1776628978.8821533,0.0,60700.5250453949,0,timeout
+quiet_user,259,1776628980.2824774,0.0,60300.063610076904,0,timeout
+quiet_user,260,1776628982.5828216,0.0,60999.61042404175,0,timeout
+quiet_user,261,1776628982.6820235,0.0,60900.463819503784,0,timeout
+quiet_user,262,1776628983.7820637,0.0,60800.185680389404,0,timeout
+quiet_user,263,1776628984.3820539,0.0,60200.32501220703,0,timeout
+quiet_user,264,1776628985.0823858,0.0,60499.99713897705,0,timeout
+quiet_user,266,1776628985.9821563,0.0,60600.36849975586,0,timeout
+quiet_user,265,1776628985.7822635,0.0,60800.34923553467,0,timeout
+quiet_user,268,1776628987.4822543,0.0,60100.10075569153,0,timeout
+quiet_user,267,1776628986.5825777,0.0,61000.02455711365,0,timeout
+quiet_user,270,1776628988.1823602,0.0,60399.94430541992,0,timeout
+quiet_user,269,1776628987.8820593,0.0,60700.55937767029,0,timeout
+quiet_user,271,1776628989.5822563,0.0,61000.23078918457,0,timeout
+quiet_user,273,1776628991.0820482,0.0,60500.70929527283,0,timeout
+quiet_user,272,1776628990.8823142,0.0,60700.48499107361,0,timeout
+quiet_user,296,1776629019.5830455,0.0,32399.41668510437,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 383 queued"", ""queue_depth"": 383, ""in_flight"": 256}"
+quiet_user,274,1776628993.9820948,0.0,60600.404500961304,0,timeout
+quiet_user,275,1776628995.0822983,0.0,60500.40864944458,0,timeout
+quiet_user,276,1776628995.8823023,0.0,60700.34432411194,0,timeout
+quiet_user,277,1776628998.9826043,0.0,60599.79343414307,0,timeout
+quiet_user,278,1776629003.9823368,0.0,60599.89881515503,0,timeout
+quiet_user,279,1776629005.1821938,0.0,60399.951219558716,0,timeout
+quiet_user,280,1776629005.18446,0.0,60397.75371551514,0,timeout
+quiet_user,281,1776629007.6822534,0.0,60899.89376068115,0,timeout
+quiet_user,282,1776629008.4822288,0.0,60099.9858379364,0,timeout
+quiet_user,283,1776629010.682397,0.0,59104.132413864136,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 296 queued"", ""queue_depth"": 296, ""in_flight"": 256}"
+quiet_user,284,1776629011.2908425,0.0,58498.50249290466,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 296 queued"", ""queue_depth"": 296, ""in_flight"": 256}"
+quiet_user,285,1776629011.4822276,0.0,58307.64722824097,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 296 queued"", ""queue_depth"": 296, ""in_flight"": 256}"
+quiet_user,286,1776629012.2821546,0.0,60300.177335739136,0,timeout
+quiet_user,287,1776629012.4823678,0.0,60100.11029243469,0,timeout
+quiet_user,289,1776629016.0822563,0.0,60500.02980232239,0,timeout
+quiet_user,288,1776629015.8822405,0.0,60700.0994682312,0,timeout
+quiet_user,290,1776629016.4820464,0.0,60100.64649581909,0,timeout
+quiet_user,291,1776629016.8822181,0.0,60700.18553733826,0,timeout
+quiet_user,292,1776629017.4877925,0.0,60094.84100341797,0,timeout
+quiet_user,293,1776629017.9824395,0.0,60599.891662597656,0,timeout
+quiet_user,294,1776629017.983691,0.0,60598.89459609985,0,timeout
+quiet_user,295,1776629019.186642,0.0,60395.89428901672,0,timeout
+quiet_user,297,1776629020.7018032,0.0,60880.55634498596,0,timeout
+quiet_user,298,1776629022.0824084,0.0,60499.940633773804,0,timeout
+quiet_user,299,1776629024.4823272,0.0,60100.01754760742,0,timeout
+quiet_user,300,1776629026.7824018,0.0,59807.0547580719,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 111 queued"", ""queue_depth"": 111, ""in_flight"": 256}"
+quiet_user,301,1776629028.4823785,0.0,58200.22892951965,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 111 queued"", ""queue_depth"": 111, ""in_flight"": 256}"
+quiet_user,302,1776629028.7823722,0.0,57900.38752555847,0,"HTTP 503: {""error"": ""server overloaded"", ""detail"": ""Admission timeout: 256 in-flight, 111 queued"", ""queue_depth"": 111, ""in_flight"": 256}"
