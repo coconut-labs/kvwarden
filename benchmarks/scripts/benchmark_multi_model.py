@@ -533,18 +533,32 @@ class MultiModelBenchmarkClient:
                         try:
                             chunk = json.loads(data_str)
                             choices = chunk.get("choices", [])
-                            if choices and choices[0].get("text", ""):
-                                # C2 fix: TTFT is time-to-first-non-empty-content,
-                                # not time-to-first-SSE-frame (which is just the
-                                # network RTT to the server). Empty/role-only
-                                # frames do not count as a token.
+                            if not choices:
+                                continue
+                            # Support /v1/completions (`text` field) AND
+                            # /v1/chat/completions (`delta.content` field). On
+                            # chat-template engines `text` is always missing,
+                            # so without the delta fallback TTFT silently
+                            # collapses to total_latency_ms.
+                            content = (
+                                choices[0].get("text")
+                                or choices[0].get("delta", {}).get("content")
+                                or ""
+                            )
+                            # C2 fix: TTFT is time-to-first-non-empty-content.
+                            # `.strip()` rejects whitespace-only or role-only
+                            # frames that vLLM/SGLang emit before real tokens —
+                            # bool("\n") is True, which would re-introduce the
+                            # very bug PR #28 set out to kill.
+                            if content.strip():
                                 if first_token_time is None:
                                     first_token_time = time.time()
                                 tokens_out += 1
                         except (json.JSONDecodeError, KeyError):
-                            if first_token_time is None:
-                                first_token_time = time.time()
-                            tokens_out += 1
+                            # Malformed SSE chunk — do NOT count as a token
+                            # and do NOT stamp TTFT (a parse error is not
+                            # generation progress).
+                            continue
 
             except asyncio.TimeoutError:
                 logger.warning("req=%d MODEL=%s TIMEOUT after %.0fs",

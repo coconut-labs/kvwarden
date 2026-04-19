@@ -39,12 +39,16 @@ class MockEngineState:
         ok_latency: float,
         stall_s: float,
         delay_first_content_s: float = 0.0,
+        first_chunk_whitespace: int = 0,
+        chat_completions_shape: bool = False,
     ):
         self.model = model
         self.hang_after = hang_after
         self.ok_latency = ok_latency
         self.stall_s = stall_s
         self.delay_first_content_s = delay_first_content_s
+        self.first_chunk_whitespace = first_chunk_whitespace
+        self.chat_completions_shape = chat_completions_shape
         self.request_count = 0
         self.stalled_count = 0
 
@@ -122,31 +126,47 @@ async def handle_completions(request: web.Request) -> web.StreamResponse:
     )
     await resp.prepare(request)
 
-    # Discriminator for real-TTFT: emit an empty-text frame immediately so a
-    # broken harness that times the first SSE frame sees a near-zero TTFT,
-    # then sleep before the first real-content chunk. A correct harness times
-    # the first non-empty `choices[0].text` and reports ~delay_first_content_s.
-    if state.delay_first_content_s > 0:
-        preamble = {
+    def _make_chunk(text_value: str | None, finish: str | None = None) -> dict[str, Any]:
+        # Chat-completions shape uses `delta.content`; classic completions
+        # uses `text`. Real engines pick based on endpoint; we let the test
+        # override so the harness can be exercised against both shapes.
+        if state.chat_completions_shape:
+            choice: dict[str, Any] = {
+                "index": 0,
+                "delta": {"content": text_value} if text_value is not None else {"role": "assistant"},
+                "finish_reason": finish,
+            }
+            obj = "chat.completion.chunk"
+        else:
+            choice = {"index": 0, "text": text_value if text_value is not None else "", "finish_reason": finish}
+            obj = "text_completion.chunk"
+        return {
             "id": f"mock-{rid}",
-            "object": "text_completion.chunk",
+            "object": obj,
             "created": int(time.time()),
             "model": state.model,
-            "choices": [{"index": 0, "text": "", "finish_reason": None}],
+            "choices": [choice],
         }
-        await resp.write(f"data: {json.dumps(preamble)}\n\n".encode())
+
+    # Discriminator for real-TTFT v2:
+    #   --first-chunk-whitespace N: emit N whitespace-only frames before
+    #     content. A broken `bool(text)` check counts whitespace as a token
+    #     and stamps TTFT early; the v2 fix uses `text.strip()` and is honest.
+    #   --delay-first-content-s D: emit one empty/role-only frame, sleep D,
+    #     then real content. A broken harness that times the first SSE frame
+    #     reports D≈0; the v2 fix reports ~D.
+    if state.first_chunk_whitespace > 0:
+        for _ in range(state.first_chunk_whitespace):
+            await resp.write(f"data: {json.dumps(_make_chunk(' '))}\n\n".encode())
+        if state.delay_first_content_s > 0:
+            await asyncio.sleep(state.delay_first_content_s)
+    elif state.delay_first_content_s > 0:
+        # Empty-text (or role-only delta) preamble.
+        await resp.write(f"data: {json.dumps(_make_chunk(None))}\n\n".encode())
         await asyncio.sleep(state.delay_first_content_s)
 
     for tok_i in range(max(1, max_tokens)):
-        chunk = {
-            "id": f"mock-{rid}",
-            "object": "text_completion.chunk",
-            "created": int(time.time()),
-            "model": state.model,
-            "choices": [{"index": 0, "text": f"t{tok_i} ", "finish_reason": None}],
-        }
-        await resp.write(f"data: {json.dumps(chunk)}\n\n".encode())
-        # Small inter-token delay to look like generation
+        await resp.write(f"data: {json.dumps(_make_chunk(f't{tok_i} '))}\n\n".encode())
         await asyncio.sleep(max(0.001, state.ok_latency / max(1, max_tokens)))
     await resp.write(b"data: [DONE]\n\n")
     await resp.write_eof()
@@ -191,6 +211,18 @@ def main() -> None:
         default=float(os.environ.get("MOCK_DELAY_FIRST_CONTENT", "0")),
         help="On streaming responses, emit an empty-text SSE frame, then sleep this long before the first real-content chunk (real-TTFT discriminator)",
     )
+    p.add_argument(
+        "--first-chunk-whitespace",
+        type=int,
+        default=int(os.environ.get("MOCK_FIRST_CHUNK_WHITESPACE", "0")),
+        help="Emit N whitespace-only SSE frames before any real content (TTFT v2 discriminator: ensures `text.strip()` is checked, not bool(text))",
+    )
+    p.add_argument(
+        "--chat-completions-shape",
+        action="store_true",
+        default=os.environ.get("MOCK_CHAT_SHAPE", "0") not in ("", "0"),
+        help="Emit chat.completion.chunk shape (delta.content) instead of text_completion.chunk (text). Tests harness chat-template path.",
+    )
     p.add_argument("--log-level", default="INFO")
     args = p.parse_args()
 
@@ -205,10 +237,12 @@ def main() -> None:
         ok_latency=args.ok_latency_s,
         stall_s=args.stall_s,
         delay_first_content_s=args.delay_first_content_s,
+        first_chunk_whitespace=args.first_chunk_whitespace,
+        chat_completions_shape=args.chat_completions_shape,
     )
     logger.info(
-        "mock engine starting: port=%d model=%s hang_after=%d ok_latency=%.2fs stall=%.0fs delay_first_content=%.2fs",
-        args.port, args.model, args.hang_after, args.ok_latency_s, args.stall_s, args.delay_first_content_s,
+        "mock engine starting: port=%d model=%s hang_after=%d ok_latency=%.2fs stall=%.0fs delay_first_content=%.2fs first_chunk_ws=%d chat_shape=%s",
+        args.port, args.model, args.hang_after, args.ok_latency_s, args.stall_s, args.delay_first_content_s, args.first_chunk_whitespace, args.chat_completions_shape,
     )
     web.run_app(make_app(state), host="127.0.0.1", port=args.port, print=None)
 
