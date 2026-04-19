@@ -1,0 +1,78 @@
+{
+  "scenario": "dual-model-serving",
+  "models": [
+    "meta-llama/Llama-3.1-8B-Instruct"
+  ],
+  "concurrency_levels": [
+    128,
+    256
+  ],
+  "benchmarks": [
+    {
+      "scenario": "dual-model-serving",
+      "workload": "concurrent",
+      "concurrency": 128,
+      "num_requests": 400,
+      "num_successful": 400,
+      "num_failed": 0,
+      "ttft_p50_ms": 612.2946739196777,
+      "ttft_p95_ms": 3357.522165775299,
+      "ttft_p99_ms": 3425.6288290023804,
+      "total_latency_p50_ms": 2778.5136699676514,
+      "total_latency_p99_ms": 5396.388881206512,
+      "throughput_tok_per_sec": 4699.795416239878,
+      "per_model": {
+        "Llama-3.1-8B-Instruct": {
+          "num_requests": 400,
+          "num_cold_starts": 0,
+          "ttft_p50_ms": 612.2946739196777,
+          "ttft_p99_ms": 3425.6288290023804,
+          "total_latency_p50_ms": 2778.5136699676514,
+          "total_latency_p99_ms": 5396.388881206512,
+          "tokens_generated": 50654
+        }
+      },
+      "gpu_memory": {
+        "peak_used_mb": 69990.875,
+        "mean_used_mb": 69952.76388888889,
+        "total_mb": 81559.0,
+        "peak_utilization_pct": 85.81624958618914,
+        "gpu_compute_util_mean": 74.33333333333333
+      },
+      "wall_time_ms": 10850.706845987588
+    },
+    {
+      "scenario": "dual-model-serving",
+      "workload": "concurrent",
+      "concurrency": 256,
+      "num_requests": 400,
+      "num_successful": 400,
+      "num_failed": 0,
+      "ttft_p50_ms": 3406.021475791931,
+      "ttft_p95_ms": 6142.4046993255615,
+      "ttft_p99_ms": 6177.053716182709,
+      "total_latency_p50_ms": 5539.411306381226,
+      "total_latency_p99_ms": 8306.724207401276,
+      "throughput_tok_per_sec": 4646.605311067776,
+      "per_model": {
+        "Llama-3.1-8B-Instruct": {
+          "num_requests": 400,
+          "num_cold_starts": 0,
+          "ttft_p50_ms": 3406.021475791931,
+          "ttft_p99_ms": 6177.053716182709,
+          "total_latency_p50_ms": 5539.411306381226,
+          "total_latency_p99_ms": 8306.724207401276,
+          "tokens_generated": 50673
+        }
+      },
+      "gpu_memory": {
+        "peak_used_mb": 69990.875,
+        "mean_used_mb": 69990.875,
+        "total_mb": 81559.0,
+        "peak_utilization_pct": 85.81624958618914,
+        "gpu_compute_util_mean": 72.4770642201835
+      },
+      "wall_time_ms": 10986.060441937298
+    }
+  ]
+}
