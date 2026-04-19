@@ -49,10 +49,22 @@ run_arm() {
     echo "Track D arm: $name ($cfg)"
     echo "============================================================"
 
-    pkill -9 -f infergrid 2>/dev/null || true
-    pkill -9 -f vllm 2>/dev/null || true
-    echo "Waiting for GPU memory release..."
-    wait_gpu_clear
+    # NOTE: pkill -f infergrid would self-kill — this script's path
+    # contains 'infergrid'. We instead kill the engine workers (which
+    # don't share that pattern) by full cmdline + targeted PIDs.
+    if pgrep -f "vllm.entrypoints" > /dev/null 2>&1; then
+        echo "Killing prior vLLM engine workers..."
+        pkill -9 -f "vllm.entrypoints" 2>/dev/null || true
+        for pid in $(pgrep -f "infergrid serve" 2>/dev/null); do
+            if [ "$pid" != "$$" ] && [ "$pid" != "$BASHPID" ]; then
+                kill -9 $pid 2>/dev/null || true
+            fi
+        done
+        echo "Waiting for GPU memory release..."
+        wait_gpu_clear
+    else
+        echo "Fresh pod / no prior workers — skipping cleanup."
+    fi
 
     nohup infergrid serve --config $cfg > $d/server.log 2>&1 &
     local pid=$!
@@ -88,8 +100,12 @@ run_arm() {
 
     kill $pid 2>/dev/null || true
     sleep 3
-    pkill -9 -f infergrid 2>/dev/null || true
-    pkill -9 -f vllm 2>/dev/null || true
+    pkill -9 -f "vllm.entrypoints" 2>/dev/null || true
+    for ipid in $(pgrep -f "infergrid serve" 2>/dev/null); do
+        if [ "$ipid" != "$$" ] && [ "$ipid" != "$BASHPID" ]; then
+            kill -9 $ipid 2>/dev/null || true
+        fi
+    done
     sleep 15
 }
 
