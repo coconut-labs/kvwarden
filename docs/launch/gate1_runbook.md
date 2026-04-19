@@ -228,11 +228,13 @@ Gate 1 documented (`GATE1_OUTCOME.md` line 90) that Arm A's vLLM subprocess leak
 
 ```bash
 python3 - <<EOF
-import runpod, os
+import runpod, os, time
 runpod.api_key = os.environ["RUNPOD_API_KEY"]
 runpod.stop_pod("$POD_ID")
-import time; time.sleep(45)   # wait for stop to settle
-runpod.resume_pod("$POD_ID")
+time.sleep(60)   # wait for stop to settle (45s was too short in practice)
+# IMPORTANT: runpod SDK 1.9+ requires gpu_count as a kwarg to resume_pod.
+# Calling resume_pod(pod_id) alone raises TypeError.
+runpod.resume_pod("$POD_ID", gpu_count=1)
 EOF
 ```
 
