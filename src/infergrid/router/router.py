@@ -51,6 +51,19 @@ BUCKET_PRIORITY: dict[str, int] = {
 }
 
 
+def _approx_tokens_in(payload: dict[str, Any]) -> int:
+    """Whitespace-split approximation of input token count.
+
+    Off by a constant factor vs a real tokenizer (BPE expands ~1.3x on
+    English) but cheap, no model dependency, and sufficient for tenant
+    budget accounting. The bench harness reports ground-truth counts.
+    """
+    text = payload.get("prompt") or " ".join(
+        str(m.get("content", "")) for m in payload.get("messages", [])
+    )
+    return len(text.split())
+
+
 def classify_request_length(max_tokens: int, input_tokens: int = 0) -> str:
     """Classify a request into a length bucket.
 
@@ -410,12 +423,32 @@ class WorkloadRouter:
             # Forward the request
             result = await state.adapter.forward_request(path, payload, stream=stream)
 
-            # Update tracking
-            elapsed = time.monotonic() - start_time
             state.request_count += 1
-            state.total_latency_s += elapsed
             state.last_request_time = time.monotonic()
 
+            # For streaming: result is an async generator that has NOT been
+            # consumed yet. We must defer ALL accounting (latency, tokens,
+            # tenant budget, metrics) into the wrapper's finally — recording
+            # them here would log placeholder values (latency = handoff time,
+            # tokens_out = 0) and never correct them post-stream. Both the
+            # admission slot and the budget reflect the true stream lifetime.
+            if stream and hasattr(result, "__aiter__"):
+                tokens_in = _approx_tokens_in(payload)
+                wrapped = self._stream_with_admission(
+                    result,
+                    model_id=model_id,
+                    tenant_id=tenant_id,
+                    state=state,
+                    tokens_in=tokens_in,
+                    start_time=start_time,
+                )
+                released = True  # ownership transferred to wrapper
+                return wrapped
+
+            # Non-streaming: usage is in the response dict, accounting is
+            # accurate at this point.
+            elapsed = time.monotonic() - start_time
+            state.total_latency_s += elapsed
             tokens_out = 0
             tokens_in = 0
             if isinstance(result, dict):
@@ -435,27 +468,6 @@ class WorkloadRouter:
                 tenant_id, tokens_in=tokens_in, tokens_out=tokens_out,
                 gpu_seconds=elapsed,
             )
-
-            # For streaming, `result` is an async generator that has NOT yet
-            # been consumed. If we release admission here in `finally`, the
-            # slot frees microseconds after acquire() — the engine is still
-            # generating tokens but admission already counts the slot as free.
-            # That is exactly the streaming-bypass bug confirmed by the
-            # smoke_bench poller (peak in_flight=0 with cap=16).
-            #
-            # Fix: hand the slot to a wrapper generator whose own `finally`
-            # releases when the iterator exhausts, raises, or is GC'd by the
-            # caller. Caveat: a client that abandons mid-stream keeps the slot
-            # held until the wrapper is collected. Acceptable trade-off for the
-            # honest engagement we need at Gate 1; revisit with a hard
-            # per-request keepalive timeout once we have real-traffic data.
-            if stream and hasattr(result, "__aiter__"):
-                wrapped = self._stream_with_admission(
-                    result, tenant_id=tenant_id,
-                )
-                released = True  # ownership transferred to wrapper
-                return wrapped
-
             return result
 
         except BudgetExceededError:
@@ -475,27 +487,63 @@ class WorkloadRouter:
     async def _stream_with_admission(
         self,
         inner: Any,
+        *,
+        model_id: str,
         tenant_id: str,
+        state: ModelState,
+        tokens_in: int,
+        start_time: float,
     ) -> Any:
-        """Stream inner iterator while holding the admission slot.
+        """Stream inner iterator while holding admission + accounting slots.
 
-        Releases the admission slot and tenant slot in `finally` so cancellation,
-        client disconnect (aiohttp closes the response), and normal completion
-        all converge on a single release path. Also `aclose()`s the inner
-        engine generator so its underlying aiohttp `session.post()` context
-        unwinds eagerly — without this, an aborted client leaves the engine
-        connection open and the engine keeps generating tokens until the
-        inner generator is GC'd.
+        Releases the admission slot, tenant slot, and records request +
+        budget metrics in `finally` so cancellation, client disconnect
+        (aiohttp closes the response), and normal completion all converge
+        on a single accounting path. Also `aclose()`s the inner engine
+        generator so its aiohttp `session.post()` unwinds eagerly — without
+        this, an aborted client leaves the engine connection open and the
+        engine keeps generating tokens until the inner generator is GC'd.
+
+        chunk_count is a coarse proxy for tokens_out: each SSE chunk is
+        usually one token (in /v1/completions) or a delta frame (in
+        /v1/chat/completions). The bench harness reports ground-truth
+        token counts; the router uses chunk_count for tenant budget +
+        Prometheus only. Wrong by a small constant factor on chat APIs;
+        not wrong by orders of magnitude as the pre-PR-#32 zero was.
         """
+        chunk_count = 0
+        status = "error"  # flipped to "ok" only on clean exhaustion
         try:
             async for chunk in inner:
+                chunk_count += 1
                 yield chunk
+            status = "ok"
         finally:
             if hasattr(inner, "aclose"):
                 try:
                     await inner.aclose()
                 except Exception:
                     pass
+            elapsed_real = time.monotonic() - start_time
+            state.total_latency_s += elapsed_real
+            try:
+                self.metrics.record_request(
+                    model=model_id,
+                    tenant=tenant_id,
+                    status=status,
+                    latency_s=elapsed_real,
+                    tokens_in=tokens_in,
+                    tokens_out=chunk_count,
+                )
+                await self.tenant_manager.record_completion(
+                    tenant_id, tokens_in=tokens_in, tokens_out=chunk_count,
+                    gpu_seconds=elapsed_real,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "stream metrics record failed model=%s tenant=%s: %s",
+                    model_id, tenant_id, exc,
+                )
             self.admission_controller.release()
             await self.tenant_manager.release_for_tenant(tenant_id)
 
