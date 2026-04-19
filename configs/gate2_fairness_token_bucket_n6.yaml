@@ -1,0 +1,35 @@
+# Track C — N=6 tenant fairness experiment.
+# 1 flooder + 5 quiet tenants on a single Llama-3.1-8B engine.
+# Same defaults as quickstart_fairness.yaml, dimensioned for higher
+# tenant count without changing the load-bearing rate-limit lever.
+#
+# Hypothesis: token-bucket guarantee scales — each quiet tenant's p99
+# stays within ~1.5× of solo regardless of how many quiet siblings exist.
+# A failure mode would be one quiet tenant degrading more than others
+# (priority-queue starvation), which the per-tenant CSVs surface
+# directly.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 384            # 6 tenants × 64 = 384 ceiling, generous
+admission_queue_size: 4096
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 256
+  rate_limit_rpm: 600          # 10 RPS each — same per-tenant ceiling as Arm 5b
+  rate_limit_burst: 10
+  priority: 1
+  scheduling: drr
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
