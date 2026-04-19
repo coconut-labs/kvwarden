@@ -44,8 +44,9 @@ MOCK_KNEE=${MOCK_KNEE:-128}
 MOCK_PER_EXCESS_S=${MOCK_PER_EXCESS_S:-0.012}
 SKIP_DISCRIMINATOR=${SKIP_DISCRIMINATOR:-0}
 
-REPO_ROOT=$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || cd "$(dirname "$0")/.." && pwd)
-cd "$REPO_ROOT"
+REPO_ROOT=$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null \
+            || ( cd "$(dirname "$0")/.." && pwd ))
+cd "$REPO_ROOT" || { echo "FATAL: cannot cd to REPO_ROOT='$REPO_ROOT'"; exit 2; }
 
 ARM_A_CFG="$REPO_ROOT/configs/gate1_admission.yaml"
 ARM_B_CFG="$REPO_ROOT/configs/gate1_admission_off.yaml"

@@ -9,6 +9,13 @@ admission_queue_size: 1024
 engine_start_timeout_s: 420
 log_level: INFO
 
+# Match Arm A's tenant_defaults so the only variable is max_concurrent
+# (the admission cap). Without this, both arms hit the 64-default budget
+# at c=128+ and the experiment measures 429-shaped failures, not admission.
+tenant_defaults:
+  max_concurrent_requests: 1024
+  rate_limit_rpm: 60000
+
 models:
   - model_id: "meta-llama/Llama-3.1-8B-Instruct"
     short_name: "llama31-8b"

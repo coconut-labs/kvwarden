@@ -141,7 +141,19 @@ async def _run_server(config: InferGridConfig) -> None:
     """
     metrics = MetricsCollector()
     cache_manager = CacheManager()
-    tenant_manager = TenantManager()
+    # Wire config.tenant_defaults → TenantManager.default_budget. Without
+    # this, the manager always falls back to its internal 64-concurrent
+    # default and rejects high-concurrency traffic with 429 even when the
+    # config lifts the cap. That blocks Gate 1 (c=256 vs default=64).
+    from infergrid.tenant.manager import TenantBudget
+    td = config.tenant_defaults
+    default_budget = TenantBudget(
+        max_concurrent_requests=td.max_concurrent_requests,
+        rate_limit_rpm=td.rate_limit_rpm,
+        max_gpu_memory_gb=td.max_gpu_memory_gb,
+        priority=td.priority,
+    )
+    tenant_manager = TenantManager(default_budget=default_budget)
 
     router = WorkloadRouter(
         config=config,

@@ -380,7 +380,16 @@ class MultiModelBenchmarkClient:
         aborted_after: int | None = None
         ABORT_THRESHOLD = 5
 
-        async with aiohttp.ClientSession() as session:
+        # Default TCPConnector caps simultaneous connections per host at 100,
+        # which silently clamps any bench run with concurrency > 100. For
+        # Gate 1 we ask for c=128 and c=256 — without this lift the harness
+        # measures the connector limit, not the engine. Sized to 4× the
+        # configured concurrency so neither connector nor pool starves.
+        connector = aiohttp.TCPConnector(
+            limit=max(256, self.concurrency * 4),
+            limit_per_host=max(256, self.concurrency * 4),
+        )
+        async with aiohttp.ClientSession(connector=connector) as session:
             tasks: list[asyncio.Task[MultiModelRequestMetrics]] = []
             for i, (model, req) in enumerate(zip(schedule, requests)):
                 prompt = req.get("prompt", "") if isinstance(req, dict) else str(req)
@@ -1007,8 +1016,20 @@ async def main() -> None:
             "Qwen/Qwen2.5-7B-Instruct",
         ]
 
-    if len(models) < 2:
-        logger.error("Need at least 2 models for multi-model benchmarks")
+    # `concurrent` workload distributes requests across the model list and
+    # works for any N >= 1 (single-model is the realistic Gate 1 setup).
+    # `switch_latency`, `alternating`, `bursty`, `eviction` compare across
+    # models and need at least two.
+    SINGLE_MODEL_OK_WORKLOADS = {"concurrent"}
+    requested = {args.workload} if args.workload != "all" else {
+        "switch_latency", "alternating", "bursty", "concurrent", "eviction",
+    }
+    if len(models) < 2 and not requested.issubset(SINGLE_MODEL_OK_WORKLOADS):
+        logger.error(
+            "Need at least 2 models for workloads %s. Got %d model(s); "
+            "for single-model runs use --workload concurrent.",
+            sorted(requested - SINGLE_MODEL_OK_WORKLOADS), len(models),
+        )
         sys.exit(1)
 
     logger.info("Models: %s", models)
