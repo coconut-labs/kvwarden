@@ -1,150 +1,117 @@
-# Gate 0 Launch Post (draft, unshipped)
+# Show HN: InferGrid — your quiet tenant doesn't have to lose to the noisy one
 
-Target surfaces: HN Show, /r/LocalLLaMA, X thread, Shrey's LinkedIn.
+A single A100. One Llama-3.1-8B engine. Two clients sharing it: a flooder hammering at 32 requests/sec, and a quiet user trickling in 1 request/sec. On vanilla vLLM, the quiet user's p99 time-to-first-token is **28,716 ms** — a 523× starvation versus the same user alone on the same hardware.
 
-Ship decision after: Gate 0.5 (bench harness fix) + Jay signs off on the scheduling-cliff framing.
+Add InferGrid in front of vLLM and apply a per-tenant token-bucket rate limit at the budget gate. The quiet user's p99 TTFT becomes **74 ms**, within 1.35× of solo baseline. Across all twelve 10-second windows of a 120-second bench, the quiet user's max TTFT is 74.5 ms. The flooder gets 429'd above its quota; the quiet user is essentially unaware the flooder exists.
 
----
-
-## HN Show title candidates
-
-1. **"Show HN: InferGrid – we shadow-reviewed our own benchmark and it had been lying for two weeks"**
-2. "Show HN: InferGrid – multi-model LLM serving on one box, and the 5 measurement bugs we caught before spending the H100 budget"
-3. "Show HN: InferGrid – we profiled vLLM and SGLang and the engines have converged; the real product is the orchestrator"
-4. "Show HN: InferGrid – run two LLMs on one A100 without Kubernetes"
-
-Pick #1 for the contrarian/found-and-fixed pull (highest expected engagement now that we have the streaming-bypass + TTFT-v2 stories). #4 is the safe default if we want the pure capability framing. Avoid the original "stays below the scheduling cliff" title until Gate 1 confirms the cliff actually reproduces with honest TTFT measurement — pre-PR-#28 we may have been measuring a network artifact, and the linear dress-rehearsal mock cannot rule that out.
+The fix is ten lines of YAML. No code change in your app. Multi-tenant inference on a shared engine doesn't have to mean noisy-neighbor TTFT roulette.
 
 ---
 
-## One-line elevator pitch
+## The chart
 
-InferGrid is a pip-installable middleware that keeps vLLM (and SGLang) below the concurrency level where throughput saturates but latency explodes — so two models can share one GPU without a Kubernetes cluster.
+3-bar comparison, **log scale on the y-axis** (the values span three orders of magnitude). Y-axis: quiet-tenant TTFT p99 in milliseconds. Three bars left to right:
+
+- **Arm 0 — solo baseline (no contention):** 54.9 ms
+- **Arm 1 — vanilla vLLM under flooder:** 28,716 ms
+- **Arm 5b — InferGrid token-bucket rate limit:** 74.2 ms
+
+Annotations: arrow from Arm 1 to Arm 5b labeled **"387× reduction in p99 starvation"**; arrow from Arm 5b to Arm 0 labeled **"1.35× of solo baseline"**.
+
+Inset (or second small panel underneath): the per-window trace — 12 ten-second windows, two lines (Arm 5 sliding-window in red showing 5 transient spikes >1000 ms; Arm 5b token-bucket in green never exceeding 75 ms). This panel is the proof there's no warmup transient hiding in the average.
+
+Workload caption under the chart, in 8pt: *Single NVIDIA A100-SXM4 80GB. Llama-3.1-8B-Instruct, bf16, max_model_len=4096. Flooder = 32 req/s constant, Quiet = 1 req/s. 120 s sustained per arm; n=113 quiet requests per contended arm, n=262 for solo baseline.*
+
+A note on the two fold-change numbers in this post: **523× is vanilla vLLM's starvation factor on the quiet tenant** (28,716 / 54.9). **387× is how much of that InferGrid recovers** (28,716 / 74.2). The remaining 1.35× is residual contention vs solo baseline.
 
 ---
 
-## Body (post-ready draft, ~450 words)
+## The mechanism — why this fix lives where it lives, and why simpler ones failed
 
-**Two weeks ago we thought vLLM lagged SGLang by 29% on Llama-3.1-8B. The data said otherwise.**
+vLLM's continuous-batch scheduler is **tenant-blind by design**. Every admitted request goes into the same engine queue and gets batched by arrival, not by who sent it. Once the flooder fills the engine queue, the quiet user's request sits behind 30 flooder prefills no matter what header it carried.
 
-I've been building InferGrid — a middleware that sits on top of vLLM and SGLang to do three things the big-league orchestrators (Dynamo, llm-d, AIBrix) don't do well: lightweight multi-model serving on 1–4 GPUs, admission control under overload, and bare-metal deployment with zero Kubernetes. The v0 of this thesis was: vLLM leaves 29% throughput on the table vs SGLang, and we can recover it.
+**Why naive admission caps don't work.** Our previous experiment (Gate 1.5, on H100 SXM5, 16,000 requests across four concurrency steps with sustained pressure) showed that capping concurrent admissions on a single-model single-engine workload doesn't lower tail latency — vLLM's own scheduler absorbs overload as well as a coarse upstream cap does, and at moderate concurrency the cap actively *adds* queue-wait. Raw numbers are in `results/gate1_5_20260419/GATE1_5_OUTCOME.md`. Lesson: admission cap is the wrong lever for tail TTFT.
 
-I ran the profiling on RunPod A100 SXM and H100 SXM ($18 total). Three concurrency sweeps per engine, 200 requests per level, 2 repeats. Here's what the data actually said:
+**Why DRR alone doesn't work.** We tried Deficit Round Robin admission priority next (Arm 3, then Arm 4 with a tight cap=16). DRR successfully reorders the *admission* queue by tenant deficit, but the saturation lives one layer down — inside vLLM's continuous batcher. The reordering never propagates. Arm 4's tight cap made things worse: slot release rate (16 / ~45s avg hold ≈ 0.36 slot/s) couldn't service even the quiet user's 1 RPS without queueing.
 
-- **vLLM and SGLang have converged on throughput.** At c=128, SGLang hits 5,276 tok/s, vLLM hits 5,334. That's a <2% gap, not 29%. (Tail TTFT is a different story — SGLang is ~2.2× lower at c=256. We don't claim convergence there.)
-- **GPUs aren't 81% idle.** They're 95–99% busy. The waste isn't hardware — it's scheduling.
-- **There appeared to be a clear scheduling cliff.** Going from c=128 → c=256 gained 2% throughput and cost 1,434% TTFT (vLLM A100). Same shape on H100, same shape on SGLang. We thought hardware-independent — until we caught the TTFT measurement bug below; the magnitude of the cliff with honest measurement is what Gate 1 is testing.
+**What works: rate-limit at the budget gate, *before* engine admission.** If the flooder is 429'd at the rate-limit before its requests ever reach vLLM's queue, the queue stays composed of quiet's traffic plus only the flooder's quota share. The engine never saturates. The quiet user's TTFT stays at baseline.
 
-That last point reshaped the pitch in ~mid-April: the product is no longer "beat SGLang"; it's "stay below the cliff while multiplexing models on one box." Whether that pitch survives Gate 1 with honest TTFT is now the open question, and the post will branch on the result (see `docs/launch/gate1_runbook.md` § "Reading the result").
+The token-bucket variant matters: a 60-second sliding window takes ~19 seconds to accumulate enough flooder history to trigger 429s, and during that warmup the engine saturates anyway. The token bucket fires from t=0.
 
-**So this weekend I ran Gate 0 — the first live GPU bring-up of `infergrid serve`.** Two models, Llama-3.1-8B-Instruct and Qwen2.5-7B-Instruct, co-resident on a single A100-SXM4-80GB. Budget: $4.50. Actual: $5.76, because of five distinct dependency and infrastructure regressions that each bit once (transformers 5.x dropped an attribute vLLM 0.8.5 relies on; numpy 2.4 broke numba; vLLM v1 engine OOMs under co-load; pod lacked SSH port mapping; HF_TOKEN didn't propagate into SSH shells — all fixed in the fix branch, all in the repo).
+```yaml
+# configs/quickstart_fairness.yaml — relevant diff vs the default config
++tenant_defaults:
++  max_concurrent_requests: 512
++  rate_limit_rpm: 600          # 10 RPS sustained refill per tenant
++  rate_limit_burst: 10         # 1 second of burst capacity; engages from t=0
++  priority: 1
++  scheduling: drr              # belt-and-suspenders; rate_limit is the heavy lifter
++
++tenants:                       # tenants are matched on the X-Tenant-ID request header
++  - id: noisy
++  - id: quiet
+```
 
-**Result: system passed. Our benchmark harness broke first.**
+That's the diff. No code change in the application — tenants are routed by the `X-Tenant-ID` request header. The `rate_limit_burst` field landed in PR #47.
 
-- 3h52m server uptime, both engines `healthy: true` the whole way
-- 181 requests admitted, 0 rejected, 0 timed out by admission
-- 55.7 GB / 80 GB VRAM, matching the 0.35+0.35 config exactly
-- 10.2 ms router overhead per model
-- No OOM, no crash, no need to restart
-- The multi-model bench harness then hung on `alternating | concurrency=1` after the first wave, hit aiohttp's 300s timeout, and never recovered. Deferred to Gate 0.5.
+---
 
-**Then Gate 0.5 (local) reproduced and fixed it** — root cause was the engine stopped returning HTTP response headers; the harness had no idle timeout. We added asymmetric timeouts (sock_read=30s), session reuse, late `response.prepare()`, an engine circuit breaker (R4), a per-bench-phase abort (R5), and a per-engine subprocess log capture so the next "engine went silent" incident leaves evidence. Cut the 301s stall to 33s.
+## What we measured honestly — five arms before we trusted the result
 
-**Then Gate 0.6 (real vLLM, ~$3.17) validated the fix end-to-end.** 75 multi-model requests + 2 smoke = 77 admitted, 0 rejected, 0 stalls, 0 OOMs. Engine stderr captured (234 KB). Throughput at c=1/8/32: 84/270/812 tok/s (alternating two models on one A100; lower than single-model baselines because each engine sees half the load).
+The headline number is the end of an arc, not its beginning. We measured the same workload five times before we'd state it.
 
-**Then we caught two measurement bugs that would have silently corrupted Gate 1.** Both surfaced from a Jay-style shadow review of our own diff:
+- **Arm 0 (solo baseline).** Quiet user alone for 240 s, no flooder. p50 = 28.5 ms, p99 = 54.9 ms, n = 262. This is what "fair" looks like.
+- **Arm 1 (vanilla vLLM, no fairness).** Flooder + quiet, FIFO admission, no rate limit. Quiet p50 = 15,087 ms; p99 = 28,716 ms. **523× starvation at p99.** This is the problem statement.
+- **Arm 3 (DRR with cap=256).** Cap never bound (all admits ≤1 ms in Prometheus). DRR was a no-op. Quiet p99 = 31,970 ms. *Falsified: priority reordering at admission doesn't help when admission isn't queueing.*
+- **Arm 4 (DRR with cap=16).** Cap bound hard (1232 admits queued 10–30 s), but vLLM's internal queue still dominated. Flooder mass-timed-out (2821 errors). Quiet p99 = 53,590 ms — *worse* than no fairness. *Falsified: tight cap moves latency without removing it.*
+- **Arm 5 (DRR + sliding-window rate limit, 600 RPM).** Steady-state win, but a 30-second warmup transient because the 60s sliding window had to fill before 429s fired. Quiet p99 = 5,378 ms full-bench. *Promising mechanism, defective implementation.*
+- **Arm 5b (DRR + token-bucket rate limit, burst=10).** Replaced the sliding window with a token bucket (PR #47). Quiet p99 = 74.2 ms, max = 74.5 ms. **Per-window trace: zero windows with p50 above 50 ms, zero windows with max above 75 ms.** The clean confirm.
 
-- **TTFT was lying.** The bench was timing the first SSE `data:` line, not the first non-empty content. Whitespace-only frames (which vLLM emits during warm-up) counted as the first token — `bool(" ")` is True in Python. And on chat-completions endpoints (`delta.content` instead of `text`), TTFT silently collapsed to `total_latency_ms`. Three fixes, one discriminator test that fails loud on the next regression.
-- **Admission control was a no-op for streaming.** `route_request` released the admission slot in `finally` — but for `stream=True`, the await returned the generator object immediately, so the slot freed microseconds after acquire. Our smoke poller (added during the fix) confirmed: 149 samples during a c=32 phase, peak in_flight = 0 with cap = 16. **The Gate 1 hypothesis (Arm A cap=128 vs Arm B cap=1024) was unmeasurable** — both arms would have admitted everything to the engine. Wrapping the iterator so admission releases when the stream actually ends took the post-fix peak in_flight to 16 + queue_depth 16, exactly as expected.
+The Arm 5 → Arm 5b transition is the one we'd point a hostile reviewer at: same hypothesis, two different rate-limit mechanisms, instrumented identically, and the difference falls cleanly out of the per-window data — five transient windows in Arm 5, zero in Arm 5b. We didn't tune the bench around the result; we changed the mechanism and the result moved as theory predicted.
 
-Five more Gate-1 plumbing blockers fell out when we ran the dress rehearsal end-to-end (CPU-only, mock backend) for the first time — bash precedence in our own script, a `len(models) < 2` gate that would have killed single-model Gate 1, tenant-budget config that was parsed but never wired to the manager, missing yaml fields, and aiohttp's default `TCPConnector.limit_per_host=100` clamping c=256 to 100. All fixed; dress rehearsal now exits OVERALL: PASS.
+Total spend across all six arms: **$1.70**. Raw artifacts (CSVs, server logs, engine logs, Prometheus dumps, GPU traces) are in `results/gate2_fairness_20260419/`.
 
-We could have spent the $7-10 H100 budget on garbage data. Instead the H100 spend goes against an experiment that's actually wired correctly.
+---
 
-Repo: **github.com/coconut-labs/infergrid**
-Full reading list:
-- `results/gate0_20260418/GATE0_OUTCOME.md` — Gate 0 post-mortem (+ 6-run recovery log)
-- `results/gate06_20260419/GATE06_OUTCOME.md` — Gate 0.6 validation
-- `results/CORRECTIONS.md` — every misleading number in the artifacts and what it actually means
-- `docs/launch/gate1_runbook.md` — the runbook for the H100 spend, including how to read the result (CONFIRM vs DISCONFIRM vs PLUMBING-REGRESSION)
+## What this is NOT
 
-Next: Gate 1 on H100 SXM5 (~$7-10, ~1.8h, 3-layer cost cap at $12). arXiv preprint draft after.
+We get to make exactly one claim from this data, and we want to be precise about which one:
 
-Happy to discuss anywhere — the "engines have converged on throughput, the orchestrator is the product" framing feels like the least-crowded corner of this market. Curious what you're seeing.
+- **Single hardware, single model, single engine.** A100-SXM4 80GB, Llama-3.1-8B-Instruct bf16, vLLM. Smaller models, quantized models, multi-GPU tensor-parallel, H100, consumer GPUs, SGLang, TensorRT-LLM — not measured. Multi-engine fairness is a separate experiment that hasn't shipped.
+- **Synthetic two-tenant workload.** A constant 32 RPS flooder against a 1 RPS quiet user is a clean stress, not real production traffic. We have not tested >2 tenants, bursty arrivals, mixed prompt-length distributions, or non-uniform output lengths.
+- **120-second bench with n=113 quiet requests per contended arm.** That makes our p99 estimate thin (~1 sample below it). Our defense is the per-window distribution and the maximum observed value (74.5 ms over 113 requests) — both consistent with the p99. For preprint-grade claims we'd rerun at 5+ minutes per arm; for a launch claim "the quiet user's worst observation across the full bench was 74.5 ms" is what we'll stand on. Note that the Arm 0 baseline ran 240 s (n=262) so its p99 is tighter than the contended arms' p99; the gap moves slightly in our favor under matched samples, not against.
+- **The earlier "scheduling cliff" pitch is gone.** Our previous experiment (Gate 1.5, sustained-pressure powered admission-cap test) decisively falsified the framing that admission caps lower tail latency on single-model single-tenant workloads. The mechanism in this post is *specifically* for multi-tenant contention. If your workload is one tenant, this fix does nothing for you.
+- **No claims about cost, throughput, or QoS guarantees beyond what we measured.** Throughput numbers and steady-state behavior are reported; we don't extrapolate.
+
+---
+
+## Try it
+
+```bash
+# Install (PyPI placeholder + GitHub fallback)
+pip install infergrid               # or: pip install git+https://github.com/coconut-labs/infergrid
+
+# Start it on top of your vLLM model
+infergrid serve --config configs/quickstart_fairness.yaml
+
+# Hit it as two tenants
+curl localhost:8000/v1/completions -H "X-Tenant-ID: noisy" \
+  -d '{"model":"llama31-8b","prompt":"...","stream":true}'
+curl localhost:8000/v1/completions -H "X-Tenant-ID: quiet" \
+  -d '{"model":"llama31-8b","prompt":"...","stream":true}'
+
+# Watch the rate-limit fire (and the engine queue stay composed)
+curl localhost:8000/metrics | grep -E "tenant_rejected|admission_queue_depth"
+```
+
+Repo: **github.com/coconut-labs/infergrid**. Configs reproducing every arm above: `configs/gate2_fairness_*.yaml`. Full Gate 2-FAIRNESS writeup with all per-window traces and raw CSVs: `results/gate2_fairness_20260419/`.
+
+If the experiment doesn't reproduce on your hardware, file an issue with your `prometheus_dump.txt` and `server.log` — that's worth more to us than a star.
+
+---
+
+## Acknowledgments
+
+InferGrid sits on top of vLLM and SGLang; both teams' work is what makes any of this possible. Shadow-review thanks to **Jay** for repeatedly red-teaming framings I'd over-anchored on (including the original "scheduling cliff" pitch this post replaces). Compute was self-funded on RunPod (~$1.70 for this experiment, ~$12 across the full series).
 
 — Shrey
-
----
-
-## What we WON'T claim (limits of this writeup)
-
-If you're going to push back on something, push back on these — we already have:
-
-1. **The Phase 1 throughput numbers (5,334 tok/s vLLM A100, 5,276 SGLang, etc.) are correct in their measured units.** The TTFT numbers from Phase 1, Gate 0, and Gate 0.6 are NOT honest first-token-time — they're SSE-first-frame RTT, which inflates with local TCP queueing in ways real first-token latency doesn't. PR #28 + #31 fixed the harness; everything published before those is in `results/CORRECTIONS.md` C2. Gate 1 is the first run with honest TTFT.
-
-2. **The "8× scheduling cliff at c=256" was measured with the broken TTFT.** That doesn't mean it's not real — it might be — but the magnitude is suspect. If Gate 1 on H100 with honest TTFT comes back flat across c=128/256, that's a real disconfirmation, not a plumbing regression.
-
-3. **`tokens_out` in the router was off by 5-50× before PR #37** (it counted raw socket reads, not SSE frames). Tenant accounting from any pre-PR-#37 run is unreliable. The bench harness has always reported its own ground-truth tokens, so the bench tables are unaffected.
-
-4. **The dress rehearsal mock is linear in latency.** It cannot rule out measurement artifact. Only the H100 result with honest TTFT can.
-
-5. **We have not validated the harness against vLLM-on-H100 with hand-timed-curl as ground truth.** It's on the followup list. If Gate 1 numbers look weird, this is the first thing we'll check.
-
-If your skepticism is in this list, you're directionally right; we just haven't shipped the fix yet. If it's outside this list, please post — that's the value of writing it up before publishing the result.
-
----
-
-## Response playbook (top-5 expected questions)
-
-**Q: Why not just use Dynamo / llm-d?**
-A: Both require Kubernetes. For 1–4 GPUs on a single box, K8s is pure overhead. Lightweight orchestration is a real gap in the landscape (see `docs/inference_orchestration_gaps_report.md`).
-
-**Q: Is this just Ollama with extra steps?**
-A: Ollama is LRU model-swap + llama.cpp. We're frequency+recency multi-model + vLLM/SGLang + admission control + KV tiering (stub). Different problem: Ollama optimizes for hobbyists on a single prompt; InferGrid for teams sharing a box under concurrent load.
-
-**Q: Why should I care about the scheduling cliff when I can just run at lower concurrency?**
-A: Because the engines' default concurrency is at or above the cliff. Most people don't know they're there. Our admission controller holds the line for you.
-
-**Q: When will this be usable?**
-A: `infergrid serve --config ...` works today on any A100 (see PRs #19 and #26 for reproduction). Gate 1 H100 admission-TTFT validation is the next paid run. Production-quality deployment is post-Gate-3.
-
-**Q: vLLM 0.8.5 is ancient. Why?**
-A: That's what the Phase 1 profiling pinned. Upgrade is on the roadmap once Gate 1 data lands. Newer vLLM avoids the compat issues we hit; we have pins in `requirements-gpu.txt` that cover 0.8.5 specifically.
-
-**Q: Your discriminator test catches the bug, but how do you know YOUR fix is right?**
-A: We don't, with certainty. That's why every fix lands with a test that fails LOUD on the unfixed code. The streaming-admission test fails on the pre-fix router with `in_flight == 0` (peak should be > 75% of cap). The TTFT v2 test reports `tokens_out=0` for the chat-shape case on the pre-PR-#31 bench. If a future fix regresses, CI catches it. We can't promise the next bug doesn't exist; we can promise we won't silently re-ship the ones we found.
-
-**Q: "Admission control was a no-op for streaming" sounds like a fundamental design flaw, not a fix-and-move-on bug.**
-A: Yes. It means our PR #29 wasn't a one-line patch — it was a full architectural review of where slots are held vs released, plus tests for GC-path leaks and a max-stream-duration fence. Three follow-up PRs (#30, #32, #33) closed adjacent issues the same review surfaced. The whole thread is in the repo with discriminator tests and CORRECTIONS.md C5.
-
----
-
-## X thread outline (5 tweets, found-and-fixed framing)
-
-1. "Hook: We were about to spend $7-10 on an H100 to test our admission controller. Then we ran our own pre-flight script for the first time. The admission controller had been a no-op for streaming traffic. <link>"
-2. "How: route_request released the slot in `finally`, but for streaming the await returned the generator object immediately — slot freed microseconds after acquire. Smoke poller confirmed: 149 samples, peak in_flight=0 with cap=16. PR #29."
-3. "Also fixed: TTFT was timing the first SSE frame, not the first non-empty content. `bool(\" \") == True`, so whitespace-only frames counted as the first token. On chat-completions, TTFT silently collapsed to total_latency. PRs #28 + #31."
-4. "Five more plumbing blockers fell out when the dress rehearsal ran end-to-end for the first time. Bash precedence in our own script, a single-model gate that would've killed Gate 1, tenant config never wired to the manager, missing yaml fields, aiohttp limit_per_host=100 silently clamping c=256."
-5. "Why post about bugs we found in our own work? Because the only way you trust the H100 numbers when they land is if you trust how we found everything else. CORRECTIONS.md is the receipt. Repo: github.com/coconut-labs/infergrid"
-
----
-
-## Timing
-
-Per Phase B roadmap: HN post target **2026-05-13 09:00 PT**. ~24 days out from 2026-04-19.
-
-**Do not ship until:**
-- [x] Gate 0.5 bench fix merged (PRs #21-25)
-- [x] Gate 0.6 real-vLLM validation passed (~$3.17, A100-SXM4)
-- [x] Streaming-admission and TTFT measurement bugs caught and fixed pre-launch (PRs #28-33)
-- [x] Gate 1 dress rehearsal exits PASS end-to-end (PR #34)
-- [x] Cost-cap defense in pod bootstrap (PR #35)
-- [ ] Gate 1 H100 result in hand (CONFIRM, DISCONFIRM, or PLUMBING-REGRESSION per `docs/launch/gate1_runbook.md`)
-- [ ] Jay reviews the new framing (the streaming-bypass beat is now the lead, not the 29% number)
-- [ ] PyPI `infergrid` placeholder uploaded (squat-protection before HN visibility)
-- [ ] Landing page refresh live + waitlist Cloudflare Worker deployed (currently `window.WAITLIST_API = ''` silently drops submissions)
-
-**Branching the post on Gate 1 outcome:**
-- **CONFIRM** (Arm A flat across c=128/256, Arm B explodes): keep title #1 OR pivot to a Gate 1 results-driven title; the streaming-bypass story is the supporting beat
-- **DISCONFIRM** (both arms flat): title #1 or #4; lead with the found-and-fixed story, treat the H100 result as "we instrumented honestly and the cliff didn't reproduce — admission's value at this scale is smaller than projected, and that's still publishable"
-- **PLUMBING-REGRESSION** (admission gauge stays at 0 on real vLLM despite the unit tests): hold the post; file an issue on the actual regression first
