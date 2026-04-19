@@ -1,0 +1,26 @@
+# Gate 1 — Arm B: admission effectively OFF (1024 >> max offered load 256).
+# Identical model config to Arm A so the only variable is max_concurrent.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+max_concurrent: 1024
+admission_queue_size: 1024
+engine_start_timeout_s: 420
+log_level: INFO
+
+# Match Arm A's tenant_defaults so the only variable is max_concurrent
+# (the admission cap). Without this, both arms hit the 64-default budget
+# at c=128+ and the experiment measures 429-shaped failures, not admission.
+tenant_defaults:
+  max_concurrent_requests: 1024
+  rate_limit_rpm: 60000
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
