@@ -1,0 +1,9 @@
+2026-04-19 15:21:44,634 [INFO] __main__: Bench config: flooder=32.0 RPS, quiet=1.0 RPS, duration=120s, model=meta-llama/Llama-3.1-8B-Instruct, max_tokens=128
+2026-04-19 15:21:44,634 [INFO] __main__: TCPConnector limit=256, limit_per_host=256
+2026-04-19 15:24:19,459 [INFO] __main__: Wrote /workspace/results/gate2f_arm3_20260419_151808/benchmarks/tenant_flooder.csv (3727 rows)
+2026-04-19 15:24:19,461 [INFO] __main__: Wrote /workspace/results/gate2f_arm3_20260419_151808/benchmarks/tenant_quiet_user.csv (113 rows)
+2026-04-19 15:24:19,465 [INFO] __main__: Wrote /workspace/results/gate2f_arm3_20260419_151808/benchmarks/summary.json
+2026-04-19 15:24:19,465 [INFO] __main__: ============================================================
+2026-04-19 15:24:19,465 [INFO] __main__: QUIET TTFT  p50=15991.3ms p99=31970.2ms max=32035.4ms (n=113, err=0)
+2026-04-19 15:24:19,465 [INFO] __main__: FLOOD TTFT  p50=17157.7ms p99=32076.7ms max=32520.9ms (n=3727, err=0)
+2026-04-19 15:24:19,465 [INFO] __main__: ============================================================

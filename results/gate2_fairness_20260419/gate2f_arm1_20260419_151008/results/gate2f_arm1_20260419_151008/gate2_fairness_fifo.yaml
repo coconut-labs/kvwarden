@@ -1,0 +1,37 @@
+# Gate 2-FAIRNESS Arm 2 — InferGrid FIFO (current shipping behavior).
+# Same single model as Gate 1/1.5 (Llama-3.1-8B). Admission cap high
+# enough not to bottleneck at ~33 RPS aggregate. Per-tenant budget
+# high enough not to 429 the flooder. The ONLY variable vs Arm 3
+# (gate2_fairness_drr.yaml) is tenant_defaults.scheduling.
+#
+# See docs/launch/gate2_fairness_runbook.md for the 4-arm experiment.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+# Cap=256 avoids the c=192 queue-time floor we found in Gate 1.5 — we do
+# NOT want the admission cap to be the bottleneck here; we want the
+# engine to be the bottleneck, and InferGrid's per-tenant scheduling to
+# mediate who gets admitted first.
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  # Generous enough that both tenants can run flat-out without hitting
+  # the 429 path; the EXPERIMENTAL variable is priority scheduling.
+  max_concurrent_requests: 512
+  rate_limit_rpm: 999999
+  priority: 1
+  scheduling: fifo   # current shipping behavior — length-bucket priority only
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1

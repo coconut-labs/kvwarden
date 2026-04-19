@@ -1,0 +1,81 @@
+cost-cap timer pid=145 max_pod_secs=10800
+cost-cap marker file: /workspace/COST_CAP_HIT (master should poll)
+=== Bootstrap start: Sun Apr 19 15:10:10 UTC 2026 RUN_NAME=gate2f_arm1_20260419_151008 ===
+loaded /root/.gate_env
+--- Phase 1: apt + clone ---
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LANGUAGE = (unset),
+	LC_ALL = (unset),
+	LANG = "en_US.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+debconf: delaying package configuration, since apt-utils is not installed
+Selecting previously unselected package libpopt0:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 24135 files and directories currently installed.)
+Preparing to unpack .../0-libpopt0_1.18-3build1_amd64.deb ...
+Unpacking libpopt0:amd64 (1.18-3build1) ...
+Selecting previously unselected package rsync.
+Preparing to unpack .../1-rsync_3.2.7-0ubuntu0.22.04.4_amd64.deb ...
+Unpacking rsync (3.2.7-0ubuntu0.22.04.4) ...
+Preparing to unpack .../2-curl_7.81.0-1ubuntu1.23_amd64.deb ...
+Unpacking curl (7.81.0-1ubuntu1.23) over (7.81.0-1ubuntu1.18) ...
+Preparing to unpack .../3-libcurl4_7.81.0-1ubuntu1.23_amd64.deb ...
+Unpacking libcurl4:amd64 (7.81.0-1ubuntu1.23) over (7.81.0-1ubuntu1.18) ...
+Preparing to unpack .../4-git_1%3a2.34.1-1ubuntu1.17_amd64.deb ...
+Unpacking git (1:2.34.1-1ubuntu1.17) over (1:2.34.1-1ubuntu1.11) ...
+Selecting previously unselected package libonig5:amd64.
+Preparing to unpack .../5-libonig5_6.9.7.1-2build1_amd64.deb ...
+Unpacking libonig5:amd64 (6.9.7.1-2build1) ...
+Selecting previously unselected package libjq1:amd64.
+Preparing to unpack .../6-libjq1_1.6-2.1ubuntu3.1_amd64.deb ...
+Unpacking libjq1:amd64 (1.6-2.1ubuntu3.1) ...
+Selecting previously unselected package jq.
+Preparing to unpack .../7-jq_1.6-2.1ubuntu3.1_amd64.deb ...
+Unpacking jq (1.6-2.1ubuntu3.1) ...
+Setting up git (1:2.34.1-1ubuntu1.17) ...
+Setting up libcurl4:amd64 (7.81.0-1ubuntu1.23) ...
+Setting up curl (7.81.0-1ubuntu1.23) ...
+Setting up libonig5:amd64 (6.9.7.1-2build1) ...
+Setting up libpopt0:amd64 (1.18-3build1) ...
+Setting up libjq1:amd64 (1.6-2.1ubuntu3.1) ...
+Setting up jq (1.6-2.1ubuntu3.1) ...
+Setting up rsync (3.2.7-0ubuntu0.22.04.4) ...
+invoke-rc.d: could not determine current runlevel
+invoke-rc.d: policy-rc.d denied execution of start.
+Processing triggers for libc-bin (2.35-0ubuntu3.8) ...
+Cloning into 'infergrid'...
+main HEAD: d3c99e5  scaffold: Gate 2-FAIRNESS bench + configs + runbook + dress rehearsal (#43)
+--- Phase 2: python deps ---
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+notebook 6.5.5 requires pyzmq<25,>=17, but you have pyzmq 27.1.0 which is incompatible.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+INFO 04-19 15:12:32 [__init__.py:239] Automatically detected platform cuda.
+vllm=0.8.5 transformers=4.57.6 numpy=2.2.6 torch=2.6.0+cu124
+PINS OK
+--- Phase 3: HF login ---
+Your token has been saved to /root/.cache/huggingface/token
+Login successful.
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.
+--- Phase 4: infergrid serve --config configs/gate2_fairness_fifo.yaml ---
+serve pid=912
+--- Phase 5: waiting for /v1/models (stable count) ---
+READY: 1 models stable after 70s
+--- Phase 6: smoke ---
+  meta-llama/Llama-3.1-8B-Instruct OK: Graphics Processing Units (GPUs) are specialized computer chips designed to accelerate the rendering of 2D and 3D graphics.
+--- Phase 7: bench (engine_bringup=67s) ---
+2026-04-19 15:13:43,625 [INFO] __main__: Bench config: flooder=32.0 RPS, quiet=1.0 RPS, duration=120s, model=meta-llama/Llama-3.1-8B-Instruct, max_tokens=128
+2026-04-19 15:13:43,625 [INFO] __main__: TCPConnector limit=256, limit_per_host=256
+2026-04-19 15:16:14,663 [INFO] __main__: Wrote /workspace/results/gate2f_arm1_20260419_151008/benchmarks/tenant_flooder.csv (3733 rows)
+2026-04-19 15:16:14,665 [INFO] __main__: Wrote /workspace/results/gate2f_arm1_20260419_151008/benchmarks/tenant_quiet_user.csv (113 rows)
+2026-04-19 15:16:14,667 [INFO] __main__: Wrote /workspace/results/gate2f_arm1_20260419_151008/benchmarks/summary.json
+2026-04-19 15:16:14,668 [INFO] __main__: ============================================================
+2026-04-19 15:16:14,668 [INFO] __main__: QUIET TTFT  p50=15087.3ms p99=28716.0ms max=28790.5ms (n=113, err=0)
+2026-04-19 15:16:14,668 [INFO] __main__: FLOOD TTFT  p50=15690.1ms p99=28744.3ms max=29512.8ms (n=3733, err=0)
+2026-04-19 15:16:14,668 [INFO] __main__: ============================================================
+--- Phase 8: capture ---
+--- trap: bundling (status=DONE rc=0) ---

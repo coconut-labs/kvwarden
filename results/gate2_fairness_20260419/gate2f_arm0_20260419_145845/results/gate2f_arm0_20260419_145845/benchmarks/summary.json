@@ -1,0 +1,33 @@
+{
+  "wall_time_s": 240.52,
+  "flooder": {
+    "count_ok": 0,
+    "count_err": 0,
+    "ttft_p50_ms": -1,
+    "ttft_p95_ms": -1,
+    "ttft_p99_ms": -1,
+    "ttft_max_ms": -1,
+    "total_p50_ms": -1,
+    "total_p99_ms": -1,
+    "tokens_out_mean": 0
+  },
+  "quiet_user": {
+    "count_ok": 262,
+    "count_err": 0,
+    "ttft_p50_ms": 28.5,
+    "ttft_p95_ms": 42.2,
+    "ttft_p99_ms": 54.9,
+    "ttft_max_ms": 55.8,
+    "total_p50_ms": 1607.4,
+    "total_p99_ms": 1708.3,
+    "tokens_out_mean": 125.7
+  },
+  "bench_args": {
+    "flooder_rps": 0.0,
+    "quiet_rps": 1.0,
+    "duration_s": 240.0,
+    "max_tokens": 128,
+    "model": "meta-llama/Llama-3.1-8B-Instruct",
+    "seed": 42
+  }
+}
