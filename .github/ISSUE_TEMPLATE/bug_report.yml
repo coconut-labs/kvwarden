@@ -1,0 +1,83 @@
+name: Bug report
+description: Report something that doesn't work the way InferGrid claims.
+title: "[bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A focused repro beats a long description — the more of the fields below you fill in, the faster this gets fixed.
+
+  - type: input
+    id: version
+    attributes:
+      label: InferGrid version
+      description: Output of `python -c "import infergrid; print(infergrid.__version__)"` — or the commit SHA if you're on an editable install.
+      placeholder: "0.1.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      description: Which backend is being served.
+      options:
+        - vLLM
+        - SGLang
+        - both
+        - none / not yet running an engine
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.11.9"
+    validations:
+      required: true
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU model + driver
+      description: `nvidia-smi --query-gpu=name,driver_version --format=csv,noheader` gives both in one line.
+      placeholder: "NVIDIA A100-SXM4-80GB, 550.90.07"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      description: Exact commands, config snippets, and any request payload that triggers the bug. Prefer the smallest case that still breaks.
+      render: shell
+      placeholder: |
+        # Minimal repro
+        infergrid serve --config configs/quickstart_fairness.yaml
+        curl -X POST localhost:8000/v1/completions \
+          -H "X-Tenant-ID: quiet" \
+          -d '{"model":"llama31-8b","prompt":"...","max_tokens":64}'
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: Expected vs. actual
+      description: What should have happened; what did happen.
+      placeholder: |
+        Expected: 200 with a streaming completion.
+        Actual: 503 with {"error": "engine_unreachable"} after 30s.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / stack trace
+      description: Server stdout, engine subprocess output, or client-side traceback. Redact anything sensitive.
+      render: shell
+    validations:
+      required: false
