@@ -1,6 +1,6 @@
 [project]
 name = "infergrid"
-version = "0.1.0"
+version = "0.1.1"
 description = "Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes."
 readme = "README.md"
 license = {text = "MIT"}
@@ -15,13 +15,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-
-[project.urls]
-Homepage = "https://github.com/coconut-labs/infergrid"
-Documentation = "https://github.com/coconut-labs/infergrid#readme"
-Repository = "https://github.com/coconut-labs/infergrid"
-Issues = "https://github.com/coconut-labs/infergrid/issues"
-
 dependencies = [
     "numpy>=1.24,<2.3",
     "pandas~=2.0",
@@ -30,6 +23,12 @@ dependencies = [
     "httpx~=0.25",
     "aiohttp~=3.9",
 ]
+
+[project.urls]
+Homepage = "https://github.com/coconut-labs/infergrid"
+Documentation = "https://github.com/coconut-labs/infergrid#readme"
+Repository = "https://github.com/coconut-labs/infergrid"
+Issues = "https://github.com/coconut-labs/infergrid/issues"
 
 [project.optional-dependencies]
 dev = [
