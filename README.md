@@ -51,7 +51,7 @@ The "multi-tenant on a small shared box without K8s" cell is empty. That's the g
 ## Quickstart
 
 ```bash
-pip install -e .          # PyPI placeholder pending; until then, install from source
+pip install infergrid
 infergrid serve --config configs/quickstart_fairness.yaml
 
 # Wait until /health returns 200. The first call returns 503 with a
@@ -94,7 +94,7 @@ The [`quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily co
 |---|---|---|
 | WorkloadRouter | Length-bucketed admission queue, length-aware scheduling, model lifecycle (freq+recency, not LRU), OpenAI-compatible HTTP API | `src/infergrid/router/router.py` (655 LOC) |
 | AdmissionController | Concurrency cap with priority queue (lower=served first), Prometheus metrics, sub-ms fast-path | `src/infergrid/router/admission.py` (309 LOC) |
-| CacheManager | KV cache block tracking across GPU/CPU/SSD tiers, weighted eviction (planned LMCache integration) | `src/infergrid/cache/manager.py` (487 LOC) |
+| CacheManager | Per-model cache lifecycle (free-on-unload, snapshot) + tiered-eviction scaffold; LMCache integration planned for per-request KV tracking | `src/infergrid/cache/manager.py` (487 LOC) |
 | TenantManager | Per-tenant budgets, **token-bucket rate limiting** (refill + burst capacity), DRR priority scoring | `src/infergrid/tenant/manager.py` (267 LOC) |
 | Engine Adapters | Subprocess management for vLLM/SGLang, health checks, HTTP proxying | `src/infergrid/engines/` (277 LOC) |
 
@@ -132,7 +132,7 @@ pytest tests/unit/        # 144 tests, no GPU required, ~10 s
 | Gate 0.6 — bench harness validation | ✅ Done | Real vLLM end-to-end |
 | Gate 1.5 — single-model admission test | ✅ Done | Falsified the original "scheduling cliff" pitch |
 | Gate 2-FAIRNESS — multi-tenant fairness | ✅ Done | Hero number; this README's lead chart |
-| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page; ship-gated on PyPI placeholder + Cloudflare Worker |
+| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page; ship-gated on waitlist backend (Cloudflare Worker) |
 | Gate 2-lite — multi-model contention | Post-launch | InferGrid's other differentiator vs Ollama; never benchmarked |
 | KV cache tiering (LMCache integration) | Post-launch | Phase 3 of original roadmap |
 | Multi-engine routing (vLLM ↔ SGLang) | Post-launch | Phase 1 hinted SGLang 2.2× better at TTFT at c=256 |
