@@ -5,9 +5,11 @@
 # per-tenant token-bucket rate limiting at the budget gate so a noisy
 # neighbor cannot starve a quiet tenant.
 #
-# Empirical anchor (from results/gate2_fairness_20260419/):
-#   Vanilla vLLM under flooder: quiet p99 = 28,716 ms (523× starvation)
-#   This config:                quiet p99 = 74 ms (1.35× of solo baseline)
+# Empirical anchor (from results/gate2_preprint_v3/, vLLM 0.19.1, 300s steady state):
+#   InferGrid FIFO under flooder, no rate-limit: quiet p99 = 1,585 ms
+#   This config (token-bucket rate-limit):       quiet p99 = 61.5 ms (1.14× solo)
+# Historical (vLLM 0.8.5, 120s — results/gate2_fairness_20260419/):
+#   Vanilla vLLM under flooder showed 523× starvation; fix still matters on 0.19.1.
 #
 # Try it:
 #   infergrid serve --config configs/quickstart_fairness.yaml

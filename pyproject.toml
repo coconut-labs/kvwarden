@@ -1,10 +1,27 @@
 [project]
 name = "infergrid"
 version = "0.1.0"
-description = "Adaptive inference orchestration for LLM serving"
+description = "Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.11"
+authors = [{name = "Shrey Patel", email = "patelshrey77@gmail.com"}]
+keywords = ["llm", "inference", "vllm", "sglang", "multi-tenant", "gpu", "orchestration"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/coconut-labs/infergrid"
+Documentation = "https://github.com/coconut-labs/infergrid#readme"
+Repository = "https://github.com/coconut-labs/infergrid"
+Issues = "https://github.com/coconut-labs/infergrid/issues"
+
 dependencies = [
     "numpy>=1.24,<2.3",
     "pandas~=2.0",
