@@ -1,5 +1,10 @@
 # InferGrid
 
+[![PyPI](https://img.shields.io/pypi/v/infergrid.svg)](https://pypi.org/project/infergrid/)
+[![Python](https://img.shields.io/pypi/pyversions/infergrid.svg)](https://pypi.org/project/infergrid/)
+[![CI](https://github.com/coconut-labs/infergrid/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/coconut-labs/infergrid/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes.**
 
 InferGrid is middleware that sits on top of vLLM/SGLang and gives a quiet user predictable TTFT even when a noisy neighbor is hammering the same shared engine. One pip install. No cluster. No YAML pile.

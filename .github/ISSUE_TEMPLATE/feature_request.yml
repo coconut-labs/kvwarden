@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a change or new capability for InferGrid.
+title: "[feat] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Good feature requests start with the problem, not the solution. Describe what you're trying to do and why the current behavior blocks it — the "how" can be left to discussion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do? What breaks or becomes painful with InferGrid today?
+      placeholder: |
+        I'm running two tenants on one GPU and want to give tenant A 10× the throughput budget of tenant B, but the current config only supports symmetric quotas.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Rough shape of the change. Config knobs, API surface, algorithm sketch — whatever's clearest.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you look at, and why didn't they fit? (Including "I tried running two vLLM instances" style answers.)
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / context
+      description: Benchmarks, links to related issues or prior art, pointers to the relevant part of the README or Gate results. InferGrid leans on empirical claims — requests that reference evidence are much easier to act on.
+    validations:
+      required: false
