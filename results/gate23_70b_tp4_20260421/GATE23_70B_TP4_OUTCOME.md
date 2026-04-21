@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-21
 **Hardware:** 4× NVIDIA H100 80GB HBM3 SXM on RunPod (SECURE on-demand, $11.96/hr, TP=4) — see Caveats re: GPU substitution from A100-SXM4 80GB.
-**Total cost:** ~$5.18 actual (ceiling $18.00)
+**Total cost:** ~$7.77 actual (ceiling $18.00)
 **main tip at start:** `77fcf37` (post-PR #82 gate-2.4: Mixtral-8x7B MoE fairness CONFIRM).
 **Model:** `meta-llama/Llama-3.1-70B-Instruct`, bfloat16, tensor_parallel_size=4, max_model_len=2048, gpu_memory_utilization=0.90
 **Workload:** Two arms — **Arm 0 solo baseline** (3 quiet tenants alone at 1 RPS each, 300s) + **Arm 1 contended** (1 flooder at 32 RPS + 3 quiet at 1 RPS each, DRR + rate_limit 600 RPM, 300s), 64-token outputs. Frontier-credibility gate — the single experiment that determines whether the launch post can claim "works at 70B" or caps at "demonstrated at 8B."
@@ -116,9 +116,9 @@ The flashinfer fallback is worth flagging as an efficiency regression (the fused
 
 - **70B weight download wallclock:** 216.2 s (~3.6 min) for 132 GB via `HF_HUB_ENABLE_HF_TRANSFER=1` from RunPod AP-IN-1 pod. Without hf_transfer, prior 8B downloads in this region have taken 2-4× as long per GB; the flag is essentially mandatory for 70B-scale pulls in IN-1. Task preamble estimate was 15-25 min; actual was 7× faster than that ceiling.
 - **TP=4 cold load (vLLM startup -> `Application startup complete`):** 234 s (05:20:59 -> 05:24:53). Weight loading proper was 12.7 s per worker; the bulk of the 234 s was NCCL init + cudagraph capture (51 cudagraph sizes from 1 to 512) + flashinfer JIT-compile attempt-and-fallback. Two `shm_broadcast` 60s-warning logs during this interval reflect the cudagraph capture being the long-running segment, not a stall. Config's `engine_start_timeout_s: 900` had 666 s headroom — could be safely lowered to 600 s for this pod class.
-- **VRAM pressure at gpu_memory_utilization=0.90 on 4× H100 80GB:** fit successfully on first try. Per-GPU: ~35 GB weights + 34.21 GB available KV cache (per engine log: "Available KV cache memory: 34.21 GiB"). `num_gpu_blocks_override=512` was applied (vLLM 0.19.1 default behavior when initial estimate is 0). No step-down to 0.85 required.
+- **VRAM pressure at gpu_memory_utilization=0.90 on 4× H100 80GB:** fit successfully on first try. Per-GPU peak: 76.16 GB used / 81.56 GB total (93.4% of cap). Composition per engine log: ~35 GB weight shard + 34.21 GB KV cache (reserved: "Available KV cache memory: 34.21 GiB") + ~6-7 GB for activation buffers, cudagraph memory pool (51 captured sizes 1-512), and NCCL workspace. `num_gpu_blocks_override=512` was applied (vLLM 0.19.1 default behavior when initial estimate is 0). No step-down to 0.85 required.
 - **flashinfer AllReduce JIT-compile failure:** `flashinfer-0.6.6` bundled with vLLM 0.19.1 fails to compile its trtllm_allreduce_fusion kernel against CUDA 12.8 / Python 3.11 due to `std::optional` being used without `<optional>` include in one header. vLLM falls back to stock NCCL cleanly; mentioned here for future triage when anyone upgrades vLLM or attempts to re-enable fused all-reduce for a throughput-sensitive benchmark.
-- **Cost actual vs ceiling:** pod ran ~26 min from provision to arm-1 completion. At $11.96/hr -> $5.18 actual, vs $18.00 1.5h ceiling. Well inside budget.
+- **Cost actual vs ceiling:** pod ran 39 min wall clock from provision (05:10 UTC) to delete (05:49 UTC). At $11.96/hr -> $7.77 actual, vs $18.00 1.5h ceiling. Well inside budget.
 - **Per-quiet-tenant p99 spread (29.9× in Arm 0, 26.4× in Arm 1):** traced to first-request cold-start hitting a cold cudagraph dispatch on the TP=4 workers. quiet_0 (first tenant to fire) had time to warm the engine during Arm 0; quiet_1 and quiet_2 (subsequent starts 1s apart) each hit their own first-request cold path. The effect is identical across arms, so it does not contaminate the fairness ratio — but reading the per-tenant p99s in isolation is misleading without this context.
 
 ---
