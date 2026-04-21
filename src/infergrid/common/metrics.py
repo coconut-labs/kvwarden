@@ -1,8 +1,8 @@
 """Prometheus-style metrics collector for InferGrid.
 
 Wraps prometheus_client to expose request counts, latency histograms,
-cache hit rates, and GPU memory usage as both Prometheus metrics and
-a plain-dict snapshot for the CLI status command.
+per-tenant TTFT, engine lifecycle, and SSE disconnect counters as both
+Prometheus metrics and a plain-dict snapshot for the CLI status command.
 """
 
 from __future__ import annotations
@@ -38,10 +38,14 @@ class MetricsCollector:
         self._start_time = time.monotonic()
 
         # --- Request metrics ---
+        # `engine` label (added in the 2026-04-21 metrics audit remediation)
+        # lets dashboards split 5xx/latency by engine kind — the single
+        # highest-value SRE question for a middleware tool that sits
+        # between clients and either vLLM or SGLang.
         self.request_count = Counter(
             "infergrid_requests_total",
             "Total number of incoming requests",
-            labelnames=["model", "tenant", "status"],
+            labelnames=["model", "tenant", "status", "engine"],
             registry=self._registry,
         )
         self.request_latency = Histogram(
@@ -64,25 +68,6 @@ class MetricsCollector:
             registry=self._registry,
         )
 
-        # --- Cache metrics ---
-        self.cache_hits = Counter(
-            "infergrid_cache_hits_total",
-            "Number of KV cache hits",
-            labelnames=["tier"],
-            registry=self._registry,
-        )
-        self.cache_misses = Counter(
-            "infergrid_cache_misses_total",
-            "Number of KV cache misses",
-            registry=self._registry,
-        )
-        self.cache_memory_bytes = Gauge(
-            "infergrid_cache_memory_bytes",
-            "Current cache memory usage in bytes",
-            labelnames=["tier"],
-            registry=self._registry,
-        )
-
         # --- Model lifecycle ---
         self.models_loaded = Gauge(
             "infergrid_models_loaded",
@@ -92,6 +77,36 @@ class MetricsCollector:
         self.model_evictions = Counter(
             "infergrid_model_evictions_total",
             "Total number of model evictions",
+            registry=self._registry,
+        )
+
+        # --- Engine lifecycle (added 2026-04-21, audit §2 row 10-11) ---
+        # Gauge tracks up/down state for each (model, engine) pair so
+        # SREs can wire a trivial "engine down for >1m" alert. Histogram
+        # captures cold-start latency; buckets cover 10s (warm model on
+        # fast disk) through 600s (first-time HF pull + CUDA init).
+        self.engine_up = Gauge(
+            "infergrid_engine_up",
+            "1 if the engine subprocess is healthy, 0 otherwise",
+            labelnames=["model", "engine"],
+            registry=self._registry,
+        )
+        self.engine_cold_start_seconds = Histogram(
+            "infergrid_engine_cold_start_seconds",
+            "Seconds from adapter.start() invocation to first healthy response",
+            labelnames=["model", "engine"],
+            buckets=(10.0, 30.0, 60.0, 120.0, 300.0, 600.0),
+            registry=self._registry,
+        )
+
+        # --- SSE stream disconnects (added 2026-04-21, audit §2 row 12) ---
+        # Reasons: client_disconnect | upstream_error | timeout. Fired
+        # from the router's SSE pass-through path — see
+        # router.handle_request and router._stream_with_admission.
+        self.sse_stream_disconnects = Counter(
+            "infergrid_sse_stream_disconnect_total",
+            "SSE streams that terminated abnormally, by reason",
+            labelnames=["reason"],
             registry=self._registry,
         )
 
@@ -133,14 +148,6 @@ class MetricsCollector:
             registry=self._registry,
         )
 
-        # --- GPU ---
-        self.gpu_memory_used_bytes = Gauge(
-            "infergrid_gpu_memory_used_bytes",
-            "GPU memory used in bytes",
-            labelnames=["gpu_index"],
-            registry=self._registry,
-        )
-
     # ------------------------------------------------------------------
     # Convenience helpers
     # ------------------------------------------------------------------
@@ -151,6 +158,7 @@ class MetricsCollector:
         tenant: str,
         status: str,
         latency_s: float,
+        engine: str = "unknown",
         tokens_in: int = 0,
         tokens_out: int = 0,
     ) -> None:
@@ -159,12 +167,17 @@ class MetricsCollector:
         Args:
             model: Model identifier.
             tenant: Tenant identifier.
-            status: "ok" or "error".
+            status: "ok", "error", or "timeout".
             latency_s: Total latency in seconds.
+            engine: Engine kind ("vllm" / "sglang"). Defaults to
+                "unknown" so ad-hoc callers don't crash; production
+                call sites should always pass the real engine kind.
             tokens_in: Number of input tokens.
             tokens_out: Number of output tokens.
         """
-        self.request_count.labels(model=model, tenant=tenant, status=status).inc()
+        self.request_count.labels(
+            model=model, tenant=tenant, status=status, engine=engine
+        ).inc()
         self.request_latency.labels(model=model).observe(latency_s)
         self.tenant_request_count.labels(tenant=tenant).inc()
         if tokens_in > 0:
@@ -185,17 +198,37 @@ class MetricsCollector:
             return
         self.tenant_ttft_seconds.labels(model=model, tenant=tenant).observe(ttft_s)
 
-    def record_cache_access(self, hit: bool, tier: str = "gpu") -> None:
-        """Record a cache hit or miss.
+    def set_engine_up(self, model: str, engine: str, up: bool) -> None:
+        """Flip the engine_up gauge for a (model, engine) pair.
 
         Args:
-            hit: True for a cache hit, False for a miss.
-            tier: Cache tier name ("gpu", "cpu", "ssd").
+            model: Model identifier.
+            engine: Engine kind ("vllm" / "sglang").
+            up: True iff the engine is currently healthy.
         """
-        if hit:
-            self.cache_hits.labels(tier=tier).inc()
-        else:
-            self.cache_misses.inc()
+        self.engine_up.labels(model=model, engine=engine).set(1 if up else 0)
+
+    def record_cold_start(self, model: str, engine: str, duration_s: float) -> None:
+        """Record the seconds from engine bring-up start to first healthy response.
+
+        Args:
+            model: Model identifier.
+            engine: Engine kind ("vllm" / "sglang").
+            duration_s: Elapsed seconds.
+        """
+        if duration_s < 0:
+            return
+        self.engine_cold_start_seconds.labels(model=model, engine=engine).observe(
+            duration_s
+        )
+
+    def record_sse_disconnect(self, reason: str) -> None:
+        """Increment the SSE abnormal-termination counter.
+
+        Args:
+            reason: One of "client_disconnect", "upstream_error", "timeout".
+        """
+        self.sse_stream_disconnects.labels(reason=reason).inc()
 
     def snapshot(self) -> dict[str, Any]:
         """Return a plain-dict snapshot of current metrics for the CLI.
@@ -212,27 +245,9 @@ class MetricsCollector:
                 if sample.name == "infergrid_requests_total":
                     total_requests += sample.value
 
-        total_cache_hits = 0.0
-        for metric in self.cache_hits.collect():
-            for sample in metric.samples:
-                if sample.name == "infergrid_cache_hits_total":
-                    total_cache_hits += sample.value
-
-        total_cache_misses = 0.0
-        for metric in self.cache_misses.collect():
-            for sample in metric.samples:
-                if sample.name == "infergrid_cache_misses_total":
-                    total_cache_misses += sample.value
-
-        total_accesses = total_cache_hits + total_cache_misses
-        hit_rate = (total_cache_hits / total_accesses) if total_accesses > 0 else 0.0
-
         return {
             "uptime_s": round(uptime, 1),
             "total_requests": int(total_requests),
-            "cache_hit_rate": round(hit_rate, 4),
-            "cache_hits": int(total_cache_hits),
-            "cache_misses": int(total_cache_misses),
         }
 
     def prometheus_output(self) -> bytes:

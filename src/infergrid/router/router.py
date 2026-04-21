@@ -306,12 +306,25 @@ class WorkloadRouter:
         port = config.port if config.port > 0 else self._allocate_port()
         adapter = self._create_adapter(config, port)
 
+        # Measure cold-start latency for the engine histogram. Observe only
+        # on success — aborted starts pollute the histogram with failure
+        # cases that don't represent "how long warmup takes."
+        cold_start_begin = time.monotonic()
         await adapter.start(timeout_s=self.config.engine_start_timeout_s)
+        cold_start_s = time.monotonic() - cold_start_begin
+        self.metrics.record_cold_start(
+            model=config.model_id,
+            engine=config.engine,
+            duration_s=cold_start_s,
+        )
 
         state = ModelState(config=config, adapter=adapter)
         self._models[config.model_id] = state
         self._model_configs[config.model_id] = config
         self.metrics.models_loaded.inc()
+        # Engine just passed its first health check — set up gauge to 1.
+        # Paired with the set-to-0 in unload_model.
+        self.metrics.set_engine_up(model=config.model_id, engine=config.engine, up=True)
 
         logger.info("Loaded model %s on port %d", config.model_id, port)
         return state
@@ -333,6 +346,8 @@ class WorkloadRouter:
         self.cache_manager.free_blocks_for_model(model_id)
         self.metrics.models_loaded.dec()
         self.metrics.model_evictions.inc()
+        # Engine subprocess has been torn down — flip gauge to 0.
+        self.metrics.set_engine_up(model=model_id, engine=state.config.engine, up=False)
 
         logger.info("Unloaded model %s", model_id)
         return True
@@ -513,6 +528,7 @@ class WorkloadRouter:
                 tenant=tenant_id,
                 status="ok",
                 latency_s=elapsed,
+                engine=state.config.engine,
                 tokens_in=tokens_in,
                 tokens_out=tokens_out,
             )
@@ -528,11 +544,21 @@ class WorkloadRouter:
             raise
         except Exception:
             elapsed = time.monotonic() - start_time
+            # state may or may not be bound if ensure_model_loaded failed;
+            # recover gracefully via the known model config map.
+            engine_kind = "unknown"
+            try:
+                engine_kind = state.config.engine  # type: ignore[name-defined]
+            except NameError:
+                cfg = self._model_configs.get(model_id)
+                if cfg is not None:
+                    engine_kind = cfg.engine
             self.metrics.record_request(
                 model=model_id,
                 tenant=tenant_id,
                 status="error",
                 latency_s=elapsed,
+                engine=engine_kind,
             )
             raise
         finally:
@@ -613,6 +639,9 @@ class WorkloadRouter:
                 sse_frames,
             )
             status = "timeout"
+            # Fire the SSE disconnect counter — router-internal max-duration
+            # fence counts as a `timeout` reason in dashboards.
+            self.metrics.record_sse_disconnect(reason="timeout")
             # Re-raise so the outer handle_request can return 504 to client.
             raise
         finally:
@@ -629,6 +658,7 @@ class WorkloadRouter:
                     tenant=tenant_id,
                     status=status,
                     latency_s=elapsed_real,
+                    engine=state.config.engine,
                     tokens_in=tokens_in,
                     tokens_out=sse_frames,
                 )
@@ -785,6 +815,13 @@ class WorkloadRouter:
                             await response.prepare(request)
                         await response.write(chunk)
                 except (asyncio.TimeoutError, aiohttp.ServerTimeoutError) as exc:
+                    # Engine-side timeout: counts as `upstream_error` for
+                    # the SSE disconnect counter. The router-internal
+                    # _STREAM_MAX_DURATION_S fence also raises
+                    # asyncio.TimeoutError but increments with reason=timeout
+                    # from _stream_with_admission — here we're catching
+                    # connection-level timeouts from the engine read.
+                    self.metrics.record_sse_disconnect(reason="upstream_error")
                     if response is None:
                         # Engine failed before first byte — clean 504.
                         logger.warning(
@@ -804,6 +841,30 @@ class WorkloadRouter:
                     )
                     await response.write_eof()
                     return response
+                except (
+                    ConnectionResetError,
+                    aiohttp.ClientConnectionError,
+                ) as exc:
+                    # Client went away mid-stream. aiohttp's
+                    # StreamResponse.write() raises one of these when the
+                    # TCP peer has closed. Record the disconnect and bail
+                    # — the response is already un-recoverable.
+                    self.metrics.record_sse_disconnect(reason="client_disconnect")
+                    logger.info(
+                        "req_id=%s EXIT client_disconnect detail=%s",
+                        req_id,
+                        exc,
+                    )
+                    # Best-effort EOF; ignore if the socket is already gone.
+                    if response is not None:
+                        try:
+                            await response.write_eof()
+                        except Exception:
+                            pass
+                        return response
+                    return web.json_response(
+                        {"error": "client disconnected"}, status=499
+                    )
 
                 if response is None:
                     # Iterator yielded nothing — treat as empty successful response.
