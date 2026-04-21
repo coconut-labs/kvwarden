@@ -175,7 +175,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # ── bench ──
     bench_parser = sub.add_parser(
-        "bench", help="Benchmark helpers (reproduce the hero number, etc.)",
+        "bench",
+        help="Benchmark helpers (reproduce the hero number, etc.)",
         description="Benchmark helpers. See `kvwarden bench reproduce-hero --help`.",
     )
     bench_sub = bench_parser.add_subparsers(dest="bench_cmd", help="bench subcommand")
@@ -183,18 +184,35 @@ def build_parser() -> argparse.ArgumentParser:
         "reproduce-hero",
         help="Replicate the launch-post hero number against a running server",
         description="Run the published noisy-neighbor bench and print a "
-                    "side-by-side table vs docs/launch/gate0_launch_post.md.",
+        "side-by-side table vs docs/launch/gate0_launch_post.md.",
     )
-    repro.add_argument("--flavor", choices=["2tenant", "n6", "n8"], default="2tenant",
-                       help="Bench flavor (default: 2tenant — the hero).")
-    repro.add_argument("--duration-s", type=float, default=None,
-                       help="Bench wall time (default: 300 s).")
-    repro.add_argument("--base-url", default="http://localhost:8000",
-                       help="KVWarden server URL (default: http://localhost:8000).")
-    repro.add_argument("--pod", action="store_true",
-                       help="Provision a 1x A100 pod via RunPod and run against it.")
-    repro.add_argument("--no-delete", action="store_true",
-                       help="With --pod: keep the pod alive after the run.")
+    repro.add_argument(
+        "--flavor",
+        choices=["2tenant", "n6", "n8"],
+        default="2tenant",
+        help="Bench flavor (default: 2tenant — the hero).",
+    )
+    repro.add_argument(
+        "--duration-s",
+        type=float,
+        default=None,
+        help="Bench wall time (default: 300 s).",
+    )
+    repro.add_argument(
+        "--base-url",
+        default="http://localhost:8000",
+        help="KVWarden server URL (default: http://localhost:8000).",
+    )
+    repro.add_argument(
+        "--pod",
+        action="store_true",
+        help="Provision a 1x A100 pod via RunPod and run against it.",
+    )
+    repro.add_argument(
+        "--no-delete",
+        action="store_true",
+        help="With --pod: keep the pod alive after the run.",
+    )
 
     # ── man ──
     man_parser = sub.add_parser(

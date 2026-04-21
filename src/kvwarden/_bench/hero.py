@@ -181,10 +181,8 @@ def _port_listening(host: str, port: int) -> bool:
 
 def _import_bench_module():
     """Import the n-tenant bench script from the repo checkout."""
-    from pathlib import Path as _P
-
     script_dir = (
-        _P(__file__).resolve().parent.parent.parent.parent / "benchmarks" / "scripts"
+        Path(__file__).resolve().parent.parent.parent.parent / "benchmarks" / "scripts"
     )
     if str(script_dir) not in sys.path:
         sys.path.insert(0, str(script_dir))

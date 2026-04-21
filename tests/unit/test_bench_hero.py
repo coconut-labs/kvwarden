@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from rich.console import Console
 
-from kvwarden._bench import hero
+from kvwarden._bench import compare, hero
 
 
 class _FakeSession:
@@ -28,8 +28,11 @@ class _FakeSession:
         return None
 
     def get(self, url: str) -> "_FakeResp":
-        return (_FakeResp(self._h, {}) if url.endswith("/health")
-                else _FakeResp(200, self._m))
+        return (
+            _FakeResp(self._h, {})
+            if url.endswith("/health")
+            else _FakeResp(200, self._m)
+        )
 
 
 class _FakeResp:
@@ -51,6 +54,7 @@ class _FakeResp:
 
 # ── flavor + reference ──────────────────────────────────────────────────
 
+
 def test_flavors_match_references() -> None:
     for key in ("2tenant", "n6", "n8"):
         assert hero.FLAVORS[key].num_quiet == hero.REFERENCES[key].num_quiet
@@ -58,9 +62,12 @@ def test_flavors_match_references() -> None:
 
 def test_default_flavor_is_hero_2tenant() -> None:
     spec = hero.FLAVORS["2tenant"]
-    assert (spec.num_quiet, spec.flooder_rps, spec.quiet_rps, spec.default_duration_s) == (
-        1, 32.0, 1.0, 300.0
-    )
+    assert (
+        spec.num_quiet,
+        spec.flooder_rps,
+        spec.quiet_rps,
+        spec.default_duration_s,
+    ) == (1, 32.0, 1.0, 300.0)
 
 
 def test_config_hints_exist() -> None:
@@ -71,11 +78,12 @@ def test_config_hints_exist() -> None:
 
 # ── comparison math + rendering ─────────────────────────────────────────
 
+
 def test_delta_badge_color_thresholds() -> None:
-    assert "green" in hero._delta_badge(68.0, 61.5)      # ~10%
-    assert "yellow" in hero._delta_badge(85.0, 61.5)     # ~38%
-    assert "red" in hero._delta_badge(150.0, 61.5)       # ~144%
-    assert hero._delta_badge(10.0, 0.0) == "[dim]n/a[/dim]"
+    assert "green" in compare._delta_badge(68.0, 61.5)  # ~10%
+    assert "yellow" in compare._delta_badge(85.0, 61.5)  # ~38%
+    assert "red" in compare._delta_badge(150.0, 61.5)  # ~144%
+    assert compare._delta_badge(10.0, 0.0) == "[dim]n/a[/dim]"
 
 
 def test_render_comparison_runs() -> None:
@@ -84,6 +92,7 @@ def test_render_comparison_runs() -> None:
 
 
 # ── preflight errors ────────────────────────────────────────────────────
+
 
 async def test_connection_refused_hint() -> None:
     import aiohttp
@@ -112,8 +121,9 @@ async def test_wrong_model_hint() -> None:
 
 
 async def test_health_non_200_hint() -> None:
-    with patch("kvwarden._bench.hero.aiohttp.ClientSession",
-               return_value=_FakeSession(503, {})):
+    with patch(
+        "kvwarden._bench.hero.aiohttp.ClientSession", return_value=_FakeSession(503, {})
+    ):
         ok, hint = await hero._preflight_server(
             "http://localhost:8000", hero._HERO_MODEL, Console()
         )
@@ -122,6 +132,7 @@ async def test_health_non_200_hint() -> None:
 
 
 # ── result extraction ───────────────────────────────────────────────────
+
 
 def test_count_429s_missing_file(tmp_path: Path) -> None:
     assert hero._count_429s(tmp_path / "missing.csv") == (0, 0)
@@ -153,9 +164,14 @@ def test_build_report_schema() -> None:
         "quiet_aggregate": {"ttft_p99_ms": 62.5, "count_ok": 311},
     }
     r = hero._build_report(
-        hero.FLAVORS["2tenant"], summary, 0.93,
-        "http://localhost:8000", 300.0, "NVIDIA A100-SXM4-80GB",
-        "2026-04-21T15:00:00+00:00", "2026-04-21T15:05:00+00:00",
+        hero.FLAVORS["2tenant"],
+        summary,
+        0.93,
+        "http://localhost:8000",
+        300.0,
+        "NVIDIA A100-SXM4-80GB",
+        "2026-04-21T15:00:00+00:00",
+        "2026-04-21T15:05:00+00:00",
     )
     assert r["schema_version"] == 1 and r["flavor"] == "2tenant"
     assert r["user_result"]["quiet_aggregate_p99_ms"] == 62.5
@@ -165,21 +181,30 @@ def test_build_report_schema() -> None:
 
 # ── url parsing ─────────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("url, expected", [
-    ("http://localhost:8000", ("localhost", 8000)),
-    ("https://example.com:8080/", ("example.com", 8080)),
-    ("http://example.com", ("example.com", 8000)),
-])
+
+@pytest.mark.parametrize(
+    "url, expected",
+    [
+        ("http://localhost:8000", ("localhost", 8000)),
+        ("https://example.com:8080/", ("example.com", 8080)),
+        ("http://example.com", ("example.com", 8000)),
+    ],
+)
 def test_split_host_port(url: str, expected: tuple[str, int]) -> None:
     assert hero._split_host_port(url) == expected
 
 
 # ── dispatch errors ─────────────────────────────────────────────────────
 
+
 def test_unknown_flavor_exits_2() -> None:
-    ns = argparse.Namespace(flavor="nope", duration_s=None,
-                            base_url="http://localhost:8000",
-                            pod=False, no_delete=False)
+    ns = argparse.Namespace(
+        flavor="nope",
+        duration_s=None,
+        base_url="http://localhost:8000",
+        pod=False,
+        no_delete=False,
+    )
     with pytest.raises(SystemExit) as ei:
         hero.run_reproduce_hero(ns)
     assert ei.value.code == 2
@@ -187,9 +212,13 @@ def test_unknown_flavor_exits_2() -> None:
 
 def test_server_unreachable_exits_2(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(hero, "_port_listening", lambda h, p: False)
-    ns = argparse.Namespace(flavor="2tenant", duration_s=5.0,
-                            base_url="http://localhost:8000",
-                            pod=False, no_delete=False)
+    ns = argparse.Namespace(
+        flavor="2tenant",
+        duration_s=5.0,
+        base_url="http://localhost:8000",
+        pod=False,
+        no_delete=False,
+    )
     with pytest.raises(SystemExit) as ei:
         hero.run_reproduce_hero(ns)
     assert ei.value.code == 2
@@ -197,12 +226,16 @@ def test_server_unreachable_exits_2(monkeypatch: pytest.MonkeyPatch) -> None:
 
 # ── pod teardown & signal handler ───────────────────────────────────────
 
+
 def _mk_pod_ctx(delete: bool = True):
     from kvwarden._bench import pod as pod_mod
 
     return pod_mod.PodContext(
-        pod_id="abc", base_url="http://ignored",
-        runpod_mod=MagicMock(), delete_on_exit=delete, console=Console(),
+        pod_id="abc",
+        base_url="http://ignored",
+        runpod_mod=MagicMock(),
+        delete_on_exit=delete,
+        console=Console(),
     )
 
 

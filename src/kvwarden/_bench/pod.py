@@ -43,7 +43,9 @@ class PodContext:
             return
         try:
             self.runpod_mod.terminate_pod(self.pod_id)
-            self.console.print(f"[green]✓[/green] terminated pod [cyan]{self.pod_id}[/cyan]")
+            self.console.print(
+                f"[green]✓[/green] terminated pod [cyan]{self.pod_id}[/cyan]"
+            )
         except Exception as exc:
             self.console.print(
                 f"[yellow]![/yellow] failed to terminate pod {self.pod_id}: {exc}\n"
@@ -81,14 +83,20 @@ def ensure_pod(
 ) -> PodContext:
     """Provision a 1x A100 pod. SystemExit(2) with a hint on missing prereqs."""
     if not os.environ.get("RUNPOD_API_KEY"):
-        _bail(console, "--pod requires RUNPOD_API_KEY (https://runpod.io/console/user/settings).")
+        _bail(
+            console,
+            "--pod requires RUNPOD_API_KEY (https://runpod.io/console/user/settings).",
+        )
     hf_token = os.environ.get("HF_TOKEN", "")
     if not hf_token:
         _bail(console, "--pod requires HF_TOKEN for gated Llama-3.1-8B weights.")
     try:
         import runpod as _rp  # lazy; zero-new-deps
     except ImportError:
-        _bail(console, "`pip install runpod` required for --pod (not a core kvwarden dep).")
+        _bail(
+            console,
+            "`pip install runpod` required for --pod (not a core kvwarden dep).",
+        )
         return None  # unreachable; appeases the type-checker
 
     _rp.api_key = os.environ["RUNPOD_API_KEY"]
@@ -96,8 +104,12 @@ def ensure_pod(
     try:
         pod = _rp.create_pod(
             name="kvwarden-reproduce-hero",
-            image_name=_IMAGE, gpu_type_id=_GPU_TYPE, cloud_type="SECURE",
-            gpu_count=1, container_disk_in_gb=100, volume_in_gb=50,
+            image_name=_IMAGE,
+            gpu_type_id=_GPU_TYPE,
+            cloud_type="SECURE",
+            gpu_count=1,
+            container_disk_in_gb=100,
+            volume_in_gb=50,
             ports=f"{port}/http",
             env={"HF_TOKEN": hf_token, "KVWARDEN_AUTO_SERVE": "1"},
         )
@@ -120,8 +132,11 @@ def ensure_pod(
         return None
     console.print(f"  base-url [cyan]{url}[/cyan]")
     return PodContext(
-        pod_id=pod_id, base_url=url, runpod_mod=_rp,
-        delete_on_exit=delete_on_exit, console=console,
+        pod_id=pod_id,
+        base_url=url,
+        runpod_mod=_rp,
+        delete_on_exit=delete_on_exit,
+        console=console,
     )
 
 
@@ -129,7 +144,9 @@ def pod_signal_handler(ctx: PodContext) -> Callable[[int, Any], None]:
     """Return a handler that tears down the pod on SIGINT/SIGTERM."""
 
     def _handler(signum: int, _frame: Any) -> None:
-        ctx.console.print(f"\n[yellow]![/yellow] caught signal {signum}, terminating pod...")
+        ctx.console.print(
+            f"\n[yellow]![/yellow] caught signal {signum}, terminating pod..."
+        )
         ctx.teardown()
         sys.exit(130)
 
