@@ -631,6 +631,29 @@ Caveats: 2 arms only (not 3 — 70B is expensive; Gate 2-FAIRNESS Arm 1 carries 
 | 2.3 | 8B → 70B + TP=1 → TP=4 | **CONFIRM** | 1.62× solo (p50 1.07×) | $7.77 | #84, #85 |
 | 2.4 | dense → MoE (Mixtral TP=2) | **CONFIRM** | 1.29× solo | $4.90 | #82 |
 
-**Total spend: ~$15.57 of $72 ceiling (~22%)**. 3 CONFIRM + 1 PASS-with-caveat. The 429 rate is identical (68%) from N=4 to N=8, 8B to 70B, dense to MoE — strongest cross-scale signal in the ladder. Token-bucket per-tenant fairness generalizes across tenant scale, model scale, parallelism fork, prompt-length variation, and routing architecture.
+**Total spend: ~$15.57 of $72 ceiling (~22%)**. 3 CONFIRM + 1 PASS-with-caveat against the pre-committed criteria.
 
-**Launch-post update pending:** hero can now claim "same fairness ratio from 8B to 70B, single-GPU to TP=4" as the frontier-credibility beat. Research roadmap update pending for 2.4b (saturated-MoE) and 2.2b (max_model_len=8192) follow-ups.
+### Regime caveat — load-bearing for any launch-post framing
+
+Post-hoc shadow review surfaced a material framing risk. The 4 gates hold against the criteria as written, but three things the "cross-scale fairness" narrative should **not** claim:
+
+1. **FIFO did not starve on H100 in any gate.** Gate 2.1 FIFO = 59.0 ms (1.23× solo), Gate 2.2 FIFO = 231.8 ms (but decomposed as engine-load not starvation), Gate 2.4 FIFO = 122.7 ms (1.45× solo). Compare the prior Gate 2-FAIRNESS (A100, 2026-04-19) where FIFO = 1585 ms = 29× solo. Same tenant configs; the difference is H100 headroom at offered load of 32-RPS flooder + 7×1-RPS quiet. **Token-bucket "fixing" the absence of starvation is not a demonstration of fairness-at-scale.** The mechanism is sound; this experimental regime under-exercises it.
+2. **The 68% 429 rate is arithmetic, not empirical.** `(flooder_rps − rate_limit_rps) / flooder_rps = (32 − 10)/32 = 68.75%` — deterministic from config. Gate 2.4's 37% matches its `flooder_rps=16` the same way. The "identical 68% across all gates" reads as cross-scale convergence but is in fact a plumbing check that the rate-limit fires at the config's setpoint. Valid finding, mis-framed as a discovery.
+3. **Cross-scale p50 flatness (1.03× → 1.07×) is not falsifiable from these gates alone.** Any config that doesn't saturate the engine will show p50 ≈ solo. Would also show flat across scales.
+
+### What's validated vs. what's pending
+
+- **Validated (load-bearing):** the rate-limit mechanism engages correctly at the admission layer across N=4, N=8, dense + MoE, 1-GPU + TP=2 + TP=4, mixed prompt lengths. Zero quiet-tenant 429s; no engine OOMs; no NCCL runtime errors; VRAM fits the TP=4 70B load on first try at `gpu_memory_utilization=0.90`. The code path is exercised under all four regimes.
+- **Pending for a public "works at 70B" claim:** an explicit saturated-regime test where FIFO produces ≥10× starvation on the same hardware and token-bucket holds inside 1.5×. On H100, that means bumping `flooder_rps` past the engine knee (estimate 128+ RPS, or tenant count to N=16). Provisional follow-up ticket: **Gate 2.1b — saturated H100 N=8 @ 128 flooder RPS** (~$3 budget, 30 min on 1× H100). Awaits user authorization — not in the original $72/4-gate allocation.
+
+### Honest launch-post framing (no 2.1b needed)
+
+- **Primary claim (supported):** "Gate 2-FAIRNESS on A100 showed per-tenant token-bucket reduces FIFO starvation from 28,716 ms p99 to 74 ms (1.35× solo)." (Already the v3 LP hero.)
+- **Replication claim (supported):** "The same code path runs cleanly at 70B TP=4 across 4× H100, under mixed prompt lengths, and under MoE routing, without engine failures. Measured TTFT deltas are small because H100 at our offered load is under-saturated — the mechanism is exercised, but the starvation regime that makes fairness load-bearing is the A100 headline."
+- **Over-claim to avoid:** "same fairness ratio at every scale" implies empirical cross-scale fairness that these gates don't prove.
+
+### Follow-ups queued (pending user authorization)
+
+- **Gate 2.1b (saturation) — $3**: bump flooder_rps to 128 on 1× H100; if FIFO still doesn't starve, bump tenant count to N=16. Decisive for the "works at 70B" hero claim.
+- **Gate 2.2b (max_model_len=8192) — $2**: rerun 2.2 with bigger context window so the 10% 8192-token bucket produces real generations instead of short-circuited empty responses.
+- **Gate 2.4b (saturated MoE) — $6**: rerun 2.4 at `flooder_rps=32+` or on a smaller TP config to force the engine past its knee; isolate whether MoE expert-capacity contention leaks past the admission layer.
