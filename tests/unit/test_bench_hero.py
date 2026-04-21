@@ -1,4 +1,4 @@
-"""Unit tests for ``infergrid bench reproduce-hero`` (network mocked)."""
+"""Unit tests for ``kvwarden bench reproduce-hero`` (network mocked)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from rich.console import Console
 
-from infergrid._bench import hero
+from kvwarden._bench import hero
 
 
 class _FakeSession:
@@ -88,7 +88,7 @@ def test_render_comparison_runs() -> None:
 async def test_connection_refused_hint() -> None:
     import aiohttp
 
-    with patch("infergrid._bench.hero.aiohttp.ClientSession") as mock_cls:
+    with patch("kvwarden._bench.hero.aiohttp.ClientSession") as mock_cls:
         mock_cls.return_value.__aenter__ = MagicMock(
             side_effect=aiohttp.ClientConnectorError(
                 connection_key=MagicMock(), os_error=OSError(111, "refused")
@@ -98,12 +98,12 @@ async def test_connection_refused_hint() -> None:
             "http://localhost:8000", hero._HERO_MODEL, Console()
         )
     assert ok is False
-    assert hint and "Could not connect" in hint and "infergrid serve" in hint
+    assert hint and "Could not connect" in hint and "kvwarden serve" in hint
 
 
 async def test_wrong_model_hint() -> None:
     sess = _FakeSession(200, {"data": [{"id": "Qwen/Qwen2.5-7B"}]})
-    with patch("infergrid._bench.hero.aiohttp.ClientSession", return_value=sess):
+    with patch("kvwarden._bench.hero.aiohttp.ClientSession", return_value=sess):
         ok, hint = await hero._preflight_server(
             "http://localhost:8000", hero._HERO_MODEL, Console()
         )
@@ -112,7 +112,7 @@ async def test_wrong_model_hint() -> None:
 
 
 async def test_health_non_200_hint() -> None:
-    with patch("infergrid._bench.hero.aiohttp.ClientSession",
+    with patch("kvwarden._bench.hero.aiohttp.ClientSession",
                return_value=_FakeSession(503, {})):
         ok, hint = await hero._preflight_server(
             "http://localhost:8000", hero._HERO_MODEL, Console()
@@ -198,7 +198,7 @@ def test_server_unreachable_exits_2(monkeypatch: pytest.MonkeyPatch) -> None:
 # ── pod teardown & signal handler ───────────────────────────────────────
 
 def _mk_pod_ctx(delete: bool = True):
-    from infergrid._bench import pod as pod_mod
+    from kvwarden._bench import pod as pod_mod
 
     return pod_mod.PodContext(
         pod_id="abc", base_url="http://ignored",
@@ -207,7 +207,7 @@ def _mk_pod_ctx(delete: bool = True):
 
 
 def test_signal_handler_terminates_and_exits_130() -> None:
-    from infergrid._bench import pod as pod_mod
+    from kvwarden._bench import pod as pod_mod
 
     ctx = _mk_pod_ctx()
     with pytest.raises(SystemExit) as ei:

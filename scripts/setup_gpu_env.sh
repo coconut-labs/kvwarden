@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# InferGrid — Idempotent GPU Environment Setup
+# KVWarden — Idempotent GPU Environment Setup
 # =============================================================================
 # Sets up a fresh Lambda Labs A100 instance for profiling.
 # Safe to re-run: every step checks before acting.
@@ -70,7 +70,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
 # ---- Step 0: Preflight checks ----
 
 log_info "=========================================="
-log_info "InferGrid GPU Environment Setup"
+log_info "KVWarden GPU Environment Setup"
 log_info "=========================================="
 
 # Check Python version
@@ -134,10 +134,10 @@ install_if_missing() {
 cd "$PROJECT_ROOT"
 
 # Install the project itself with all optional deps
-if pip show infergrid &>/dev/null; then
-    log_ok "infergrid package already installed"
+if pip show kvwarden &>/dev/null; then
+    log_ok "kvwarden package already installed"
 else
-    log_info "Installing infergrid with all dependencies..."
+    log_info "Installing kvwarden with all dependencies..."
     pip install --no-cache-dir -e ".[dev,profiling]"
 fi
 

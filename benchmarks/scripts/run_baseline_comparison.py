@@ -378,7 +378,7 @@ async def main() -> None:
     )
 
     logger.info("=" * 70)
-    logger.info("InferGrid Phase 1: Baseline Comparison — vLLM vs SGLang")
+    logger.info("KVWarden Phase 1: Baseline Comparison — vLLM vs SGLang")
     logger.info("=" * 70)
 
     # Log environment

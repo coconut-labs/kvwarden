@@ -4,7 +4,7 @@ Same single-model harness as benchmark_two_tenant_single_model.py but
 sends through 1 flooder + N quiet tenants, each with its own
 X-Tenant-ID. Per-tenant Poisson arrivals, fixed wall-clock duration.
 
-Track C in the pre-launch sprint asks: does InferGrid's token-bucket
+Track C in the pre-launch sprint asks: does KVWarden's token-bucket
 guarantee hold when N=6 (1 flooder + 5 quiet)? If quiet tenants stay
 within ~1.5× of solo across all 5, that is a stronger fairness claim
 than the 2-tenant launch chart. If one quiet tenant degrades while

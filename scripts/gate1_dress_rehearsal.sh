@@ -6,7 +6,7 @@
 # spending $7-10 on an H100 SXM5 spot pod.
 #
 # What this DOES validate:
-#   - infergrid serve loads BOTH gate1 configs (admission ON / admission OFF)
+#   - kvwarden serve loads BOTH gate1 configs (admission ON / admission OFF)
 #   - benchmark_multi_model.py runs at c=128 and c=256 against a mock backend
 #   - /metrics admission_in_flight gauge engages on Arm A, stays open on Arm B
 #   - per-(arm, concurrency) ttft_p99_ms is parsed cleanly from summary JSON
@@ -73,7 +73,7 @@ cleanup() {
   [ -n "${POLLER_PID:-}" ] && kill "$POLLER_PID" 2>/dev/null || true
   [ -n "${SERVE_PID:-}"  ] && kill "$SERVE_PID"  2>/dev/null || true
   [ -n "${MOCK_PID:-}"   ] && kill "$MOCK_PID"   2>/dev/null || true
-  pkill -f "infergrid.cli serve.*gate1_" 2>/dev/null || true
+  pkill -f "kvwarden.cli serve.*gate1_" 2>/dev/null || true
   pkill -f "gate1_dress_mock.py"          2>/dev/null || true
   sleep 1
 }
@@ -89,7 +89,7 @@ MOCK_PY="$LOGDIR/gate1_dress_mock.py"
 cat > "$MOCK_PY" <<'PYEOF'
 """Load-aware mock vLLM engine for Gate 1 dress rehearsal.
 
-OpenAI-compatible enough for infergrid's vLLMEngine adapter + the multi-model
+OpenAI-compatible enough for kvwarden's vLLMEngine adapter + the multi-model
 bench harness. Tracks concurrent in-flight requests and adds knee-shaped
 TTFT pressure so admission ON vs OFF produces a measurable difference.
 """
@@ -206,7 +206,7 @@ PYEOF
 
 # ---------------------------------------------------------------------------
 # 2. Start the load-aware mock engine ONCE; it serves all 4 bench runs.
-#    infergrid runs in DEV_SKIP_ENGINE_LAUNCH mode; the model client adapter
+#    kvwarden runs in DEV_SKIP_ENGINE_LAUNCH mode; the model client adapter
 #    talks to whatever is on the per-model port. We override the per-model
 #    port via a tmp config (gate1 configs leave port=auto).
 # ---------------------------------------------------------------------------
@@ -239,9 +239,9 @@ c['models'][0]['port'] = $MOCK_PORT
 with open('$cfg_out','w') as f: yaml.safe_dump(c, f)
 "
   echo "--- Phase 2.$arm: serve $cfg_in (max_concurrent=$max_conc) ---"
-  INFERGRID_DEV_SKIP_ENGINE_LAUNCH=1 \
+  KVWARDEN_DEV_SKIP_ENGINE_LAUNCH=1 \
   PYTHONPATH="$REPO_ROOT/src:${PYTHONPATH:-}" \
-  python3 -m infergrid.cli serve --config "$cfg_out" --log-level WARNING \
+  python3 -m kvwarden.cli serve --config "$cfg_out" --log-level WARNING \
       > "$LOGDIR/serve_${arm}.log" 2>&1 &
   SERVE_PID=$!
 
@@ -267,10 +267,10 @@ with open('$cfg_out','w') as f: yaml.safe_dump(c, f)
     (
       while true; do
         M=$(curl -sf "http://localhost:$SERVE_PORT/metrics" 2>/dev/null) || M=""
-        IF=$(printf '%s\n' "$M" | awk '/^infergrid_admission_in_flight /{print $2; exit}')
-        QD=$(printf '%s\n' "$M" | awk '/^infergrid_admission_queue_depth /{print $2; exit}')
-        AT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_admitted_total /{print $2; exit}')
-        RT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_rejected_total\{/{sum+=$2} END{print sum+0}')
+        IF=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_in_flight /{print $2; exit}')
+        QD=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_queue_depth /{print $2; exit}')
+        AT=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_admitted_total /{print $2; exit}')
+        RT=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_rejected_total\{/{sum+=$2} END{print sum+0}')
         printf "%s,%s,%s,%s,%s\n" "$(date +%s.%N)" "${IF:-0}" "${QD:-0}" "${AT:-0}" "${RT:-0}" >> "$trace"
         sleep 0.05
       done
@@ -314,7 +314,7 @@ json.dump(d, open('$RESULTS_JSON','w'), indent=2)
   done
 
   kill "$SERVE_PID" 2>/dev/null || true; wait "$SERVE_PID" 2>/dev/null || true
-  pkill -f "infergrid.cli serve.*${arm}_config" 2>/dev/null || true
+  pkill -f "kvwarden.cli serve.*${arm}_config" 2>/dev/null || true
   sleep 2   # let port :8000 free up before the next arm
 }
 

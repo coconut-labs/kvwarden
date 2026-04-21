@@ -17,14 +17,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from infergrid.common.config import InferGridConfig, ModelConfig
-from infergrid.router.router import WorkloadRouter
+from kvwarden.common.config import KVWardenConfig, ModelConfig
+from kvwarden.router.router import WorkloadRouter
 
 
 @pytest.mark.asyncio
 async def test_ensure_model_loaded_serializes_concurrent_calls(monkeypatch):
     """32 concurrent ensure_model_loaded() calls → exactly 1 load_model()."""
-    cfg = InferGridConfig(
+    cfg = KVWardenConfig(
         models=[
             ModelConfig(
                 model_id="llama31-8b",
@@ -80,7 +80,7 @@ async def test_ensure_model_loaded_serializes_concurrent_calls(monkeypatch):
 @pytest.mark.asyncio
 async def test_ensure_model_loaded_lock_is_per_model(monkeypatch):
     """Two different model_ids load concurrently — not serialized by the lock."""
-    cfg = InferGridConfig(
+    cfg = KVWardenConfig(
         models=[
             ModelConfig(
                 model_id="llama31-8b", short_name="l", engine="vllm", dtype="bfloat16"

@@ -25,10 +25,10 @@ git log --oneline origin/main | head -20 | grep -iE 'reproduce.hero|bench.hero' 
 ```
 
 Out-of-tree blocking items from `user_checklist.md` — confirm manually:
-- `pip index versions gpufair` → returns 0.0.1 (you own the PyPI name)
-- `npm view gpufair` → shows your placeholder
-- `dig +short gpufair.org` → returns a Cloudflare IP (you own the domain)
-- `gh repo view coconut-labs/gpufair --json name` → name is `gpufair`
+- `pip index versions kvwarden` → returns 0.0.1 (you own the PyPI name)
+- `npm view kvwarden` → shows your placeholder
+- `dig +short kvwarden.org` → returns a Cloudflare IP (you own the domain)
+- `gh repo view coconut-labs/kvwarden --json name` → name is `kvwarden`
 
 If any of the above fails, stop and finish the checklist item first.
 
@@ -37,19 +37,19 @@ If any of the above fails, stop and finish the checklist item first.
 ## 1. Create the sweep branch
 
 ```bash
-git checkout -b rename/infergrid-to-gpufair
+git checkout -b rename/kvwarden-to-kvwarden
 ```
 
 ---
 
-## 2. Directory rename — `src/infergrid/` → `src/gpufair/`
+## 2. Directory rename — `src/kvwarden/` → `src/kvwarden/`
 
 ```bash
 # Preserves git history through a rename-detection pass.
-git mv src/infergrid src/gpufair
+git mv src/kvwarden src/kvwarden
 
 # Remove the generated egg-info — rebuild picks up the new name.
-rm -rf src/infergrid.egg-info src/gpufair.egg-info
+rm -rf src/kvwarden.egg-info src/kvwarden.egg-info
 ```
 
 ---
@@ -61,7 +61,7 @@ Every subsequent `git grep` and sed pass honors this exclusion list. Save it to 
 ```bash
 EXCLUDE='
 :(exclude)results/
-:(exclude)docs/naming/infergrid_name_audit.md
+:(exclude)docs/naming/kvwarden_name_audit.md
 :(exclude)PROGRESS.md
 :(exclude)*.tar.gz
 :(exclude)*.egg-info/
@@ -81,11 +81,11 @@ _grep() { git grep "$@" -- $EXCLUDE ; }
 Only two files in-tree reference these forms (the audit doc), but run the pass for completeness and future-proofing.
 
 ```bash
-files="$(_grep -l -E 'infer-grid|infer_grid' | grep -v docs/naming/infergrid_name_audit.md || true)"
+files="$(_grep -l -E 'kvwarden|kvwarden' | grep -v docs/naming/kvwarden_name_audit.md || true)"
 if [[ -n "$files" ]]; then
   echo "$files" | xargs sed -i '' \
-    -e 's/infer-grid/gpufair/g' \
-    -e 's/infer_grid/gpufair/g'
+    -e 's/kvwarden/kvwarden/g' \
+    -e 's/kvwarden/kvwarden/g'
 fi
 ```
 
@@ -93,38 +93,38 @@ Note: on Linux use `sed -i` (no `''`). The `sed -i ''` form above is macOS BSD s
 
 ---
 
-## 5. sed pass 2 — `InferGrid` → `GPUFair`
+## 5. sed pass 2 — `KVWarden` → `KVWarden`
 
 ```bash
-files="$(_grep -l 'InferGrid' || true)"
+files="$(_grep -l 'KVWarden' || true)"
 if [[ -n "$files" ]]; then
-  echo "$files" | xargs sed -i '' 's/InferGrid/GPUFair/g'
+  echo "$files" | xargs sed -i '' 's/KVWarden/KVWarden/g'
 fi
 ```
 
 ---
 
-## 6. sed pass 3 — `INFERGRID_` → `GPUFAIR_` (env vars, anchored)
+## 6. sed pass 3 — `KVWARDEN_` → `KVWARDEN_` (env vars, anchored)
 
-The trailing underscore anchor protects against any hypothetical `INFERGRIDX` collision (none exist today, but the anchor is free insurance).
+The trailing underscore anchor protects against any hypothetical `KVWARDENX` collision (none exist today, but the anchor is free insurance).
 
 ```bash
-files="$(_grep -l 'INFERGRID_' || true)"
+files="$(_grep -l 'KVWARDEN_' || true)"
 if [[ -n "$files" ]]; then
-  echo "$files" | xargs sed -i '' 's/INFERGRID_/GPUFAIR_/g'
+  echo "$files" | xargs sed -i '' 's/KVWARDEN_/KVWARDEN_/g'
 fi
 ```
 
 ---
 
-## 7. sed pass 4 — lowercase `infergrid` → `gpufair`
+## 7. sed pass 4 — lowercase `kvwarden` → `kvwarden`
 
 Runs last so it does not clobber any form handled above.
 
 ```bash
-files="$(_grep -l 'infergrid' || true)"
+files="$(_grep -l 'kvwarden' || true)"
 if [[ -n "$files" ]]; then
-  echo "$files" | xargs sed -i '' 's/infergrid/gpufair/g'
+  echo "$files" | xargs sed -i '' 's/kvwarden/kvwarden/g'
 fi
 ```
 
@@ -133,8 +133,8 @@ fi
 ## 8. File renames — dashboards and grafana
 
 ```bash
-git mv dashboards/infergrid-fairness.json dashboards/gpufair-fairness.json
-git mv docs/grafana/infergrid-overview.json docs/grafana/gpufair-overview.json
+git mv dashboards/kvwarden-fairness.json dashboards/kvwarden-fairness.json
+git mv docs/grafana/kvwarden-overview.json docs/grafana/kvwarden-overview.json
 ```
 
 (These also received content rewrites from the sed passes; the `git mv` here is just the filename.)
@@ -144,7 +144,7 @@ git mv docs/grafana/infergrid-overview.json docs/grafana/gpufair-overview.json
 ## 9. telemetry-worker wrangler.toml — **review and confirm**
 
 ```bash
-# The sed passes already changed name = "infergrid-telemetry" to "gpufair-telemetry".
+# The sed passes already changed name = "kvwarden-telemetry" to "kvwarden-telemetry".
 # But database_id was "REPLACE_WITH_WRANGLER_OUTPUT" on main and still needs
 # the real id from the new D1 database created in user_checklist.md item 6.
 # If user_checklist step 6 has been done, paste the new id here manually.
@@ -157,14 +157,14 @@ $EDITOR telemetry-worker/wrangler.toml
 
 ```bash
 # Without installing — just the AST:
-python -c "import ast; ast.parse(open('src/gpufair/__init__.py').read())"
+python -c "import ast; ast.parse(open('src/kvwarden/__init__.py').read())"
 
 # Full install + import:
 pip install -e ".[dev]"
-python -c "import gpufair; print(gpufair.__version__)"
+python -c "import kvwarden; print(kvwarden.__version__)"
 
 # CLI entry point:
-gpufair --help | head -5
+kvwarden --help | head -5
 ```
 
 ---
@@ -194,7 +194,7 @@ ruff format src/ tests/
 ## 13. The verification grep — must return nothing
 
 ```bash
-_grep -iE 'InferGrid|infergrid|INFERGRID|infer-grid|infer_grid' && {
+_grep -iE 'KVWarden|kvwarden|KVWARDEN|kvwarden|kvwarden' && {
   echo "LEFTOVER HITS — inspect above, decide fix-or-exclude"
   exit 1
 } || echo "VERIFICATION CLEAN"
@@ -212,32 +212,32 @@ Expected failure paths and fixes:
 # Chunk 1: directory rename (pure `git mv`, reviewers can skim).
 git add -A src/
 git commit --author="Shrey Patel <patelshrey77@gmail.com>" \
-  -m "rename: src/infergrid/ → src/gpufair/ (directory move)"
+  -m "rename: src/kvwarden/ → src/kvwarden/ (directory move)"
 
 # Chunk 2: pyproject.toml and build metadata.
 git add pyproject.toml requirements-gpu.txt .gitignore
 git commit --author="Shrey Patel <patelshrey77@gmail.com>" \
-  -m "rename: pyproject + build metadata (infergrid → gpufair)"
+  -m "rename: pyproject + build metadata (kvwarden → kvwarden)"
 
 # Chunk 3: configs + benchmark scripts.
 git add configs/ benchmarks/ scripts/ profiling/
 git commit --author="Shrey Patel <patelshrey77@gmail.com>" \
-  -m "rename: configs + scripts (infergrid → gpufair)"
+  -m "rename: configs + scripts (kvwarden → kvwarden)"
 
 # Chunk 4: docs + README.
 git add README.md CONTRIBUTING.md SECURITY.md research_roadmap.md docs/ docker/
 git commit --author="Shrey Patel <patelshrey77@gmail.com>" \
-  -m "rename: docs + top-level (infergrid → gpufair)"
+  -m "rename: docs + top-level (kvwarden → kvwarden)"
 
 # Chunk 5: telemetry-worker + dashboards + grafana.
 git add telemetry-worker/ dashboards/ docs/grafana/
 git commit --author="Shrey Patel <patelshrey77@gmail.com>" \
-  -m "rename: telemetry-worker + dashboards (infergrid → gpufair)"
+  -m "rename: telemetry-worker + dashboards (kvwarden → kvwarden)"
 
 # Chunk 6: tests.
 git add tests/
 git commit --author="Shrey Patel <patelshrey77@gmail.com>" \
-  -m "rename: tests (infergrid → gpufair)"
+  -m "rename: tests (kvwarden → kvwarden)"
 
 # Chunk 7: .github/.
 git add .github/
@@ -252,23 +252,23 @@ If any of the above complains "nothing to commit" it means sed had no hits there
 ## 15. Push and open the sweep PR
 
 ```bash
-git push -u origin rename/infergrid-to-gpufair
+git push -u origin rename/kvwarden-to-kvwarden
 
 gh pr create \
-  --title "rename: infergrid → gpufair (tree sweep)" \
+  --title "rename: kvwarden → kvwarden (tree sweep)" \
   --body "$(cat <<'EOF'
 Executes the rename playbook at docs/naming/rename_plan.md. All five spelling
 forms swapped in the order documented there. results/**, PROGRESS.md, and
-docs/naming/infergrid_name_audit.md are deliberately untouched — they are
+docs/naming/kvwarden_name_audit.md are deliberately untouched — they are
 historical evidence.
 
-Preconditions (all held before this PR): domains purchased, PyPI gpufair
-0.0.1 reserved, npm gpufair + scope reserved, GitHub org repos renamed with
+Preconditions (all held before this PR): domains purchased, PyPI kvwarden
+0.0.1 reserved, npm kvwarden + scope reserved, GitHub org repos renamed with
 301s active. See docs/naming/user_checklist.md for the full checklist.
 
 Post-merge follow-ups in docs/naming/user_checklist.md sections 6–8:
-Cloudflare Worker cutover, PyPI infergrid 0.1.3 deprecation stub, DNS
-cutover for gpufair.org.
+Cloudflare Worker cutover, PyPI kvwarden 0.1.3 deprecation stub, DNS
+cutover for kvwarden.org.
 EOF
 )"
 ```
@@ -282,12 +282,12 @@ git checkout main && git pull
 git tag v0.1.0
 git push --tags
 
-# Build and publish to PyPI (the gpufair name is already reserved):
+# Build and publish to PyPI (the kvwarden name is already reserved):
 python -m build
 python -m twine upload dist/*
 ```
 
-Then run `user_checklist.md` sections 6, 7, 8 for the Worker cutover, the `infergrid` 0.1.3 deprecation publish, and the DNS cutover.
+Then run `user_checklist.md` sections 6, 7, 8 for the Worker cutover, the `kvwarden` 0.1.3 deprecation publish, and the DNS cutover.
 
 ---
 
@@ -297,8 +297,8 @@ The sweep is a set of ordinary commits on a branch. To back out:
 
 ```bash
 git checkout main
-git branch -D rename/infergrid-to-gpufair
-git push origin --delete rename/infergrid-to-gpufair
+git branch -D rename/kvwarden-to-kvwarden
+git push origin --delete rename/kvwarden-to-kvwarden
 ```
 
-The PyPI `gpufair` 0.0.1 placeholder remains (PyPI does not permit re-use of a version number, and the name reservation stands). The GitHub redirects remain. The domains remain. Those are all sunk-cost and useful even if the rename is aborted.
+The PyPI `kvwarden` 0.0.1 placeholder remains (PyPI does not permit re-use of a version number, and the name reservation stands). The GitHub redirects remain. The domains remain. Those are all sunk-cost and useful even if the rename is aborted.

@@ -1,4 +1,4 @@
-# Gate 2-FAIRNESS Arm 2 — InferGrid FIFO (current shipping behavior).
+# Gate 2-FAIRNESS Arm 2 — KVWarden FIFO (current shipping behavior).
 # Same single model as Gate 1/1.5 (Llama-3.1-8B). Admission cap high
 # enough not to bottleneck at ~33 RPS aggregate. Per-tenant budget
 # high enough not to 429 the flooder. The ONLY variable vs Arm 3
@@ -12,7 +12,7 @@ gpu_budget_fraction: 0.92
 
 # Cap=256 avoids the c=192 queue-time floor we found in Gate 1.5 — we do
 # NOT want the admission cap to be the bottleneck here; we want the
-# engine to be the bottleneck, and InferGrid's per-tenant scheduling to
+# engine to be the bottleneck, and KVWarden's per-tenant scheduling to
 # mediate who gets admitted first.
 max_concurrent: 256
 admission_queue_size: 2048

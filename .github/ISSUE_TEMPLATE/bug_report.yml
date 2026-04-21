@@ -1,5 +1,5 @@
 name: Bug report
-description: Report something that doesn't work the way InferGrid claims.
+description: Report something that doesn't work the way KVWarden claims.
 title: "[bug] "
 labels: ["bug", "needs-triage"]
 body:
@@ -11,8 +11,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: InferGrid version
-      description: Output of `python -c "import infergrid; print(infergrid.__version__)"` — or the commit SHA if you're on an editable install.
+      label: KVWarden version
+      description: Output of `python -c "import kvwarden; print(kvwarden.__version__)"` — or the commit SHA if you're on an editable install.
       placeholder: "0.1.1"
     validations:
       required: true
@@ -55,7 +55,7 @@ body:
       render: shell
       placeholder: |
         # Minimal repro
-        infergrid serve --config configs/quickstart_fairness.yaml
+        kvwarden serve --config configs/quickstart_fairness.yaml
         curl -X POST localhost:8000/v1/completions \
           -H "X-Tenant-ID: quiet" \
           -d '{"model":"llama31-8b","prompt":"...","max_tokens":64}'

@@ -11,7 +11,7 @@
 # delta between FIFO and DRR).
 #
 # What this DOES validate:
-#   - infergrid serve loads gate2_fairness_fifo.yaml AND _drr.yaml
+#   - kvwarden serve loads gate2_fairness_fifo.yaml AND _drr.yaml
 #   - benchmark_two_tenant_single_model.py runs end-to-end against a mock
 #     engine with flooder_rps=4, quiet_rps=1, duration=20s
 #   - tenant_flooder.csv, tenant_quiet.csv, summary.json are produced
@@ -75,7 +75,7 @@ SERVE_PORT=8000
 cleanup() {
   [ -n "${SERVE_PID:-}" ] && kill "$SERVE_PID" 2>/dev/null || true
   [ -n "${MOCK_PID:-}"  ] && kill "$MOCK_PID"  2>/dev/null || true
-  pkill -f "infergrid.cli serve.*gate2_fairness" 2>/dev/null || true
+  pkill -f "kvwarden.cli serve.*gate2_fairness" 2>/dev/null || true
   pkill -f "gate2f_dress_mock.py" 2>/dev/null || true
   sleep 1
 }
@@ -161,15 +161,15 @@ c = yaml.safe_load(open('$cfg_in'))
 c['models'][0]['port'] = $MOCK_PORT
 yaml.safe_dump(c, open('$cfg_out','w'))
 "
-  echo "--- Phase 2 [$arm]: infergrid serve --config $cfg_out ---"
-  INFERGRID_DEV_SKIP_ENGINE_LAUNCH=1 \
-    python3 -m infergrid.cli serve --config "$cfg_out" \
+  echo "--- Phase 2 [$arm]: kvwarden serve --config $cfg_out ---"
+  KVWARDEN_DEV_SKIP_ENGINE_LAUNCH=1 \
+    python3 -m kvwarden.cli serve --config "$cfg_out" \
       > "$run_dir/server.log" 2>&1 &
   SERVE_PID=$!
   for i in {1..30}; do
     sleep 1
     curl -sf "http://127.0.0.1:$SERVE_PORT/v1/models" >/dev/null && break
-    kill -0 "$SERVE_PID" 2>/dev/null || { echo "FATAL: infergrid serve crashed"; tail -40 "$run_dir/server.log"; return 1; }
+    kill -0 "$SERVE_PID" 2>/dev/null || { echo "FATAL: kvwarden serve crashed"; tail -40 "$run_dir/server.log"; return 1; }
   done
 
   echo "--- Phase 3 [$arm]: two-tenant bench (duration=${DURATION_S}s) ---"

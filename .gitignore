@@ -37,4 +37,4 @@ benchmarks/results/
 # Local agent state
 .claude/
 # Gate run tarballs (results are extracted into results/)
-infergrid_gate0_*.tar.gz
+kvwarden_gate0_*.tar.gz

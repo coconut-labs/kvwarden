@@ -98,7 +98,7 @@ def main() -> None:
     labels = [
         "Arm 0\nSolo baseline\n(no contention)",
         "Arm 1\nFIFO scheduling\n(no rate-limit)",
-        "Arm 5b\nInferGrid\n(token bucket)",
+        "Arm 5b\nKVWarden\n(token bucket)",
     ]
     vals = [a0_p99, a1_p99, a5b_p99_post]
     colors = ["#4caf50", "#e53935", "#1e88e5"]
@@ -122,7 +122,7 @@ def main() -> None:
     reduction_factor = a1_p99 / max(a5b_p99_post, 0.001)
     of_solo_factor = a5b_p99_post / max(a0_p99, 0.001)
     ax_top.annotate(
-        f"{reduction_factor:.0f}× reduction\nfrom InferGrid-without-rate-limit",
+        f"{reduction_factor:.0f}× reduction\nfrom KVWarden-without-rate-limit",
         xy=(2, a5b_p99_post * 1.5),
         xytext=(1.4, 2500),
         ha="center", fontsize=10,

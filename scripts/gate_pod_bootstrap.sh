@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generic InferGrid Gate-run pod bootstrap (Gate 0.6, 1, 2, 3+).
+# Generic KVWarden Gate-run pod bootstrap (Gate 0.6, 1, 2, 3+).
 # Idempotent. Parameterized. Bundles results+engine_logs ON ANY EXIT (D2 fix).
 #
 # 5 Gate-0 lessons baked in here (see results/gate0_20260418/GATE0_OUTCOME.md):
@@ -132,7 +132,7 @@ fail() { echo "FAIL: $1" >&2; exit 1; }   # trap still fires
 [ -f /root/.gate_env ] && { set -a; . /root/.gate_env; set +a; echo "loaded /root/.gate_env"; }
 export VLLM_USE_V1=0
 export PYTHONUNBUFFERED=1
-export INFERGRID_ENGINE_LOG_DIR="$ELOG"   # PR #16 per-engine stderr capture
+export KVWARDEN_ENGINE_LOG_DIR="$ELOG"   # PR #16 per-engine stderr capture
 [ -n "${HF_TOKEN:-}" ] || fail "HF_TOKEN not set"
 
 # Phase timestamp helper (for layer-3 wall-clock budget).
@@ -142,9 +142,9 @@ phase_ts() { date +%s > "$RDIR/phase_$1.ts"; }
 phase_ts 1
 echo "--- Phase 1: apt + clone ---"
 apt-get update -qq && apt-get install -y -qq git rsync curl jq || fail "apt install"
-cd /workspace; rm -rf infergrid
-git clone --branch main --depth 1 https://github.com/coconut-labs/infergrid.git || fail "git clone"
-cd infergrid; echo "main HEAD: $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)"
+cd /workspace; rm -rf kvwarden
+git clone --branch main --depth 1 https://github.com/coconut-labs/kvwarden.git || fail "git clone"
+cd kvwarden; echo "main HEAD: $(git rev-parse --short HEAD)  $(git log -1 --pretty=%s)"
 abort_check
 
 # ---- Phase 2: python deps ----
@@ -153,7 +153,7 @@ echo "--- Phase 2: python deps ---"
 python3 -m pip install --quiet --upgrade pip || fail "pip upgrade"
 python3 -m pip install --quiet 'vllm==0.19.1' || fail "vllm install"
 python3 -m pip install --quiet -r requirements-gpu.txt || fail "requirements-gpu"
-python3 -m pip install --quiet -e . || fail "infergrid editable"
+python3 -m pip install --quiet -e . || fail "kvwarden editable"
 python3 -m pip install --quiet 'huggingface_hub[cli]' || fail "hf cli"
 
 # ---- Dep verification ----
@@ -174,13 +174,13 @@ abort_check
 
 # ---- Phase 4: serve ----
 phase_ts 4
-echo "--- Phase 4: infergrid serve --config $CONFIG ---"
+echo "--- Phase 4: kvwarden serve --config $CONFIG ---"
 nohup bash -c 'while true; do
   nvidia-smi --query-gpu=timestamp,memory.used,memory.total,utilization.gpu,power.draw \
     --format=csv,noheader >> '"$RDIR"'/gpu_trace.csv; sleep 1; done' \
   > "$RDIR/gpu_trace.err" 2>&1 &
 echo $! > "$RDIR/gpu_trace.pid"
-nohup infergrid serve --config "$CONFIG" --port 8000 --log-level INFO \
+nohup kvwarden serve --config "$CONFIG" --port 8000 --log-level INFO \
   > "$RDIR/server.log" 2>&1 &
 echo $! > "$RDIR/server.pid"
 SERVER_PID=$(cat "$RDIR/server.pid"); echo "serve pid=$SERVER_PID"
@@ -214,7 +214,7 @@ for M in $MODELS; do
   [ -n "$C" ] || fail "smoke empty for $M: $R"
   echo "  $M OK: $C"
 done
-curl -s http://localhost:8000/infergrid/status > "$RDIR/status_before.json" 2>/dev/null || true
+curl -s http://localhost:8000/kvwarden/status > "$RDIR/status_before.json" 2>/dev/null || true
 
 # ---- Phase 7: bench (skipped if --bench-script empty) ----
 phase_ts 7
@@ -242,7 +242,7 @@ fi
 # ---- Phase 8: capture ----
 phase_ts 8
 echo "--- Phase 8: capture ---"
-curl -s http://localhost:8000/infergrid/status > "$RDIR/status_after.json"  2>/dev/null || true
+curl -s http://localhost:8000/kvwarden/status > "$RDIR/status_after.json"  2>/dev/null || true
 curl -s http://localhost:8000/metrics         > "$RDIR/prometheus_dump.txt" 2>/dev/null || true
 cp "$CONFIG" "$RDIR/" 2>/dev/null || true
 nvidia-smi > "$RDIR/nvidia_smi_final.txt" 2>&1

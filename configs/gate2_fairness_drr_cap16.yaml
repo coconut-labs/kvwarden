@@ -3,7 +3,7 @@
 # Diagnostic arm added after Arm 3 (cap=256) DISCONFIRM'd. Arm 3's
 # prometheus dump showed admission NEVER engaged (all 3841 admits ≤1ms)
 # because cap=256 was far above the ~33 RPS offered — so DRR had nothing
-# to reorder. Arm 4 drops the cap to 16 so InferGrid's admission queue
+# to reorder. Arm 4 drops the cap to 16 so KVWarden's admission queue
 # becomes the binding layer; DRR should then rescue the quiet tenant.
 #
 # Pre-committed Arm 4 criterion:

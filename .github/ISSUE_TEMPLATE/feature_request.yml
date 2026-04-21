@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a change or new capability for InferGrid.
+description: Propose a change or new capability for KVWarden.
 title: "[feat] "
 labels: ["enhancement", "needs-triage"]
 body:
@@ -12,7 +12,7 @@ body:
     id: problem
     attributes:
       label: Problem
-      description: What are you trying to do? What breaks or becomes painful with InferGrid today?
+      description: What are you trying to do? What breaks or becomes painful with KVWarden today?
       placeholder: |
         I'm running two tenants on one GPU and want to give tenant A 10× the throughput budget of tenant B, but the current config only supports symmetric quotas.
     validations:
@@ -38,6 +38,6 @@ body:
     id: evidence
     attributes:
       label: Evidence / context
-      description: Benchmarks, links to related issues or prior art, pointers to the relevant part of the README or Gate results. InferGrid leans on empirical claims — requests that reference evidence are much easier to act on.
+      description: Benchmarks, links to related issues or prior art, pointers to the relevant part of the README or Gate results. KVWarden leans on empirical claims — requests that reference evidence are much easier to act on.
     validations:
       required: false

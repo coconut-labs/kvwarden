@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Mock vLLM-compatible engine for local Gate 0.5 bench harness reproduction.
 
-Mimics just enough of vLLM's OpenAI-compatible surface to drive `infergrid serve`
+Mimics just enough of vLLM's OpenAI-compatible surface to drive `kvwarden serve`
 and the multi-model benchmark harness without a GPU. After a configurable number
 of successful requests, subsequent POST /v1/completions handlers enter a long
 sleep, mimicking the Gate 0 symptom where vLLM stopped returning response

@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in InferGrid, please report it responsibly.
+If you discover a security vulnerability in KVWarden, please report it responsibly.
 
 **Email:** patelshrey77@gmail.com
 
@@ -16,7 +16,7 @@ We will acknowledge receipt within 48 hours and provide a timeline for resolutio
 
 ## Scope
 
-InferGrid is an inference orchestration middleware. Security concerns include:
+KVWarden is an inference orchestration middleware. Security concerns include:
 - Unauthorized access to model endpoints
 - Resource exhaustion via tenant isolation bypass
 - Data leakage between tenants

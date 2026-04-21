@@ -124,7 +124,7 @@ Verification of claims in the inference orchestration gap map against live sourc
 2. **Dynamo's agent API has evolved** — new `speculative_prefill` hint and planned `program_id`/`context_type`. But cache pinning remains experimental and the feedback loop remains one-directional.
 3. **AIBrix v0.6.0** is more mature and better-positioned under vllm-project org. Heterogeneous GPU optimizer is closer to production.
 4. **Mammoth (Modular)** is a real product now, not just "early access." K8s-native with intelligent traffic routing.
-5. **Gap #2 remains wide open** — no new entrant fills lightweight multi-model orchestration without K8s. This is InferGrid's clearest opportunity.
+5. **Gap #2 remains wide open** — no new entrant fills lightweight multi-model orchestration without K8s. This is KVWarden's clearest opportunity.
 6. **LLMVisor could not be verified** — flag for manual checking.
 
 Sources:

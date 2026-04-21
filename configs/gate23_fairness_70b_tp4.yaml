@@ -1,7 +1,7 @@
 # Gate 2.3 — Llama-3.1-70B across 4×A100-SXM4 TP=4, 1 flooder + 3 quiet.
 #
 # Hypothesis: token-bucket fairness transfers from 8B to 70B. The rate-limit
-# lever lives at the InferGrid budget gate, architecturally upstream of the
+# lever lives at the KVWarden budget gate, architecturally upstream of the
 # engine's TP-replicated scheduler, so bigger-model TTFT characteristics
 # should shift uniformly (quiet and flooder both get slower) without
 # breaking the per-tenant ratio.

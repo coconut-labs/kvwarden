@@ -1,5 +1,5 @@
 [project]
-name = "infergrid"
+name = "kvwarden"
 version = "0.1.2"
 description = "Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes."
 readme = "README.md"
@@ -26,10 +26,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/coconut-labs/infergrid"
-Documentation = "https://github.com/coconut-labs/infergrid#readme"
-Repository = "https://github.com/coconut-labs/infergrid"
-Issues = "https://github.com/coconut-labs/infergrid/issues"
+Homepage = "https://github.com/coconut-labs/kvwarden"
+Documentation = "https://github.com/coconut-labs/kvwarden#readme"
+Repository = "https://github.com/coconut-labs/kvwarden"
+Issues = "https://github.com/coconut-labs/kvwarden/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -55,7 +55,7 @@ vllm = ["vllm==0.19.1", "numpy>=1.24"]
 sglang = ["sglang~=0.3.0"]
 
 [project.scripts]
-infergrid = "infergrid.cli:main"
+kvwarden = "kvwarden.cli:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]

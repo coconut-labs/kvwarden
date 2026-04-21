@@ -10,7 +10,7 @@ import time
 
 import pytest
 
-from infergrid.cache.manager import CacheBlock, CacheManager
+from kvwarden.cache.manager import CacheBlock, CacheManager
 
 # ---------------------------------------------------------------------------
 # CacheBlock reuse scoring

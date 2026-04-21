@@ -99,7 +99,7 @@ The throughput plateau at c=128→c=256 reveals the critical bottleneck:
 
 Doubling concurrency from 128→256 yields only 2% more throughput but 8x worse TTFT. This is the "scheduling cliff" — the point where batch scheduling overhead dominates and requests spend most of their time waiting in queue rather than being processed.
 
-**Implication for InferGrid:** The WorkloadRouter's primary intervention point is at this saturation regime (c>64). Length-aware batching, priority scheduling, and multi-queue architecture could maintain throughput while dramatically reducing TTFT at high concurrency.
+**Implication for KVWarden:** The WorkloadRouter's primary intervention point is at this saturation regime (c>64). Length-aware batching, priority scheduling, and multi-queue architecture could maintain throughput while dramatically reducing TTFT at high concurrency.
 
 ## Finding 4: Head-to-Head Comparison
 
@@ -131,7 +131,7 @@ Priority-ranked based on measured data:
 - **Intervention:** Lightweight length predictor (small classifier on prompt features).
 - **Expected impact:** Enables better batch construction and admission control decisions.
 
-## Implications for InferGrid
+## Implications for KVWarden
 
 ### Confirmed Claims
 1. GPU utilization is consistently high (>95%) -- the bottleneck is scheduling quality, not GPU idleness
@@ -140,7 +140,7 @@ Priority-ranked based on measured data:
 4. The scheduling cliff exists on all hardware (A100 SXM, H100 SXM) and both engines
 
 ### Benchmark Targets
-Based on measured baselines, InferGrid should demonstrate:
+Based on measured baselines, KVWarden should demonstrate:
 - **2-4x p99 TTFT improvement** at saturation through admission control
 - **Significant p99/p50 reduction** through priority scheduling
 - **Multi-model lifecycle management** with frequency+recency eviction (not LRU)

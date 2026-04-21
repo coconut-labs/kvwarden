@@ -12,8 +12,8 @@ import asyncio
 
 import pytest
 
-from infergrid.router.admission import AdmissionController
-from infergrid.tenant.manager import TenantBudget, TenantRecord
+from kvwarden.router.admission import AdmissionController
+from kvwarden.tenant.manager import TenantBudget, TenantRecord
 
 # ---------------------------------------------------------------------------
 # priority_score formula

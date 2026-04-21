@@ -1,4 +1,4 @@
-# Gate 2-lite Arm 1 — InferGrid full stack with two co-loaded models.
+# Gate 2-lite Arm 1 — KVWarden full stack with two co-loaded models.
 # Llama-3.1-8B + Qwen2.5-7B on a single A100-SXM4 80GB. Admission ON,
 # per-tenant budget enforced. WorkloadRouter mediates which engine
 # handles which model.

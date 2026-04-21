@@ -1,4 +1,4 @@
-# InferGrid Demo Script (2 minutes)
+# KVWarden Demo Script (2 minutes)
 
 Target: Developer audience. Tone: technical, direct, no fluff.
 
@@ -20,29 +20,29 @@ Target: Developer audience. Tone: technical, direct, no fluff.
 **ON SCREEN:** Clean terminal. Type the commands:
 
 ```
-pip install infergrid
-infergrid serve llama-8b qwen-7b --gpu-budget 80%
+pip install kvwarden
+kvwarden serve llama-8b qwen-7b --gpu-budget 80%
 ```
 
 **NARRATION:**
-"InferGrid replaces both instances with a single orchestration layer. One command. It launches vLLM or SGLang under the hood, manages model loading and eviction, and allocates GPU memory as a shared pool -- not static partitions."
+"KVWarden replaces both instances with a single orchestration layer. One command. It launches vLLM or SGLang under the hood, manages model loading and eviction, and allocates GPU memory as a shared pool -- not static partitions."
 
-**ON SCREEN:** InferGrid startup log showing:
+**ON SCREEN:** KVWarden startup log showing:
 ```
-[infergrid] Loading llama-8b on gpu:0 (42% VRAM)
-[infergrid] Loading qwen-7b on gpu:0 (38% VRAM)
-[infergrid] Admission controller: max_concurrent=120, target_ttft=200ms
-[infergrid] Serving on http://0.0.0.0:8000
+[kvwarden] Loading llama-8b on gpu:0 (42% VRAM)
+[kvwarden] Loading qwen-7b on gpu:0 (38% VRAM)
+[kvwarden] Admission controller: max_concurrent=120, target_ttft=200ms
+[kvwarden] Serving on http://0.0.0.0:8000
 ```
 
 ---
 
 ## SCENE 3 -- Automatic Routing (0:50-1:15)
 
-**ON SCREEN:** Split view. Left: a script sending requests. Right: InferGrid dashboard or log output showing routing decisions.
+**ON SCREEN:** Split view. Left: a script sending requests. Right: KVWarden dashboard or log output showing routing decisions.
 
 **NARRATION:**
-"Requests come in through a single endpoint. InferGrid routes them to the right model automatically. Watch the routing log -- Llama handles the code generation requests, Qwen handles the Chinese language queries. No client-side logic needed."
+"Requests come in through a single endpoint. KVWarden routes them to the right model automatically. Watch the routing log -- Llama handles the code generation requests, Qwen handles the Chinese language queries. No client-side logic needed."
 
 **ON SCREEN:** Log output scrolling:
 ```
@@ -52,7 +52,7 @@ infergrid serve llama-8b qwen-7b --gpu-budget 80%
 ```
 
 **NARRATION:**
-"The router tracks queue depth and estimated time-to-first-token for each model. Clients hit one endpoint. InferGrid decides where the request goes."
+"The router tracks queue depth and estimated time-to-first-token for each model. Clients hit one endpoint. KVWarden decides where the request goes."
 
 ---
 
@@ -63,10 +63,10 @@ infergrid serve llama-8b qwen-7b --gpu-budget 80%
 **NARRATION:**
 "Here is why this matters. We profiled vLLM and SGLang on A100 and H100 GPUs. At 128 concurrent requests, you get 5,300 tokens per second with 150 millisecond TTFT. Push to 256 concurrent requests -- throughput barely moves, up 2%. But TTFT explodes to 2.3 seconds. That is an 8x degradation. We call this the scheduling cliff."
 
-**ON SCREEN:** Transition to InferGrid admission control visualization. Requests above the threshold are queued or shed. TTFT stays flat.
+**ON SCREEN:** Transition to KVWarden admission control visualization. Requests above the threshold are queued or shed. TTFT stays flat.
 
 **NARRATION:**
-"InferGrid's admission controller detects the cliff and holds concurrency below the threshold. Excess requests queue at the middleware layer with backpressure signals, instead of piling into the engine's scheduler where they destroy latency for everyone."
+"KVWarden's admission controller detects the cliff and holds concurrency below the threshold. Excess requests queue at the middleware layer with backpressure signals, instead of piling into the engine's scheduler where they destroy latency for everyone."
 
 ---
 
@@ -79,17 +79,17 @@ infergrid serve llama-8b qwen-7b --gpu-budget 80%
 Dynamo (NVIDIA)     Yes              Yes             Datacenter
 llm-d (CNCF)       Yes              1 per pool      Datacenter
 Ollama              No               LRU only        Hobby
-InferGrid           No               Intelligent     1-4 GPUs
+KVWarden           No               Intelligent     1-4 GPUs
 ```
 
 **NARRATION:**
-"Dynamo and llm-d need Kubernetes. Ollama has no scheduling intelligence. InferGrid is the only option for developers who want smart multi-model orchestration on bare metal. One pip install. No cluster required."
+"Dynamo and llm-d need Kubernetes. Ollama has no scheduling intelligence. KVWarden is the only option for developers who want smart multi-model orchestration on bare metal. One pip install. No cluster required."
 
 **ON SCREEN:** Final frame with GitHub URL and install command:
 
 ```
-pip install infergrid
-github.com/coconut-labs/infergrid
+pip install kvwarden
+github.com/coconut-labs/kvwarden
 ```
 
 **END.**

@@ -5,9 +5,9 @@ the same upstream model engine. Three arms of the Gate 2-FAIRNESS
 experiment use this script:
 
     Arm 0: quiet-only baseline (120-240s sustained, 0 flooder)
-    Arm 1: raw vLLM (InferGrid passthrough, admission=no-op) — starvation baseline
-    Arm 2: InferGrid FIFO scheduling — current behavior (middle arm)
-    Arm 3: InferGrid DRR scheduling (scheduling: drr) — the bet
+    Arm 1: raw vLLM (KVWarden passthrough, admission=no-op) — starvation baseline
+    Arm 2: KVWarden FIFO scheduling — current behavior (middle arm)
+    Arm 3: KVWarden DRR scheduling (scheduling: drr) — the bet
 
 Per-tenant Poisson arrivals. Fixed wall-clock, not fixed request count
 (Gate 1.5 lesson: you need ≥100s sustained per cell for Little's Law

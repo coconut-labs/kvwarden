@@ -1,6 +1,6 @@
-"""Multi-model benchmark harness for InferGrid.
+"""Multi-model benchmark harness for KVWarden.
 
-Measures InferGrid's core differentiator: intelligent multi-model orchestration
+Measures KVWarden's core differentiator: intelligent multi-model orchestration
 on 1-4 GPUs without Kubernetes. Benchmarks model switch latency, concurrent
 multi-model throughput, eviction policy effectiveness, and memory utilization.
 
@@ -301,15 +301,15 @@ class MultiModelBenchmarkResults:
 
 
 class MultiModelBenchmarkClient:
-    """Async client that sends requests to multiple models through InferGrid.
+    """Async client that sends requests to multiple models through KVWarden.
 
-    InferGrid exposes a single OpenAI-compatible endpoint. The ``model`` field
+    KVWarden exposes a single OpenAI-compatible endpoint. The ``model`` field
     in each request payload determines which backend model handles it. This
     client coordinates request scheduling across models and detects cold-start
     model switches.
 
     Args:
-        base_url: InferGrid server URL (e.g., http://localhost:8000).
+        base_url: KVWarden server URL (e.g., http://localhost:8000).
         concurrency: Maximum concurrent in-flight requests.
         timeout_s: Per-request timeout in seconds.
         max_tokens: Default max output tokens per request.
@@ -483,7 +483,7 @@ class MultiModelBenchmarkClient:
         Args:
             session: aiohttp ClientSession.
             request_id: Unique request identifier.
-            model: Target model name for InferGrid routing.
+            model: Target model name for KVWarden routing.
             prompt: The prompt string.
             max_tokens: Maximum tokens to generate.
             semaphore: Concurrency limiter.
@@ -904,14 +904,14 @@ async def benchmark_eviction_policy(
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Multi-model benchmark harness for InferGrid",
+        description="Multi-model benchmark harness for KVWarden",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--url",
         type=str,
         default="http://localhost:8000",
-        help="InferGrid server URL",
+        help="KVWarden server URL",
     )
     parser.add_argument(
         "--config",
@@ -997,7 +997,7 @@ async def main() -> None:
     )
 
     logger.info("=" * 70)
-    logger.info("InferGrid Multi-Model Benchmark Harness")
+    logger.info("KVWarden Multi-Model Benchmark Harness")
     logger.info("=" * 70)
 
     env_info = log_environment(seed=args.seed)
@@ -1039,8 +1039,8 @@ async def main() -> None:
     healthy = await check_engine_health(args.url)
     if not healthy:
         logger.error(
-            "InferGrid server at %s is not reachable. Start with:\n"
-            "  infergrid serve %s --gpu-budget 0.85",
+            "KVWarden server at %s is not reachable. Start with:\n"
+            "  kvwarden serve %s --gpu-budget 0.85",
             args.url,
             " ".join(models),
         )

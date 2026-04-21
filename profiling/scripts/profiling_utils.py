@@ -1,4 +1,4 @@
-"""Shared profiling infrastructure for InferGrid benchmarks.
+"""Shared profiling infrastructure for KVWarden benchmarks.
 
 Provides GPU metrics collection, request generation, async benchmarking,
 and timing utilities used by all profiling and benchmark scripts.

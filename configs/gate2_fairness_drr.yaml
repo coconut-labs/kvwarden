@@ -1,4 +1,4 @@
-# Gate 2-FAIRNESS Arm 3 — InferGrid DRR (the bet).
+# Gate 2-FAIRNESS Arm 3 — KVWarden DRR (the bet).
 #
 # IDENTICAL to configs/gate2_fairness_fifo.yaml except
 # `tenant_defaults.scheduling: drr`. Every other knob is held constant

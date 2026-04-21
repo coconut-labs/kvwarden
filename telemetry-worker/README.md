@@ -1,7 +1,7 @@
-# InferGrid Telemetry Worker
+# KVWarden Telemetry Worker
 
 Tiny Cloudflare Worker that receives opt-in anonymous install stats from
-the InferGrid CLI and writes them to D1. Intentionally **not** auto-deployed
+the KVWarden CLI and writes them to D1. Intentionally **not** auto-deployed
 from this repo — a human reviews and runs `wrangler deploy`.
 
 ## What it does (and doesn't)
@@ -24,20 +24,20 @@ from this repo — a human reviews and runs `wrangler deploy`.
 cd telemetry-worker
 
 # 1. Create the D1 database, paste the returned id into wrangler.toml.
-wrangler d1 create infergrid-telemetry
+wrangler d1 create kvwarden-telemetry
 
 # 2. Create the KV namespace for the rate limiter, paste the id in.
 wrangler kv:namespace create RL
 
 # 3. Apply the schema.
-wrangler d1 execute infergrid-telemetry --file=schema.sql
+wrangler d1 execute kvwarden-telemetry --file=schema.sql
 
 # 4. Deploy.
 wrangler deploy
 ```
 
-The Worker URL (e.g. `https://infergrid-telemetry.<account>.workers.dev`)
-is what you set as `INFERGRID_TELEMETRY_URL` at Python-package build time.
+The Worker URL (e.g. `https://kvwarden-telemetry.<account>.workers.dev`)
+is what you set as `KVWARDEN_TELEMETRY_URL` at Python-package build time.
 Without that, the CLI is a no-op even for users who opted in.
 
 ## Local dev
@@ -61,7 +61,7 @@ curl -X POST http://127.0.0.1:8787/event \
 ## Inspecting collected data
 
 ```bash
-wrangler d1 execute infergrid-telemetry \
+wrangler d1 execute kvwarden-telemetry \
   --command='SELECT event, COUNT(*) FROM events GROUP BY event;'
 ```
 
@@ -71,7 +71,7 @@ wrangler d1 execute infergrid-telemetry \
 `wrangler.toml`). For per-`install_id` deletion on request:
 
 ```bash
-wrangler d1 execute infergrid-telemetry \
+wrangler d1 execute kvwarden-telemetry \
   --command="DELETE FROM events WHERE install_id = '...';"
 ```
 

@@ -1,4 +1,4 @@
-"""Unit tests for ``infergrid._telemetry``.
+"""Unit tests for ``kvwarden._telemetry``.
 
 These tests must never hit the network. ``urllib.request.urlopen`` is
 mocked for every test that exercises the POST path. File I/O is redirected
@@ -13,15 +13,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from infergrid import _telemetry
+from kvwarden import _telemetry
 
 
 @pytest.fixture(autouse=True)
 def _isolate_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Each test gets a pristine XDG config home + env scrubbed."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    monkeypatch.delenv("INFERGRID_TELEMETRY", raising=False)
-    monkeypatch.delenv("INFERGRID_TELEMETRY_URL", raising=False)
+    monkeypatch.delenv("KVWARDEN_TELEMETRY", raising=False)
+    monkeypatch.delenv("KVWARDEN_TELEMETRY_URL", raising=False)
     return tmp_path
 
 
@@ -41,22 +41,22 @@ class TestGpuClass:
         ],
     )
     def test_mapping(self, name: str, expected: str) -> None:
-        with patch("infergrid._telemetry.subprocess.run") as run:
+        with patch("kvwarden._telemetry.subprocess.run") as run:
             run.return_value = MagicMock(stdout=name + "\n")
             assert _telemetry._gpu_class() == expected
 
     def test_no_nvidia_smi(self) -> None:
-        with patch("infergrid._telemetry.subprocess.run") as run:
+        with patch("kvwarden._telemetry.subprocess.run") as run:
             run.side_effect = FileNotFoundError
             assert _telemetry._gpu_class() == "none"
 
     def test_empty_output(self) -> None:
-        with patch("infergrid._telemetry.subprocess.run") as run:
+        with patch("kvwarden._telemetry.subprocess.run") as run:
             run.return_value = MagicMock(stdout="")
             assert _telemetry._gpu_class() == "none"
 
     def test_subprocess_timeout(self) -> None:
-        with patch("infergrid._telemetry.subprocess.run") as run:
+        with patch("kvwarden._telemetry.subprocess.run") as run:
             import subprocess
 
             run.side_effect = subprocess.TimeoutExpired(cmd="nvidia-smi", timeout=2)
@@ -101,14 +101,14 @@ class TestPersistence:
 class TestEnvAndEndpoint:
     @pytest.mark.parametrize("v", ["0", "false", "no", "off", "FALSE", "No"])
     def test_env_disables(self, v: str, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("INFERGRID_TELEMETRY", v)
+        monkeypatch.setenv("KVWARDEN_TELEMETRY", v)
         assert _telemetry._env_disabled() is True
 
     def test_env_unset_does_not_disable(self) -> None:
         assert _telemetry._env_disabled() is False
 
     def test_env_url_beats_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
         assert _telemetry._endpoint() == "https://example.org"
 
     def test_default_url_is_empty(self) -> None:
@@ -124,14 +124,14 @@ class TestMaybePromptAndRecord:
     def test_env_off_short_circuits_before_file_write(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("INFERGRID_TELEMETRY", "0")
-        with patch("infergrid._telemetry._post_event_blocking") as post:
+        monkeypatch.setenv("KVWARDEN_TELEMETRY", "0")
+        with patch("kvwarden._telemetry._post_event_blocking") as post:
             _telemetry.maybe_prompt_and_record_event(event="install_first_run")
         post.assert_not_called()
         assert _telemetry._load_config() is None  # nothing written
 
     def test_unknown_event_noop(self) -> None:
-        with patch("infergrid._telemetry._post_event_blocking") as post:
+        with patch("kvwarden._telemetry._post_event_blocking") as post:
             _telemetry.maybe_prompt_and_record_event(event="nope")  # type: ignore[arg-type]
         post.assert_not_called()
 
@@ -141,8 +141,8 @@ class TestMaybePromptAndRecord:
         # stdin.isatty returns False → never prompt, never post, persist off.
         monkeypatch.setattr("sys.stdin.isatty", lambda: False)
         monkeypatch.setattr("sys.stderr.isatty", lambda: True)
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
-        with patch("infergrid._telemetry._post_event_blocking") as post:
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
+        with patch("kvwarden._telemetry._post_event_blocking") as post:
             _telemetry.maybe_prompt_and_record_event(event="install_first_run")
         post.assert_not_called()
         cfg = _telemetry._load_config()
@@ -154,15 +154,15 @@ class TestMaybePromptAndRecord:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _telemetry._save_config(False, "22222222-2222-2222-2222-222222222222")
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
-        with patch("infergrid._telemetry._post_event_blocking") as post:
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
+        with patch("kvwarden._telemetry._post_event_blocking") as post:
             _telemetry.maybe_prompt_and_record_event(event="serve_started")
         post.assert_not_called()
 
     def test_opted_in_but_empty_url_does_not_post(self) -> None:
         _telemetry._save_config(True, "33333333-3333-3333-3333-333333333333")
         # URL env unset by fixture → endpoint is empty.
-        with patch("infergrid._telemetry._post_event_blocking") as post:
+        with patch("kvwarden._telemetry._post_event_blocking") as post:
             _telemetry.maybe_prompt_and_record_event(event="serve_started")
         post.assert_not_called()
 
@@ -170,12 +170,12 @@ class TestMaybePromptAndRecord:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _telemetry._save_config(True, "44444444-4444-4444-4444-444444444444")
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
-        monkeypatch.setattr("infergrid._telemetry._gpu_class", lambda: "a100")
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
+        monkeypatch.setattr("kvwarden._telemetry._gpu_class", lambda: "a100")
 
         # Replace Thread with a MagicMock so we can inspect the call without
         # actually spawning a thread (and thus without hitting the network).
-        with patch("infergrid._telemetry.threading.Thread") as thread_cls:
+        with patch("kvwarden._telemetry.threading.Thread") as thread_cls:
             inst = MagicMock()
             thread_cls.return_value = inst
             _telemetry.maybe_prompt_and_record_event(event="serve_started")
@@ -206,8 +206,8 @@ class TestMaybePromptAndRecord:
         p = _telemetry._config_path()
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps({"enabled": True, "install_id": bad_id}))
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
-        with patch("infergrid._telemetry._post_event_blocking") as post:
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
+        with patch("kvwarden._telemetry._post_event_blocking") as post:
             _telemetry.maybe_prompt_and_record_event(event="serve_started")
         post.assert_not_called()
 
@@ -215,8 +215,8 @@ class TestMaybePromptAndRecord:
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
         monkeypatch.setattr("sys.stderr.isatty", lambda: True)
         monkeypatch.setattr("sys.stdin.readline", lambda: "y\n")
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
-        with patch("infergrid._telemetry.threading.Thread") as thread_cls:
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
+        with patch("kvwarden._telemetry.threading.Thread") as thread_cls:
             thread_cls.return_value = MagicMock()
             _telemetry.maybe_prompt_and_record_event(event="install_first_run")
         cfg = _telemetry._load_config()
@@ -227,8 +227,8 @@ class TestMaybePromptAndRecord:
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
         monkeypatch.setattr("sys.stderr.isatty", lambda: True)
         monkeypatch.setattr("sys.stdin.readline", lambda: "\n")
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
-        with patch("infergrid._telemetry.threading.Thread") as thread_cls:
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
+        with patch("kvwarden._telemetry.threading.Thread") as thread_cls:
             _telemetry.maybe_prompt_and_record_event(event="install_first_run")
         cfg = _telemetry._load_config()
         assert cfg is not None and cfg["enabled"] is False
@@ -279,8 +279,8 @@ class TestSetEnabledAndStatus:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         _telemetry._save_config(True, "77777777-7777-7777-7777-777777777777")
-        monkeypatch.setenv("INFERGRID_TELEMETRY", "0")
-        monkeypatch.setenv("INFERGRID_TELEMETRY_URL", "https://example.org")
+        monkeypatch.setenv("KVWARDEN_TELEMETRY", "0")
+        monkeypatch.setenv("KVWARDEN_TELEMETRY_URL", "https://example.org")
         st = _telemetry.get_status()
         assert st["configured"] is True
         assert st["enabled"] is True

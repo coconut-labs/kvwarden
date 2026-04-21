@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Gate 0.5 reproducer — recreates the 2026-04-18 bench harness stall locally.
 #
-# Runs 2 mock engines (ports 8002, 8003) + infergrid serve (port 8000)
+# Runs 2 mock engines (ports 8002, 8003) + kvwarden serve (port 8000)
 # + the multi-model benchmark at concurrency=1 alternating. With
 # --hang-after 20 the engines start stalling on request 21, mimicking
 # the real incident.
@@ -29,7 +29,7 @@ cleanup() {
     jobs -p | xargs -r kill 2>/dev/null || true
     pkill -f "mock_engine.py --port 8002" 2>/dev/null || true
     pkill -f "mock_engine.py --port 8003" 2>/dev/null || true
-    pkill -f "infergrid serve --port 8000" 2>/dev/null || true
+    pkill -f "kvwarden serve --port 8000" 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -45,16 +45,16 @@ python3 benchmarks/scripts/mock_engine.py --port 8003 \
 
 sleep 2
 
-echo "--- starting infergrid serve (dev mode: skip engine launch, attach to mocks) ---"
+echo "--- starting kvwarden serve (dev mode: skip engine launch, attach to mocks) ---"
 # Use gate05_mock.yaml so engines are pinned to ports 8002/8003 matching mocks.
 # Without --config the router auto-allocates from 8001 and the mapping breaks.
-INFERGRID_ENGINE_LOG_DIR="$LOGDIR" \
-INFERGRID_DEV_SKIP_ENGINE_LAUNCH=1 \
+KVWARDEN_ENGINE_LOG_DIR="$LOGDIR" \
+KVWARDEN_DEV_SKIP_ENGINE_LAUNCH=1 \
 PYTHONPATH="$REPO_ROOT/src:${PYTHONPATH:-}" \
-python3 -m infergrid.cli serve \
+python3 -m kvwarden.cli serve \
     --config benchmarks/configs/gate05_mock.yaml \
     --log-level INFO \
-    > "$LOGDIR/infergrid.log" 2>&1 &
+    > "$LOGDIR/kvwarden.log" 2>&1 &
 IG_PID=$!
 
 # Wait for /v1/models

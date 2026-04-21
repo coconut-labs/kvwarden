@@ -1,9 +1,9 @@
-# InferGrid Tuning Guide — When to Use Which Lever
+# KVWarden Tuning Guide — When to Use Which Lever
 
-**Audience:** operators running InferGrid in front of vLLM/SGLang on a single GPU or small cluster.
+**Audience:** operators running KVWarden in front of vLLM/SGLang on a single GPU or small cluster.
 **Status:** based on empirical results from Gates 0/0.5/0.6/1/1.5/2-FAIRNESS (2026-04-19). Each recommendation links to the experiment that produced the evidence.
 
-InferGrid exposes three orthogonal scheduling levers. Most production tuning regrets come from reaching for the wrong one. This document walks through what each lever actually does — measured, not theorized — and gives a decision tree by workload shape.
+KVWarden exposes three orthogonal scheduling levers. Most production tuning regrets come from reaching for the wrong one. This document walks through what each lever actually does — measured, not theorized — and gives a decision tree by workload shape.
 
 ---
 
@@ -12,7 +12,7 @@ InferGrid exposes three orthogonal scheduling levers. Most production tuning reg
 | Lever | Don't use it for... | Why |
 |---|---|---|
 | `max_concurrent` (admission cap) | Single-tenant tail-latency reduction | Modern vLLM continuous batching matches a coarse upstream cap. At cap > offered load, no effect. At cap < offered load, the queue *adds* tail latency without removing engine-side latency. (Gate 1.5: B/A=1.04× at c=256; cap=128 actively hurt at c=192 by 69% at p99.9.) |
-| `tenant_defaults.scheduling: drr` | Rescuing a starved tenant on a saturated engine, alone | DRR reorders InferGrid's admission queue. vLLM's internal scheduler is tenant-blind and runs *after* admission. Reordering above a saturated engine doesn't propagate. (Gate 2-FAIRNESS Arms 3 + 4 both DISCONFIRM-DRR-no-help.) |
+| `tenant_defaults.scheduling: drr` | Rescuing a starved tenant on a saturated engine, alone | DRR reorders KVWarden's admission queue. vLLM's internal scheduler is tenant-blind and runs *after* admission. Reordering above a saturated engine doesn't propagate. (Gate 2-FAIRNESS Arms 3 + 4 both DISCONFIRM-DRR-no-help.) |
 | `tenant_defaults.rate_limit_rpm` (without `rate_limit_burst`) | Fairness-critical multi-tenant from t=0 | The default 60-second sliding-window-equivalent capacity allows ~`rate_limit_rpm` requests through before any 429s fire. A 32-RPS flooder drains a 600-RPM bucket in ~19 seconds, during which the engine saturates and the quiet tenant inherits the saturation. (Gate 2-FAIRNESS Arm 5: full-bench p99 = 5378ms despite ~30ms steady state.) |
 
 **Use the right lever for the right job. Reach for `rate_limit_burst` first when the answer is "fairness."**
@@ -23,7 +23,7 @@ InferGrid exposes three orthogonal scheduling levers. Most production tuning reg
 
 ### 1. `max_concurrent` (admission cap)
 
-The number of in-flight requests InferGrid forwards to the engine. Above the cap, requests queue at the InferGrid layer; the queue is ordered by `tenant_defaults.scheduling`. **Useful for:** preventing engine OOM under burst (the original "scheduling cliff" intuition), back-pressuring runaway clients before they reach the engine, gating slow models that can't keep up. **Not useful for:** TTFT optimization on modern continuous-batching engines (vLLM ≥ 0.6, SGLang ≥ 0.4) at concurrency where the engine has not yet OOM'd.
+The number of in-flight requests KVWarden forwards to the engine. Above the cap, requests queue at the KVWarden layer; the queue is ordered by `tenant_defaults.scheduling`. **Useful for:** preventing engine OOM under burst (the original "scheduling cliff" intuition), back-pressuring runaway clients before they reach the engine, gating slow models that can't keep up. **Not useful for:** TTFT optimization on modern continuous-batching engines (vLLM ≥ 0.6, SGLang ≥ 0.4) at concurrency where the engine has not yet OOM'd.
 
 ### 2. `tenant_defaults.scheduling` (`fifo` | `drr`)
 
@@ -31,14 +31,14 @@ Discipline for the admission queue. `fifo` (default): requests dequeue in arriva
 
 ### 3. `tenant_defaults.rate_limit_rpm` + `rate_limit_burst` (token-bucket rate limit)
 
-Per-tenant request rate cap. Refill rate = `rate_limit_rpm / 60` tokens/sec. Capacity = `rate_limit_burst` (defaults to `rate_limit_rpm` for sliding-window-equivalent backward compat). Above-cap requests get `429 Too Many Requests` at the budget gate, BEFORE any admission queueing. **Useful for:** the actual mechanism that delivers per-tenant fairness. By 429-rejecting a flooder above its quota, InferGrid prevents flooder requests from saturating vLLM's internal batch queue — the layer where starvation actually lives. **The single most under-used lever.** Set `rate_limit_burst` to ~1 second of capacity (`rate_limit_rpm / 60`) for fairness-critical workloads.
+Per-tenant request rate cap. Refill rate = `rate_limit_rpm / 60` tokens/sec. Capacity = `rate_limit_burst` (defaults to `rate_limit_rpm` for sliding-window-equivalent backward compat). Above-cap requests get `429 Too Many Requests` at the budget gate, BEFORE any admission queueing. **Useful for:** the actual mechanism that delivers per-tenant fairness. By 429-rejecting a flooder above its quota, KVWarden prevents flooder requests from saturating vLLM's internal batch queue — the layer where starvation actually lives. **The single most under-used lever.** Set `rate_limit_burst` to ~1 second of capacity (`rate_limit_rpm / 60`) for fairness-critical workloads.
 
 ---
 
 ## Decision tree by workload shape
 
 ### A) Single-tenant, single-model
-You don't need most of InferGrid's machinery. Run with a wide cap and let vLLM do its job.
+You don't need most of KVWarden's machinery. Run with a wide cap and let vLLM do its job.
 
 ```yaml
 max_concurrent: 1024            # effectively off
@@ -48,10 +48,10 @@ tenant_defaults:
   scheduling: fifo
 ```
 
-**Evidence:** Gate 1.5 robust DISCONFIRM. Single-model admission cap delivers no TTFT benefit and actively hurts at c=192. Save InferGrid's value for the multi-tenant case.
+**Evidence:** Gate 1.5 robust DISCONFIRM. Single-model admission cap delivers no TTFT benefit and actively hurts at c=192. Save KVWarden's value for the multi-tenant case.
 
-### B) Multi-tenant, single-model, fairness matters (the canonical InferGrid case)
-You have N tenants on a shared model and a noisy-neighbor risk. This is where InferGrid wins.
+### B) Multi-tenant, single-model, fairness matters (the canonical KVWarden case)
+You have N tenants on a shared model and a noisy-neighbor risk. This is where KVWarden wins.
 
 ```yaml
 max_concurrent: 256             # generous; let the engine do its scheduling
@@ -88,7 +88,7 @@ max_concurrent: 32              # tight — set just below where the engine fall
 admission_queue_size: 1024
 ```
 
-**Evidence:** Gate 0 documented vLLM v1 OOM with co-loaded Qwen + Llama at default `gpu_memory_utilization`. The fix was a tighter `gpu_memory_utilization`, not the InferGrid cap — but the cap is a useful safety net.
+**Evidence:** Gate 0 documented vLLM v1 OOM with co-loaded Qwen + Llama at default `gpu_memory_utilization`. The fix was a tighter `gpu_memory_utilization`, not the KVWarden cap — but the cap is a useful safety net.
 
 ---
 
@@ -109,10 +109,10 @@ Each lever surfaces metrics for in-production tuning. Hit `/metrics` (Prometheus
 
 | Metric | What to watch for |
 |---|---|
-| `infergrid_admission_in_flight` (gauge) | If this consistently sits below `max_concurrent`, the admission cap isn't binding and is doing nothing for you. Lower the cap or remove the lever from your decision space. |
-| `infergrid_admission_queue_depth` (gauge) | If this is consistently > 0, the cap is binding. Check whether you actually want it to. |
-| `infergrid_admission_wait_seconds` (histogram) | The le=0.001 bucket ratio tells you the fast-path admission rate. If most admits take >1s, the cap is too tight. |
-| `infergrid_tenant_rejected_total{reason="budget_exceeded"}` (counter) | Should be > 0 for tenants that exceed their `rate_limit_rpm`. If 0 for a tenant you expect to flood, your rate-limit isn't engaging — check `rate_limit_burst` and your sliding-window-vs-token-bucket config. |
+| `kvwarden_admission_in_flight` (gauge) | If this consistently sits below `max_concurrent`, the admission cap isn't binding and is doing nothing for you. Lower the cap or remove the lever from your decision space. |
+| `kvwarden_admission_queue_depth` (gauge) | If this is consistently > 0, the cap is binding. Check whether you actually want it to. |
+| `kvwarden_admission_wait_seconds` (histogram) | The le=0.001 bucket ratio tells you the fast-path admission rate. If most admits take >1s, the cap is too tight. |
+| `kvwarden_tenant_rejected_total{reason="budget_exceeded"}` (counter) | Should be > 0 for tenants that exceed their `rate_limit_rpm`. If 0 for a tenant you expect to flood, your rate-limit isn't engaging — check `rate_limit_burst` and your sliding-window-vs-token-bucket config. |
 | Per-tenant `usage.rate_limit_tokens_remaining` (in `/status`) | Live token bucket level per tenant. If a tenant is at 0 and you're seeing 429s for them, the rate-limit is doing its job. |
 
 ---
@@ -122,8 +122,8 @@ Each lever surfaces metrics for in-production tuning. Hit `/metrics` (Prometheus
 Before reaching for a lever, ask:
 
 1. **Did I measure?** A 60-second smoke bench against your actual model with your actual workload shape will tell you more than 10 hours of intuition. The `benchmark_two_tenant_single_model.py` script in `benchmarks/scripts/` is a fast way to repro the Gate 2-FAIRNESS shape against your config.
-2. **Is the engine the bottleneck or am I?** Watch `infergrid_admission_in_flight` over a load test. If it never approaches `max_concurrent`, the admission layer isn't where the latency lives — don't tune it.
-3. **Is fairness or throughput the goal?** They're different problems. Fairness needs `rate_limit_burst`. Throughput needs `gpu_memory_utilization` and `tensor_parallel_size` — engine-level knobs InferGrid doesn't gate.
+2. **Is the engine the bottleneck or am I?** Watch `kvwarden_admission_in_flight` over a load test. If it never approaches `max_concurrent`, the admission layer isn't where the latency lives — don't tune it.
+3. **Is fairness or throughput the goal?** They're different problems. Fairness needs `rate_limit_burst`. Throughput needs `gpu_memory_utilization` and `tensor_parallel_size` — engine-level knobs KVWarden doesn't gate.
 
 ---
 
@@ -135,4 +135,4 @@ All recommendations here trace to a measured experiment. Read the OUTCOME docs f
 - `results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md` — full 5-arm tenant-fairness experiment
 - `results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm5b.md` — token-bucket clean CONFIRM (the recommended config)
 
-If your workload doesn't match any of the above, the honest recommendation is: **run your own bench first.** InferGrid was built around the Gate 2-FAIRNESS workload shape; other shapes may need other levers.
+If your workload doesn't match any of the above, the honest recommendation is: **run your own bench first.** KVWarden was built around the Gate 2-FAIRNESS workload shape; other shapes may need other levers.

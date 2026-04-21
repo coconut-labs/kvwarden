@@ -1,6 +1,6 @@
 """Track D — Multi-model OOM-under-burst benchmark.
 
-Tests whether InferGrid's admission + per-tenant budget prevents OOM/
+Tests whether KVWarden's admission + per-tenant budget prevents OOM/
 timeout cliffs when a long-prompt RAG tenant bursts on a co-loaded
 multi-model A100 (Llama + Qwen).
 
@@ -10,7 +10,7 @@ Workload shape:
     prompts, then 60s idle. Three burst cycles over 5 minutes.
 
 Two arms:
-  D1 (gate2_multi_tenant.yaml): InferGrid full stack — admission cap +
+  D1 (gate2_multi_tenant.yaml): KVWarden full stack — admission cap +
      per-tenant budget. Hypothesis: bursts get bounded by admission,
      no OOM, p99 chat latency stays low.
   D2 (gate2_round_robin.yaml): thin proxy, no admission (max_concurrent
@@ -31,7 +31,7 @@ Usage:
     --chat-model meta-llama/Llama-3.1-8B-Instruct \\
     --rag-model Qwen/Qwen2.5-7B-Instruct \\
     --duration-s 300 \\
-    --output-dir /workspace/results/gate2_d_inferGrid
+    --output-dir /workspace/results/gate2_d_kvwarden
 """
 
 from __future__ import annotations

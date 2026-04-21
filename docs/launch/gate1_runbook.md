@@ -11,10 +11,10 @@
 
 ## Pre-flight (do not skip — each check has burned budget historically)
 
-1. **Source of truth for fixes.** `git -C ~/Personal\ Projects/infergrid_implementation_poc/infergrid log --oneline -10` should show PR #28 through #35 in `main`.
+1. **Source of truth for fixes.** `git -C ~/Personal\ Projects/kvwarden_implementation_poc/kvwarden log --oneline -10` should show PR #28 through #35 in `main`.
 2. **Local CPU dress rehearsal exits PASS.**
    ```bash
-   cd ~/Personal\ Projects/infergrid_implementation_poc/infergrid
+   cd ~/Personal\ Projects/kvwarden_implementation_poc/kvwarden
    NUM_REQUESTS=300 SKIP_DISCRIMINATOR=1 bash scripts/gate1_dress_rehearsal.sh
    ```
    Look for `OVERALL: PASS — Gate 1 plumbing is wired correctly`. If it fails, **do not provision the pod.** Debug locally first.
@@ -38,7 +38,7 @@ Per advisor: **don't** bundle these into a one-button script. The first time, ru
 ### 1. Provision the pod
 
 ```bash
-cd ~/Personal\ Projects/infergrid_implementation_poc/infergrid
+cd ~/Personal\ Projects/kvwarden_implementation_poc/kvwarden
 python3 scripts/provision_runpod.py \
   --gpu "NVIDIA H100 80GB HBM3" \
   --ports "22/tcp,8000/http" \
@@ -132,8 +132,8 @@ B_vs_A  = B_p99(c=256) / A_p99(c=256)
 → This is **a real negative result, not a plumbing bug**. The c=128→c=256 cliff Phase 1 saw (185ms → 1293ms, 7×) may have been an artifact of the pre-PR-#28 TTFT bug (which timed SSE-frame RTT, sensitive to system load in ways real first-token isn't). Publishable as: "we instrumented honestly and the cliff didn't reproduce; admission's value at this scale is smaller than projected."
 
 ### Plumbing sanity (look at this BEFORE deciding which of the above):
-- Arm A `prometheus_dump.txt` should show `infergrid_admission_in_flight` near 128 at c=256 and `infergrid_admission_queue_depth > 0` for sustained periods. If both are 0, admission isn't engaging — file an issue, don't trust the TTFT numbers.
-- Arm B `prometheus_dump.txt` should show `infergrid_admission_in_flight` reaching 256+. If clamped at 100 or 128, the connector limit (PR #34) regressed.
+- Arm A `prometheus_dump.txt` should show `kvwarden_admission_in_flight` near 128 at c=256 and `kvwarden_admission_queue_depth > 0` for sustained periods. If both are 0, admission isn't engaging — file an issue, don't trust the TTFT numbers.
+- Arm B `prometheus_dump.txt` should show `kvwarden_admission_in_flight` reaching 256+. If clamped at 100 or 128, the connector limit (PR #34) regressed.
 
 ---
 
@@ -181,7 +181,7 @@ Same pre-flight as Gate 1 above, plus:
 #### 1. Provision the pod (same as Gate 1, with `MAX_POD_SECS=5400`)
 
 ```bash
-cd ~/Personal\ Projects/infergrid_implementation_poc/infergrid
+cd ~/Personal\ Projects/kvwarden_implementation_poc/kvwarden
 python3 scripts/provision_runpod.py \
   --gpu "NVIDIA H100 80GB HBM3" \
   --ports "22/tcp,8000/http" \
@@ -274,7 +274,7 @@ Rsync Arm B results, then **terminate the pod** in the RunPod console.
 |---|---|
 | c=64 cell takes > 18 min in Arm A | Abort, drop c=192 from the args, restart Arm A with `64,128,256` only |
 | Engine bring-up > 15 min, no log progress | `ssh pod 'touch /workspace/ABORT'` |
-| `infergrid_admission_in_flight` stuck at 0 during c=256 (Arm A) | Admission isn't engaging — file an issue, do not run Arm B |
+| `kvwarden_admission_in_flight` stuck at 0 during c=256 (Arm A) | Admission isn't engaging — file an issue, do not run Arm B |
 | Arm A wall-clock projected > 75 min | Abort — hypothesis isn't admission-cliff-shaped at this concurrency profile |
 | `/workspace/COST_CAP_HIT` appears | Manually terminate from RunPod console immediately |
 

@@ -1,4 +1,4 @@
-# InferGrid — Investor Summary
+# KVWarden — Investor Summary
 
 ## Problem
 
@@ -8,11 +8,11 @@ Every existing fix is either (a) a Kubernetes-mandatory datacenter orchestrator 
 
 ## Solution
 
-**InferGrid** is middleware that sits in front of vLLM/SGLang and adds the one thing engines structurally cannot do: per-tenant fairness. One pip install:
+**KVWarden** is middleware that sits in front of vLLM/SGLang and adds the one thing engines structurally cannot do: per-tenant fairness. One pip install:
 
 ```
-pip install infergrid
-infergrid serve --config configs/quickstart_fairness.yaml
+pip install kvwarden
+kvwarden serve --config configs/quickstart_fairness.yaml
 ```
 
 A token-bucket rate limit at the budget gate (10-line YAML config) brings the same degraded quiet user to **61.5 ms p99 — within 1.14× of solo baseline** under the same flooder. The quiet user is essentially unaware the flooder exists.
@@ -21,7 +21,7 @@ A token-bucket rate limit at the budget gate (10-line YAML config) brings the sa
 
 Source: `results/gate2_preprint_v3/` (300 s sustained per arm, vLLM 0.19.1, n=320/321/311 quiet samples). Methodology: hero p99 excludes first 10 s warmup window (single JIT-compile transient; all 29 subsequent steady-state windows have p99 36-65 ms). See [CORRECTIONS C7](../results/CORRECTIONS.md) for the version-pin caveat. Original 5-arm 120 s experiment at vLLM 0.8.5 in `results/gate2_fairness_20260419/`.
 
-InferGrid also ships:
+KVWarden also ships:
 - **Multi-model lifecycle management** — frequency+recency eviction (not LRU), hot-swap routing, no-K8s
 - **OpenAI-compatible HTTP API** in front of multiple engines, so application code doesn't change
 - **Per-tenant DRR admission priority + Prometheus metrics** for production observability
@@ -50,14 +50,14 @@ All require Kubernetes or managed cloud. The 1-4 GPU multi-tenant developer segm
 
 | | K8s Required | Multi-Model | Per-Tenant Fairness | Target Scale |
 |---|:---:|:---:|:---:|---|
-| **InferGrid** | **No** | **Yes (freq+recency)** | **Yes (token bucket + DRR)** | **1-4 GPUs, multi-tenant** |
+| **KVWarden** | **No** | **Yes (freq+recency)** | **Yes (token bucket + DRR)** | **1-4 GPUs, multi-tenant** |
 | Dynamo v1.0 | Yes | Yes | No | Datacenter |
 | llm-d v0.5 | Yes | 1 model/pool | No | Datacenter |
 | Mammoth (Modular) | Yes | Yes | No | Datacenter |
 | Ollama | No | LRU only | No | Single-tenant single-node |
 | Vanilla vLLM/SGLang | No | One model per process | No | Single-node |
 
-InferGrid is the only project combining no-K8s deployment with **measured per-tenant fairness** on shared engines.
+KVWarden is the only project combining no-K8s deployment with **measured per-tenant fairness** on shared engines.
 
 ## Honest scope (what we are NOT claiming)
 
@@ -80,8 +80,8 @@ Seed funding to convert validated tenant-fairness pitch into a product:
 
 ## Why now
 
-The frontier-engine race (vLLM 0.x, SGLang 0.x) has converged on continuous batching. Engine-internal scheduling is approaching local optima — the next gains come from layers above. InferGrid's empirical work shows that *per-tenant* fairness specifically is a layer engines structurally can't reach (they have no tenant concept). That niche has no incumbent and no Kubernetes-tax.
+The frontier-engine race (vLLM 0.x, SGLang 0.x) has converged on continuous batching. Engine-internal scheduling is approaching local optima — the next gains come from layers above. KVWarden's empirical work shows that *per-tenant* fairness specifically is a layer engines structurally can't reach (they have no tenant concept). That niche has no incumbent and no Kubernetes-tax.
 
 ---
 
-**Repo:** [github.com/coconut-labs/infergrid](https://github.com/coconut-labs/infergrid) · **Hero data:** `results/gate2_fairness_20260419/` · **Tuning guide:** `docs/tuning_guide.md` · **License:** MIT
+**Repo:** [github.com/coconut-labs/kvwarden](https://github.com/coconut-labs/kvwarden) · **Hero data:** `results/gate2_fairness_20260419/` · **Tuning guide:** `docs/tuning_guide.md` · **License:** MIT

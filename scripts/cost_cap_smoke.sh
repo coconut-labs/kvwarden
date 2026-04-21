@@ -70,7 +70,7 @@ timeout 20 bash "$SMOKE_SCRIPT" \
   > "$WORK/caseA.log" 2>&1 &
 PID=$!
 # Let the bootstrap run a few phases and then fail naturally (no real
-# infergrid serve / engine — it will fail at Phase 4). The trap fires,
+# kvwarden serve / engine — it will fail at Phase 4). The trap fires,
 # cleanup runs, timer should be killed.
 wait $PID
 RC_A=$?

@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import infergrid.router.router as router_module
-from infergrid.common.config import InferGridConfig, ModelConfig
-from infergrid.router.router import (
+import kvwarden.router.router as router_module
+from kvwarden.common.config import KVWardenConfig, ModelConfig
+from kvwarden.router.router import (
     ModelState,
     WorkloadRouter,
     classify_request_length,
@@ -135,12 +135,12 @@ class TestModelStateEviction:
 class TestWorkloadRouter:
     """Tests for WorkloadRouter initialization and model management."""
 
-    def _make_config(self, n_models: int = 2) -> InferGridConfig:
+    def _make_config(self, n_models: int = 2) -> KVWardenConfig:
         models = [
             ModelConfig(model_id=f"test-org/model-{i}", engine="vllm")
             for i in range(n_models)
         ]
-        return InferGridConfig(port=9999, models=models)
+        return KVWardenConfig(port=9999, models=models)
 
     def test_init(self) -> None:
         config = self._make_config()
@@ -180,7 +180,7 @@ class TestWorkloadRouter:
         router = WorkloadRouter(config=config)
         model_config = ModelConfig(model_id="test-org/model-0", engine="vllm")
         adapter = router._create_adapter(model_config, 8001)
-        from infergrid.engines.vllm_adapter.adapter import VLLMAdapter
+        from kvwarden.engines.vllm_adapter.adapter import VLLMAdapter
 
         assert isinstance(adapter, VLLMAdapter)
 
@@ -189,7 +189,7 @@ class TestWorkloadRouter:
         router = WorkloadRouter(config=config)
         model_config = ModelConfig(model_id="test-org/model-0", engine="sglang")
         adapter = router._create_adapter(model_config, 8002)
-        from infergrid.engines.sglang_adapter.adapter import SGLangAdapter
+        from kvwarden.engines.sglang_adapter.adapter import SGLangAdapter
 
         assert isinstance(adapter, SGLangAdapter)
 
@@ -209,7 +209,7 @@ class TestEvictionOrdering:
     """Test that evict_model picks the right victim."""
 
     async def test_evicts_lowest_scored_model(self) -> None:
-        config = InferGridConfig(port=9999, models=[])
+        config = KVWardenConfig(port=9999, models=[])
         router = WorkloadRouter(config=config)
 
         # Manually inject model states
@@ -263,7 +263,7 @@ class TestStreamingAdmission:
         chunk_count: int = 5,
         chunk_delay_s: float = 0.05,
     ) -> WorkloadRouter:
-        cfg = InferGridConfig(
+        cfg = KVWardenConfig(
             port=9999,
             max_concurrent=max_concurrent,
             models=[ModelConfig(model_id="m", engine="vllm")],
@@ -423,7 +423,7 @@ class TestStreamingAdmission:
         Counting raw chunks would report dozens; the fixed code reports
         the number of complete `data:` frames (3 here).
         """
-        cfg = InferGridConfig(
+        cfg = KVWardenConfig(
             port=9999,
             max_concurrent=4,
             models=[ModelConfig(model_id="m", engine="vllm")],

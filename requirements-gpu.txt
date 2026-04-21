@@ -1,5 +1,5 @@
 # requirements-gpu.txt
-# Pinned dependencies for InferGrid GPU profiling runs
+# Pinned dependencies for KVWarden GPU profiling runs
 # Tested on: NVIDIA A100-SXM4-80GB, CUDA 12.4, Python 3.11
 
 # === Inference engine ===

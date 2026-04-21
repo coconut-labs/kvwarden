@@ -17,7 +17,7 @@ import asyncio
 
 import pytest
 
-from infergrid.tenant.manager import TenantBudget, TenantRecord
+from kvwarden.tenant.manager import TenantBudget, TenantRecord
 
 
 class TestTokenBucketDefaults:

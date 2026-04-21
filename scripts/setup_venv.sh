@@ -1,16 +1,16 @@
 #!/bin/bash
-# setup_venv.sh — Create isolated Python environment for InferGrid GPU runs
+# setup_venv.sh — Create isolated Python environment for KVWarden GPU runs
 # Usage: source scripts/setup_venv.sh
 # MUST be sourced (not executed) so the venv stays active in your shell
 
 set -euo pipefail
 
-VENV_DIR="${INFERGRID_VENV:-/workspace/venv}"
+VENV_DIR="${KVWARDEN_VENV:-/workspace/venv}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo "[INFO] ============================================"
-echo "[INFO] InferGrid Virtual Environment Setup"
+echo "[INFO] KVWarden Virtual Environment Setup"
 echo "[INFO] ============================================"
 
 # Step 1: Create venv with --without-pip first, then bootstrap pip
@@ -48,10 +48,10 @@ echo "[OK]    tokenizers=$TOKENIZERS_VER"
 echo "[INFO] Installing profiling dependencies..."
 pip install aiohttp numpy pandas matplotlib pyyaml "nvidia-ml-py>=12.0" datasets pytest pytest-asyncio
 
-# Step 7: Install infergrid package in dev mode
-echo "[INFO] Installing infergrid package..."
+# Step 7: Install kvwarden package in dev mode
+echo "[INFO] Installing kvwarden package..."
 cd "$PROJECT_ROOT"
-pip install -e ".[dev]" --no-deps 2>/dev/null || pip install -e . --no-deps 2>/dev/null || echo "[WARN] Could not install infergrid package — profiling scripts will still work"
+pip install -e ".[dev]" --no-deps 2>/dev/null || pip install -e . --no-deps 2>/dev/null || echo "[WARN] Could not install kvwarden package — profiling scripts will still work"
 
 # Step 8: Lock versions
 echo "[INFO] Locking all installed versions..."

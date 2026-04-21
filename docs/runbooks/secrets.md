@@ -12,7 +12,7 @@ Three credentials were pasted into a shared session transcript during the
 
 | Secret | Where used | Rotation URL |
 |---|---|---|
-| PyPI API token (`pypi-AgE...`) | `twine upload` to release new InferGrid versions | https://pypi.org/manage/account/token/ |
+| PyPI API token (`pypi-AgE...`) | `twine upload` to release new KVWarden versions | https://pypi.org/manage/account/token/ |
 | Resend API key (`re_185s...`) | Worker sends waitlist emails via Resend | https://resend.com/api-keys |
 | Cloudflare API token (`cfut_L7e...`) | Wrangler deploy + D1 + zone DNS | https://dash.cloudflare.com/profile/api-tokens |
 
@@ -22,19 +22,19 @@ leaves the transcript equally risky.
 ### PyPI — 90 seconds
 
 1. https://pypi.org/manage/account/token/ → **Revoke** the existing
-   `infergrid`-scoped token
-2. **Add API token** → Name: `infergrid-release-<YYYYMMDD>`, Scope:
-   `Project: infergrid`, **Create**
+   `kvwarden`-scoped token
+2. **Add API token** → Name: `kvwarden-release-<YYYYMMDD>`, Scope:
+   `Project: kvwarden`, **Create**
 3. Copy the new `pypi-...` value immediately (shown once)
-4. Save in your password manager under "InferGrid / PyPI"
+4. Save in your password manager under "KVWarden / PyPI"
 5. Next release (0.1.3+): `TWINE_PASSWORD=<new token> twine upload dist/*`
 
 ### Resend — 90 seconds
 
 1. https://resend.com/api-keys → click the existing key → **Delete**
-2. **Create API Key** → Name: `infergrid-waitlist-<YYYYMMDD>`,
+2. **Create API Key** → Name: `kvwarden-waitlist-<YYYYMMDD>`,
    Permission: **Sending access**, Domain: **All domains** (or
-   specifically `infergrid.org`)
+   specifically `kvwarden.org`)
 3. Copy the new `re_...` value
 4. Rotate on the Worker (no redeploy needed — secrets are side-channel):
    ```bash
@@ -91,9 +91,9 @@ Once set, call admin endpoints with `Authorization: Bearer <your ADMIN_KEY>`.
 
 | Secret | What an attacker can do |
 |---|---|
-| PyPI token | Upload a malicious `infergrid==0.1.3` to PyPI; every `pip install infergrid` pulls it. Fast supply-chain attack. |
-| Resend API key | Send email from `hello@infergrid.org`. Phishing risk + we pay for the delivery + domain reputation damage. |
-| Cloudflare token (scoped) | Deploy/overwrite Workers, run D1 queries, modify DNS on the attached zone. Can redirect `infergrid.org` to a malicious host. |
+| PyPI token | Upload a malicious `kvwarden==0.1.3` to PyPI; every `pip install kvwarden` pulls it. Fast supply-chain attack. |
+| Resend API key | Send email from `hello@kvwarden.org`. Phishing risk + we pay for the delivery + domain reputation damage. |
+| Cloudflare token (scoped) | Deploy/overwrite Workers, run D1 queries, modify DNS on the attached zone. Can redirect `kvwarden.org` to a malicious host. |
 | Cloudflare Global API Key (if ever used) | Full account — delete everything, transfer domains, drain balance. **Never paste this in a chat.** |
 | `ADMIN_KEY` (if set) | Read the full subscriber list (email leak, GDPR-reportable) and trigger mass notify emails at our Resend cost. |
 
@@ -102,7 +102,7 @@ Once set, call admin endpoints with `Authorization: Bearer <your ADMIN_KEY>`.
 ## Prevention for next time
 
 - Use **scoped** Cloudflare API tokens (Workers + D1 + specific zone), never Global API Key
-- PyPI tokens should always be **project-scoped** to `infergrid`, never account-scoped
+- PyPI tokens should always be **project-scoped** to `kvwarden`, never account-scoped
 - Resend API keys support **scope: Sending** (no admin power) — use that for Worker use
 - Before pasting any secret into a chat or an issue, ask yourself: does the tool I'm giving this to *need* production-scoped access, or is a read-only/limited-scope variant enough?
 - Secrets should expire. If your dashboard offers an expiration (CF does), pick 30-90 days.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# run_multi_model_demo.sh — One-command multi-model benchmark for InferGrid
+# run_multi_model_demo.sh — One-command multi-model benchmark for KVWarden
 #
-# Starts InferGrid serving two models, runs all workload scenarios,
+# Starts KVWarden serving two models, runs all workload scenarios,
 # collects GPU metrics, and packages results.
 #
 # Works locally (if GPU available) and on cloud (RunPod).
@@ -20,8 +20,8 @@ set -euo pipefail
 MODEL_A="${MODEL_A:-meta-llama/Llama-3.1-8B-Instruct}"
 MODEL_B="${MODEL_B:-Qwen/Qwen2.5-7B-Instruct}"
 GPU_BUDGET="${GPU_BUDGET:-0.85}"
-INFERGRID_PORT="${INFERGRID_PORT:-8000}"
-INFERGRID_URL="${INFERGRID_URL:-http://localhost:${INFERGRID_PORT}}"
+KVWARDEN_PORT="${KVWARDEN_PORT:-8000}"
+KVWARDEN_URL="${KVWARDEN_URL:-http://localhost:${KVWARDEN_PORT}}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 RESULTS_DIR="${RESULTS_DIR:-results/multi_model_${TIMESTAMP}}"
 CONFIG_FILE="${CONFIG_FILE:-benchmarks/configs/multi_model_scenario.yaml}"
@@ -40,10 +40,10 @@ log() { echo "[$(date '+%H:%M:%S')] $*"; }
 die() { log "ERROR: $*" >&2; exit 1; }
 
 cleanup() {
-    if [[ "${INFERGRID_PID:-}" ]]; then
-        log "Stopping InferGrid server (PID ${INFERGRID_PID})..."
-        kill "${INFERGRID_PID}" 2>/dev/null || true
-        wait "${INFERGRID_PID}" 2>/dev/null || true
+    if [[ "${KVWARDEN_PID:-}" ]]; then
+        log "Stopping KVWarden server (PID ${KVWARDEN_PID})..."
+        kill "${KVWARDEN_PID}" 2>/dev/null || true
+        wait "${KVWARDEN_PID}" 2>/dev/null || true
     fi
 }
 trap cleanup EXIT
@@ -85,12 +85,12 @@ check_gpu() {
 cd "${PROJECT_ROOT}"
 
 log "========================================"
-log "InferGrid Multi-Model Demo"
+log "KVWarden Multi-Model Demo"
 log "========================================"
 log "Model A:     ${MODEL_A}"
 log "Model B:     ${MODEL_B}"
 log "GPU budget:  ${GPU_BUDGET}"
-log "Server URL:  ${INFERGRID_URL}"
+log "Server URL:  ${KVWARDEN_URL}"
 log "Results dir: ${RESULTS_DIR}"
 log "Config:      ${CONFIG_FILE}"
 log ""
@@ -114,35 +114,35 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 1: Start InferGrid (unless already running or SKIP_SERVER=1)
+# Step 1: Start KVWarden (unless already running or SKIP_SERVER=1)
 # ---------------------------------------------------------------------------
 
 if [[ "${SKIP_SERVER}" == "1" ]] || [[ "${1:-}" == "--url" ]]; then
     if [[ "${1:-}" == "--url" ]]; then
-        INFERGRID_URL="${2:?--url requires a value}"
+        KVWARDEN_URL="${2:?--url requires a value}"
     fi
-    log "Using existing server at ${INFERGRID_URL}"
+    log "Using existing server at ${KVWARDEN_URL}"
 else
-    log "Starting InferGrid serving two models..."
+    log "Starting KVWarden serving two models..."
 
-    # Check if infergrid CLI is available
-    if ! command -v infergrid &> /dev/null; then
-        log "infergrid CLI not found, trying python -m infergrid..."
-        INFERGRID_CMD="python -m infergrid"
+    # Check if kvwarden CLI is available
+    if ! command -v kvwarden &> /dev/null; then
+        log "kvwarden CLI not found, trying python -m kvwarden..."
+        KVWARDEN_CMD="python -m kvwarden"
     else
-        INFERGRID_CMD="infergrid"
+        KVWARDEN_CMD="kvwarden"
     fi
 
-    ${INFERGRID_CMD} serve \
+    ${KVWARDEN_CMD} serve \
         "${MODEL_A}" "${MODEL_B}" \
         --gpu-budget "${GPU_BUDGET}" \
-        --port "${INFERGRID_PORT}" \
+        --port "${KVWARDEN_PORT}" \
         > "${RESULTS_DIR}/server.log" 2>&1 &
-    INFERGRID_PID=$!
-    log "InferGrid started (PID ${INFERGRID_PID}), log: ${RESULTS_DIR}/server.log"
+    KVWARDEN_PID=$!
+    log "KVWarden started (PID ${KVWARDEN_PID}), log: ${RESULTS_DIR}/server.log"
 
     # Wait for server to be ready
-    wait_for_server "${INFERGRID_URL}" 300
+    wait_for_server "${KVWARDEN_URL}" 300
 fi
 
 # ---------------------------------------------------------------------------
@@ -171,7 +171,7 @@ if [[ ! -f "${BENCHMARK_SCRIPT}" ]]; then
 fi
 
 python "${BENCHMARK_SCRIPT}" \
-    --url "${INFERGRID_URL}" \
+    --url "${KVWARDEN_URL}" \
     --config "${CONFIG_FILE}" \
     --models "${MODEL_A}" "${MODEL_B}" \
     --concurrency "${CONCURRENCY}" \

@@ -6,7 +6,7 @@ Simulates the scheduling cliff scenario observed in profiling:
     - SGLang A100: c=128->c=256 yields -1.2% throughput but +928% TTFT
 
 Sends 256 concurrent requests through two paths:
-    1. Via InferGrid with admission control (max_concurrent=128)
+    1. Via KVWarden with admission control (max_concurrent=128)
     2. Directly to the engine (no admission control)
 
 Then compares TTFT distributions to quantify the value of admission control.
@@ -14,7 +14,7 @@ Then compares TTFT distributions to quantify the value of admission control.
 Usage:
     python benchmarks/scripts/benchmark_admission.py \\
         --engine-url http://localhost:8000 \\
-        --infergrid-url http://localhost:8080 \\
+        --kvwarden-url http://localhost:8080 \\
         --model meta-llama/Llama-3.1-8B-Instruct \\
         --total-requests 256 \\
         --max-concurrent 128 \\
@@ -65,10 +65,10 @@ def parse_args() -> argparse.Namespace:
         help="Direct engine URL (e.g. http://localhost:8000)",
     )
     parser.add_argument(
-        "--infergrid-url",
+        "--kvwarden-url",
         type=str,
         required=True,
-        help="InferGrid proxy URL (e.g. http://localhost:8080)",
+        help="KVWarden proxy URL (e.g. http://localhost:8080)",
     )
     parser.add_argument(
         "--model",
@@ -86,7 +86,7 @@ def parse_args() -> argparse.Namespace:
         "--max-concurrent",
         type=int,
         default=128,
-        help="Max concurrent requests for InferGrid admission control (default: 128)",
+        help="Max concurrent requests for KVWarden admission control (default: 128)",
     )
     parser.add_argument(
         "--max-tokens",
@@ -182,7 +182,7 @@ def compare_results(
 
     Args:
         direct_results: Results from direct engine access.
-        admission_results: Results from InferGrid with admission control.
+        admission_results: Results from KVWarden with admission control.
 
     Returns:
         Comparison summary dictionary.
@@ -315,13 +315,13 @@ async def main() -> None:
     logger.info("Waiting 10s for engine to stabilize between benchmarks...")
     await asyncio.sleep(10)
 
-    # Benchmark 2: Through InferGrid with admission control
-    logger.info("--- Phase 2: InferGrid with admission control ---")
+    # Benchmark 2: Through KVWarden with admission control
+    logger.info("--- Phase 2: KVWarden with admission control ---")
     admission_results = await run_benchmark(
-        base_url=args.infergrid_url,
+        base_url=args.kvwarden_url,
         model=args.model,
         requests=requests,
-        concurrency=args.total_requests,  # All at once (InferGrid handles queuing)
+        concurrency=args.total_requests,  # All at once (KVWarden handles queuing)
         label="Admission-controlled",
         gpu_collector=gpu_collector,
     )
@@ -344,7 +344,7 @@ async def main() -> None:
     # Save config
     config = {
         "engine_url": args.engine_url,
-        "infergrid_url": args.infergrid_url,
+        "kvwarden_url": args.kvwarden_url,
         "model": args.model,
         "total_requests": args.total_requests,
         "max_concurrent": args.max_concurrent,

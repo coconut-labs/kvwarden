@@ -6,7 +6,7 @@ tenant isolation.
 
 from __future__ import annotations
 
-from infergrid.tenant.manager import TenantBudget, TenantManager, TenantRecord
+from kvwarden.tenant.manager import TenantBudget, TenantManager, TenantRecord
 
 # ---------------------------------------------------------------------------
 # TenantBudget

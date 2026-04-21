@@ -1,14 +1,14 @@
-# InferGrid Strategic Analysis — April 15, 2026
+# KVWarden Strategic Analysis — April 15, 2026
 
 ## The Question
 
-InferGrid has two potential paths: **academic paper** (MLSys 2026) or **product/startup**. The research roadmap targets MLSys. The landing page suggests product ambitions. These paths have different build priorities, timelines, and resource requirements. This analysis forces the decision.
+KVWarden has two potential paths: **academic paper** (MLSys 2026) or **product/startup**. The research roadmap targets MLSys. The landing page suggests product ambitions. These paths have different build priorities, timelines, and resource requirements. This analysis forces the decision.
 
 ---
 
-## Where InferGrid Sits
+## Where KVWarden Sits
 
-InferGrid targets **gap #2**: lightweight multi-model orchestration for 1-4 GPUs without Kubernetes. This gap is verified as wide open (April 2026). No competitor fills it.
+KVWarden targets **gap #2**: lightweight multi-model orchestration for 1-4 GPUs without Kubernetes. This gap is verified as wide open (April 2026). No competitor fills it.
 
 ### The Landscape (verified)
 
@@ -22,9 +22,9 @@ InferGrid targets **gap #2**: lightweight multi-model orchestration for 1-4 GPUs
 | **LocalAI** | Single node | No | LRU eviction | No | No | Multi |
 | **vLLM/SGLang** | Per-instance | No | 1 model/instance | No (standalone) | No | Multi |
 | **Gimlet Labs** | Cloud | Managed | Yes | Yes | Likely | Multi-silicon |
-| **InferGrid** | 1-4 GPUs | **No** | **Intelligent** | **Tiered** | **Planned** | Multi (via engines) |
+| **KVWarden** | 1-4 GPUs | **No** | **Intelligent** | **Tiered** | **Planned** | Multi (via engines) |
 
-InferGrid's unique position: the only project attempting intelligent multi-model orchestration with KV cache tiering on bare metal without Kubernetes.
+KVWarden's unique position: the only project attempting intelligent multi-model orchestration with KV cache tiering on bare metal without Kubernetes.
 
 ---
 
@@ -38,7 +38,7 @@ InferGrid's unique position: the only project attempting intelligent multi-model
 - Writing: ~19 weeks per roadmap (Phase 1 still incomplete)
 
 ### Strengths
-- Academic credibility establishes InferGrid as a reference system
+- Academic credibility establishes KVWarden as a reference system
 - Forced rigor produces better engineering
 - The "81% efficiency gap" framing is strong and novel
 
@@ -59,7 +59,7 @@ The strongest paper contributions would be:
 ## Path B: Product / Open Source
 
 ### What it requires
-- `pip install infergrid` → working daemon in < 5 minutes
+- `pip install kvwarden` → working daemon in < 5 minutes
 - Multi-model lifecycle management (load, evict, hot-swap based on traffic patterns)
 - KV cache tiering (GPU → CPU → SSD) with zero config
 - Basic per-tenant isolation
@@ -96,15 +96,15 @@ This is the real variable the plan must address:
 
 Given the current state (solo, Phase 1 incomplete, gap verified open), the highest-value path avoids the paper-vs-product false binary:
 
-### Step 1: Ship a minimal working InferGrid (4-6 weeks)
-- `pip install infergrid` daemon that manages 2-3 vLLM/SGLang instances on one node
+### Step 1: Ship a minimal working KVWarden (4-6 weeks)
+- `pip install kvwarden` daemon that manages 2-3 vLLM/SGLang instances on one node
 - Intelligent model loading/eviction (beyond LRU — use request frequency + recency)
 - Basic KV cache offloading (GPU → CPU) using LMCache integration
-- CLI: `infergrid serve model1 model2 --gpu-budget 80%`
+- CLI: `kvwarden serve model1 model2 --gpu-budget 80%`
 - Target: developer on 1-2 GPUs who currently runs manual vLLM instances
 
 ### Step 2: Run benchmarks and publish arXiv preprint (2-3 weeks after Step 1)
-- Profile InferGrid vs. manual vLLM multi-instance vs. Ollama
+- Profile KVWarden vs. manual vLLM multi-instance vs. Ollama
 - Measure: model switch latency, KV cache hit rate, GPU utilization, throughput
 - Publish as 6-8 page arXiv preprint (not a venue submission — faster, no review cycle)
 - Include the polished gap analysis as the "landscape" section
@@ -123,7 +123,7 @@ Given the current state (solo, Phase 1 incomplete, gap verified open), the highe
 | Week | Activity |
 |------|----------|
 | 1 | Run Phase 1 profiling on cloud GPU (A100, ~2 hours) |
-| 2-5 | Build minimal InferGrid daemon (WorkloadRouter + basic CacheManager) |
+| 2-5 | Build minimal KVWarden daemon (WorkloadRouter + basic CacheManager) |
 | 6 | Internal benchmarks |
 | 7-8 | arXiv preprint + polish gap analysis blog |
 | 9 | HN/Reddit launch |
@@ -135,7 +135,7 @@ Given the current state (solo, Phase 1 incomplete, gap verified open), the highe
 
 GPU profiling serves both paths:
 - **For the arXiv preprint:** baseline measurements of vLLM/SGLang scheduling overhead validate the "81% efficiency gap" thesis
-- **For the product:** establishes what InferGrid needs to beat
+- **For the product:** establishes what KVWarden needs to beat
 
 **This is the immediate next action.** Provision an A100 80GB on RunPod or Lambda Labs, run the existing scripts (~2 hours), and fill the Phase 1 TODOs. Everything else flows from having real numbers.
 
@@ -144,13 +144,13 @@ GPU profiling serves both paths:
 ## Competitive Moats (if pursuing product)
 
 1. **Simplicity moat:** `pip install` + daemon vs. Kubernetes YAML. Hard for datacenter-first tools to replicate.
-2. **Integration moat:** First to offer LMCache-based KV tiering without K8s. If LMCache becomes the standard KV layer, InferGrid becomes the lightweight frontend.
+2. **Integration moat:** First to offer LMCache-based KV tiering without K8s. If LMCache becomes the standard KV layer, KVWarden becomes the lightweight frontend.
 3. **Community moat:** OSS community around small-scale inference is underserved. Ollama's community proves demand exists.
 4. **Data moat (future):** Per-request cost attribution (gap #4) becomes a differentiator if/when multi-tenant hosting grows.
 
 ## Key Risks
 
-1. **vLLM ships multi-model support** — partially mitigates gap #2, but InferGrid's value is orchestration, not engine-level support
+1. **vLLM ships multi-model support** — partially mitigates gap #2, but KVWarden's value is orchestration, not engine-level support
 2. **Gimlet expands to self-hosted** — unlikely near-term (they're cloud-first with $92M to deploy)
 3. **Modular/Mammoth goes lightweight** — possible but Mammoth is K8s-native by design
 4. **Solo execution speed** — the gap won't stay open forever. AIBrix v0.6 under vllm-project org is the nearest threat.

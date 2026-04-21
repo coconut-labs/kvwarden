@@ -1,13 +1,13 @@
-# InferGrid
+# KVWarden
 
-[![PyPI](https://img.shields.io/pypi/v/infergrid.svg)](https://pypi.org/project/infergrid/)
-[![Python](https://img.shields.io/pypi/pyversions/infergrid.svg)](https://pypi.org/project/infergrid/)
-[![CI](https://github.com/coconut-labs/infergrid/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/coconut-labs/infergrid/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/kvwarden.svg)](https://pypi.org/project/kvwarden/)
+[![Python](https://img.shields.io/pypi/pyversions/kvwarden.svg)](https://pypi.org/project/kvwarden/)
+[![CI](https://github.com/coconut-labs/kvwarden/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/coconut-labs/kvwarden/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes.**
 
-InferGrid is middleware that sits on top of vLLM/SGLang and gives a quiet user predictable TTFT even when a noisy neighbor is hammering the same shared engine. One pip install. No cluster. No YAML pile.
+KVWarden is middleware that sits on top of vLLM/SGLang and gives a quiet user predictable TTFT even when a noisy neighbor is hammering the same shared engine. One pip install. No cluster. No YAML pile.
 
 ## The hero number
 
@@ -18,8 +18,8 @@ Single A100-SXM4 80GB, Llama-3.1-8B, vLLM 0.19.1, two clients sharing one engine
 | | Quiet user TTFT p99 |
 |---|---:|
 | Solo (no contention) | 53.9 ms |
-| InferGrid FIFO under flooder, no rate-limit | **1,585 ms** |
-| InferGrid + token-bucket rate-limit | **61.5 ms** (within **1.14× of solo**) |
+| KVWarden FIFO under flooder, no rate-limit | **1,585 ms** |
+| KVWarden + token-bucket rate-limit | **61.5 ms** (within **1.14× of solo**) |
 
 Ten lines of YAML. No application code change. **The quiet user is essentially unaware the flooder exists** — within 14% of the no-contention baseline.
 
@@ -27,17 +27,17 @@ p99 figures exclude the first 10 s warmup window (vLLM JIT-compile transient, si
 
 Full writeup: [`results/gate2_preprint_v3/`](results/gate2_preprint_v3/) and the original 5-arm experimental arc at [`results/gate2_fairness_20260419/`](results/gate2_fairness_20260419/) (vLLM 0.8.5, 120 s — newer steady-state numbers in v3 are more honest for current vLLM users).
 
-## What InferGrid is and isn't
+## What KVWarden is and isn't
 
-InferGrid is a thin orchestration layer (~3,500 LOC) that sits between your app and vLLM/SGLang. It adds three things engines can't do internally:
+KVWarden is a thin orchestration layer (~3,500 LOC) that sits between your app and vLLM/SGLang. It adds three things engines can't do internally:
 
-1. **Per-tenant token-bucket rate limiting at the budget gate.** This is the load-bearing mechanism (validated empirically — see Gate 2-FAIRNESS results). Engines have no concept of a tenant; InferGrid does.
+1. **Per-tenant token-bucket rate limiting at the budget gate.** This is the load-bearing mechanism (validated empirically — see Gate 2-FAIRNESS results). Engines have no concept of a tenant; KVWarden does.
 2. **Multi-model lifecycle management** on a single GPU — frequency+recency eviction, hot-swap routing, no-K8s.
 3. **OpenAI-compatible HTTP API** in front of multiple engines, so your app code doesn't change.
 
 It is **not** a vLLM/SGLang replacement. It runs them as subprocesses and proxies to them. It is **not** a Kubernetes alternative for datacenter workloads — Dynamo, llm-d, Mammoth do that better. It is **not** going to magically lower single-tenant TTFT — Gate 1.5 measured a robust DISCONFIRM there; vLLM's continuous batching matches a coarse upstream cap on single-tenant single-model workloads.
 
-## Why InferGrid
+## Why KVWarden
 
 Every existing solution requires Kubernetes or gives up tenant fairness:
 
@@ -49,15 +49,15 @@ Every existing solution requires Kubernetes or gives up tenant fairness:
 | AIBrix v0.6 | Yes | Yes | No | NVIDIA, datacenter |
 | Ollama | No | LRU eviction | No | Multi, single node |
 | Vanilla vLLM/SGLang | No | One model per process | No | Single node |
-| **InferGrid** | **No** | **Yes (frequency+recency)** | **Yes (token bucket + DRR)** | **Single node, 1-4 GPUs** |
+| **KVWarden** | **No** | **Yes (frequency+recency)** | **Yes (token bucket + DRR)** | **Single node, 1-4 GPUs** |
 
-The "multi-tenant on a small shared box without K8s" cell is empty. That's the gap InferGrid fills.
+The "multi-tenant on a small shared box without K8s" cell is empty. That's the gap KVWarden fills.
 
 ## Quickstart
 
 ```bash
-pip install infergrid
-infergrid serve --config configs/quickstart_fairness.yaml
+pip install kvwarden
+kvwarden serve --config configs/quickstart_fairness.yaml
 
 # Wait until /health returns 200. The first call returns 503 with a
 # {missing_models: [...]} body until the configured engines finish
@@ -79,11 +79,11 @@ The [`quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily co
 More CLI surface (0.1.2+):
 
 ```bash
-infergrid --version         # "infergrid 0.1.2"
-infergrid doctor            # env check: Python, GPU, engines, port, PyPI version
-infergrid man               # overview of commands + mental model
-infergrid man tenants       # fairness mental model + v3 numbers
-infergrid man topics        # list all bundled help pages
+kvwarden --version         # "kvwarden 0.1.2"
+kvwarden doctor            # env check: Python, GPU, engines, port, PyPI version
+kvwarden man               # overview of commands + mental model
+kvwarden man tenants       # fairness mental model + v3 numbers
+kvwarden man topics        # list all bundled help pages
 ```
 
 ## Reproduce the hero number
@@ -91,22 +91,22 @@ infergrid man topics        # list all bundled help pages
 Run the same 300-second noisy-neighbor bench that produced the chart at the top of this README, and print a side-by-side table vs the published numbers. Two modes:
 
 ```bash
-# (a) You already have `infergrid serve --config configs/gate2_fairness_token_bucket.yaml` running:
-infergrid bench reproduce-hero
+# (a) You already have `kvwarden serve --config configs/gate2_fairness_token_bucket.yaml` running:
+kvwarden bench reproduce-hero
 
 # (b) You want the CLI to provision a 1x A100 pod for you and tear it down afterwards:
 export RUNPOD_API_KEY=<key>
 export HF_TOKEN=<token>
-infergrid bench reproduce-hero --pod
+kvwarden bench reproduce-hero --pod
 ```
 
-Pick `--flavor 2tenant` (default — the hero), `--flavor n6`, or `--flavor n8`. The command writes `./infergrid-reproduce-<timestamp>/report.json` with your number, the published reference, and the ratio so you can file an issue with concrete data if they diverge. Full doc: [`docs/reproduce_hero.md`](docs/reproduce_hero.md).
+Pick `--flavor 2tenant` (default — the hero), `--flavor n6`, or `--flavor n8`. The command writes `./kvwarden-reproduce-<timestamp>/report.json` with your number, the published reference, and the ratio so you can file an issue with concrete data if they diverge. Full doc: [`docs/reproduce_hero.md`](docs/reproduce_hero.md).
 
 ## Telemetry
 
-InferGrid ships with **opt-in, anonymous** install/usage telemetry. The very first time you run any `infergrid` command interactively, you'll see a one-paragraph prompt asking whether to share stats. **The default is no.** If you answer `n` (or just press Enter), nothing is ever transmitted and we never re-prompt. If you answer `y`, each subsequent command sends a seven-field JSON payload — install ID (a locally-minted uuid4), InferGrid version, Python major.minor, OS (`linux`/`darwin`/`win32`), bucketed GPU class (`h100`/`a100`/`rtx4090`/`other`/`none`), the command name (`serve_started` / `doctor_ran`), and a unix timestamp. **Nothing else.** No prompts, no model names, no tenant IDs, no IP capture on the receiver side. The endpoint is a Cloudflare Worker we maintain; source is at [`telemetry-worker/`](telemetry-worker/).
+KVWarden ships with **opt-in, anonymous** install/usage telemetry. The very first time you run any `kvwarden` command interactively, you'll see a one-paragraph prompt asking whether to share stats. **The default is no.** If you answer `n` (or just press Enter), nothing is ever transmitted and we never re-prompt. If you answer `y`, each subsequent command sends a seven-field JSON payload — install ID (a locally-minted uuid4), KVWarden version, Python major.minor, OS (`linux`/`darwin`/`win32`), bucketed GPU class (`h100`/`a100`/`rtx4090`/`other`/`none`), the command name (`serve_started` / `doctor_ran`), and a unix timestamp. **Nothing else.** No prompts, no model names, no tenant IDs, no IP capture on the receiver side. The endpoint is a Cloudflare Worker we maintain; source is at [`telemetry-worker/`](telemetry-worker/).
 
-To disable (or toggle later): `infergrid telemetry off` / `infergrid telemetry on` / `infergrid telemetry status`. To hard-disable on a machine regardless of the saved setting, `export INFERGRID_TELEMETRY=0` — that short-circuits the subsystem before it reads or writes anything. Non-interactive sessions (CI, Docker entrypoints, cron) are treated as opt-out automatically; we never block on a prompt. Full policy and per-field rationale: [`docs/privacy/telemetry.md`](docs/privacy/telemetry.md).
+To disable (or toggle later): `kvwarden telemetry off` / `kvwarden telemetry on` / `kvwarden telemetry status`. To hard-disable on a machine regardless of the saved setting, `export KVWARDEN_TELEMETRY=0` — that short-circuits the subsystem before it reads or writes anything. Non-interactive sessions (CI, Docker entrypoints, cron) are treated as opt-out automatically; we never block on a prompt. Full policy and per-field rationale: [`docs/privacy/telemetry.md`](docs/privacy/telemetry.md).
 
 ## Architecture
 
@@ -129,11 +129,11 @@ To disable (or toggle later): `infergrid telemetry off` / `infergrid telemetry o
 
 | Component | What it does | Source |
 |---|---|---|
-| WorkloadRouter | Length-bucketed admission queue, length-aware scheduling, model lifecycle (freq+recency, not LRU), OpenAI-compatible HTTP API | `src/infergrid/router/router.py` (655 LOC) |
-| AdmissionController | Concurrency cap with priority queue (lower=served first), Prometheus metrics, sub-ms fast-path | `src/infergrid/router/admission.py` (309 LOC) |
-| CacheManager | Per-model cache lifecycle (free-on-unload, snapshot) + tiered-eviction scaffold; LMCache integration planned for per-request KV tracking | `src/infergrid/cache/manager.py` (487 LOC) |
-| TenantManager | Per-tenant budgets, **token-bucket rate limiting** (refill + burst capacity), DRR priority scoring | `src/infergrid/tenant/manager.py` (267 LOC) |
-| Engine Adapters | Subprocess management for vLLM/SGLang, health checks, HTTP proxying | `src/infergrid/engines/` (277 LOC) |
+| WorkloadRouter | Length-bucketed admission queue, length-aware scheduling, model lifecycle (freq+recency, not LRU), OpenAI-compatible HTTP API | `src/kvwarden/router/router.py` (655 LOC) |
+| AdmissionController | Concurrency cap with priority queue (lower=served first), Prometheus metrics, sub-ms fast-path | `src/kvwarden/router/admission.py` (309 LOC) |
+| CacheManager | Per-model cache lifecycle (free-on-unload, snapshot) + tiered-eviction scaffold; LMCache integration planned for per-request KV tracking | `src/kvwarden/cache/manager.py` (487 LOC) |
+| TenantManager | Per-tenant budgets, **token-bucket rate limiting** (refill + burst capacity), DRR priority scoring | `src/kvwarden/tenant/manager.py` (267 LOC) |
+| Engine Adapters | Subprocess management for vLLM/SGLang, health checks, HTTP proxying | `src/kvwarden/engines/` (277 LOC) |
 
 Total: 4,100 LOC src + 2,900 LOC tests (153 unit tests passing, ~10 s on CPU).
 
@@ -171,12 +171,12 @@ ruff format --check src/ tests/
 | Gate 0.6 — bench harness validation | ✅ Done | Real vLLM end-to-end |
 | Gate 1.5 — single-model admission test | ✅ Done | Falsified the original "scheduling cliff" pitch |
 | Gate 2-FAIRNESS — multi-tenant fairness | ✅ Done | Hero number; this README's lead chart |
-| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page at [infergrid.org](https://infergrid.org); waitlist backend + launch post merged (PR #20) |
+| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page at [kvwarden.org](https://kvwarden.org); waitlist backend + launch post merged (PR #20) |
 | Gate 2.1 — N=8 tenant scaling | Post-launch, day 1 | Extends N=6 CONFIRM to N=8 on 1×A100; config: [`gate21_fairness_n8.yaml`](configs/gate21_fairness_n8.yaml) |
 | Gate 2.4 — Mixtral-8×7B MoE fairness | Post-launch | First MoE test; 2×A100 TP=2; config: [`gate24_fairness_mixtral_tp2.yaml`](configs/gate24_fairness_mixtral_tp2.yaml) |
 | Gate 2.3 — Llama-3.1-70B on 4×A100 TP=4 | Post-launch | Frontier credibility; config: [`gate23_fairness_70b_tp4.yaml`](configs/gate23_fairness_70b_tp4.yaml). ~$36 spend, on-demand SECURE required |
 | Gate 2.2 — mixed prompt-length distribution | Post-launch | Blocked on harness PR (`benchmark_n_tenant_single_model.py` needs a `--prompt-length-dist` flag) |
-| Gate 2-lite — multi-model contention vs Ollama | Post-launch | InferGrid's other differentiator vs Ollama; never benchmarked |
+| Gate 2-lite — multi-model contention vs Ollama | Post-launch | KVWarden's other differentiator vs Ollama; never benchmarked |
 | KV cache tiering (LMCache integration) | v0.3 | Phase 3 of original roadmap; unblocks Gate 2.5 (32K long-context fairness) |
 | Multi-engine routing (vLLM ↔ SGLang) | v0.2.1 | Phase 1 hinted SGLang 2.2× better at TTFT at c=256 — needs re-validation on v0.19 |
 
@@ -189,7 +189,7 @@ ruff format --check src/ tests/
 - [Tuning Guide](docs/tuning_guide.md) — when to use which lever, with empirical evidence
 - [Inference Orchestration Gap Analysis](docs/inference_orchestration_gaps_report.md) — competitive landscape (April 2026)
 - [Corrections / measurement honesty log](results/CORRECTIONS.md) — every metric we under-counted and the fix
-- [Post-launch tracking backlog](https://github.com/coconut-labs/infergrid/issues/69) — gates 2.1-2.5 + community/infra/docs items
+- [Post-launch tracking backlog](https://github.com/coconut-labs/kvwarden/issues/69) — gates 2.1-2.5 + community/infra/docs items
 
 ## Contributing
 

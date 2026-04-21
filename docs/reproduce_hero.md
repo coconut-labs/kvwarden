@@ -1,6 +1,6 @@
 # Reproduce the hero number
 
-`infergrid bench reproduce-hero` runs the same 300-second noisy-neighbor
+`kvwarden bench reproduce-hero` runs the same 300-second noisy-neighbor
 bench that produced the numbers in the [launch post](launch/gate0_launch_post.md),
 then prints your box's result side-by-side with the published reference.
 
@@ -8,16 +8,16 @@ then prints your box's result side-by-side with the published reference.
 
 ```bash
 # 1. Start a server in another terminal against the hero config.
-infergrid serve --config configs/gate2_fairness_token_bucket.yaml --port 8000
+kvwarden serve --config configs/gate2_fairness_token_bucket.yaml --port 8000
 
 # 2. Wait for /health to return 200 (first call is 503 while vLLM JIT-compiles).
 until curl -fs http://localhost:8000/health > /dev/null; do sleep 5; done
 
 # 3. Run the hero bench.
-infergrid bench reproduce-hero
+kvwarden bench reproduce-hero
 ```
 
-Finishes in ~5 min. Writes results to `./infergrid-reproduce-<timestamp>/`.
+Finishes in ~5 min. Writes results to `./kvwarden-reproduce-<timestamp>/`.
 
 ## Flavors
 
@@ -40,7 +40,7 @@ the results back, and deletes the pod on exit (including on Ctrl-C):
 
 ```bash
 export RUNPOD_API_KEY=<your key>
-infergrid bench reproduce-hero --pod
+kvwarden bench reproduce-hero --pod
 ```
 
 Pass `--no-delete` to keep the pod for post-run inspection.
@@ -53,13 +53,13 @@ Total wall time (pod path): ~25 min including pull + warmup + bench + teardown.
 |---|---|---|
 | `--flavor` | `2tenant` | `2tenant`, `n6`, or `n8` |
 | `--duration-s` | `300` | Bench wall time per flavor |
-| `--base-url` | `http://localhost:8000` | InferGrid server URL |
+| `--base-url` | `http://localhost:8000` | KVWarden server URL |
 | `--pod` | off | Provision a RunPod A100 (requires `RUNPOD_API_KEY`) |
 | `--no-delete` | off | Don't delete the pod after a `--pod` run |
 
 ## Report format
 
-`./infergrid-reproduce-<timestamp>/report.json` contains your
+`./kvwarden-reproduce-<timestamp>/report.json` contains your
 measurement, the reference, and the delta ratio.
 
 ```json
@@ -82,7 +82,7 @@ measurement, the reference, and the delta ratio.
 ## Common errors
 
 - **`nothing listening on localhost:8000`**: server not up. Run
-  `infergrid serve --config <flavor config>` in a second terminal.
+  `kvwarden serve --config <flavor config>` in a second terminal.
 - **`Model ... not found in /v1/models`**: your config doesn't include
   `meta-llama/Llama-3.1-8B-Instruct`. Use one of the flavor configs
   above.

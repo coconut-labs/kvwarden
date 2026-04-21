@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# InferGrid — Master Baseline Collection Orchestrator
+# KVWarden — Master Baseline Collection Orchestrator
 # =============================================================================
 # One command to run all profiling phases and collect baseline data.
 # Budget-aware: only one engine loaded at a time (40GB A100 constraint).
@@ -356,7 +356,7 @@ stop_gpu_monitor() {
 
 print_plan() {
     echo ""
-    echo -e "${BOLD}InferGrid Baseline Collection Plan${NC}"
+    echo -e "${BOLD}KVWarden Baseline Collection Plan${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  Model:        $MODEL_ID"
     echo "  Concurrency:  $CONCURRENCY"
@@ -623,7 +623,7 @@ python3 "$SCRIPT_DIR/summarize_results.py" \
     2>/dev/null || log_warn "Summary generation failed (non-critical)"
 
 # Create tarball
-TARBALL="infergrid_results_$(date +%Y%m%d_%H%M%S).tar.gz"
+TARBALL="kvwarden_results_$(date +%Y%m%d_%H%M%S).tar.gz"
 tar -czf "$PROJECT_ROOT/$TARBALL" -C "$(dirname "$RESULTS_DIR")" "$(basename "$RESULTS_DIR")"
 log_ok "Results packaged: $TARBALL"
 

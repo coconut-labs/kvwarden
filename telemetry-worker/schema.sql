@@ -1,12 +1,12 @@
--- InferGrid telemetry event store.
+-- KVWarden telemetry event store.
 --
 -- Apply with:
---   wrangler d1 execute infergrid-telemetry --file=schema.sql
+--   wrangler d1 execute kvwarden-telemetry --file=schema.sql
 --
 -- Column notes:
 --   install_id       uuid4 chosen by the client, stable across runs for a
 --                    single user install. Not linked to any account.
---   version          InferGrid version string (semver-ish).
+--   version          KVWarden version string (semver-ish).
 --   python_version   "3.11" / "3.12" / ... (major.minor only).
 --   platform         linux | darwin | win32 | other
 --   gpu_class        h100 | a100 | rtx4090 | other | none

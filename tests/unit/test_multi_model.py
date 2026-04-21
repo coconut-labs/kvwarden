@@ -8,7 +8,7 @@ Tests the WorkloadRouter contract for multi-model scenarios:
 
 The router and adapter are tested via lightweight mocks that define the
 expected interface, since these are the contract specifications for the
-InferGrid orchestration layer.
+KVWarden orchestration layer.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 
 # ---------------------------------------------------------------------------
-# Stub interfaces matching the expected InferGrid router contract
+# Stub interfaces matching the expected KVWarden router contract
 # ---------------------------------------------------------------------------
 
 
@@ -66,7 +66,7 @@ class AdapterStub:
 
 @dataclass
 class WorkloadRouterStub:
-    """Stub for the InferGrid WorkloadRouter.
+    """Stub for the KVWarden WorkloadRouter.
 
     Implements the routing, loading, and eviction logic that the real
     router is expected to provide. This defines the contract.

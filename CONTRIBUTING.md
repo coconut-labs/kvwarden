@@ -1,13 +1,13 @@
-# Contributing to InferGrid
+# Contributing to KVWarden
 
-Thank you for your interest in contributing to InferGrid! This document provides guidelines for contributing.
+Thank you for your interest in contributing to KVWarden! This document provides guidelines for contributing.
 
 ## Development Setup
 
 ```bash
 # Clone the repo
-git clone https://github.com/coconut-labs/infergrid.git
-cd infergrid
+git clone https://github.com/coconut-labs/kvwarden.git
+cd kvwarden
 
 # Install with dev dependencies (pulls pytest, ruff, pytest-asyncio, etc.)
 pip install -e ".[dev,profiling]"
@@ -29,7 +29,7 @@ PR cannot merge to `main`. See [`.github/workflows/ci.yml`](.github/workflows/ci
 
 ## Architecture Overview
 
-InferGrid is a middleware orchestration layer sitting on top of vLLM and SGLang:
+KVWarden is a middleware orchestration layer sitting on top of vLLM and SGLang:
 
 ```
     WorkloadRouter  (request profiling, SLO-aware routing)
@@ -43,10 +43,10 @@ InferGrid is a middleware orchestration layer sitting on top of vLLM and SGLang:
 
 ### Key directories
 
-- `src/infergrid/router/` — WorkloadRouter: request routing, model lifecycle, priority scheduling
-- `src/infergrid/cache/` — CacheManager: KV cache tiering across GPU/CPU/SSD
-- `src/infergrid/tenant/` — TenantManager: multi-tenant isolation and resource budgets
-- `src/infergrid/engines/` — Adapters for vLLM and SGLang backends
+- `src/kvwarden/router/` — WorkloadRouter: request routing, model lifecycle, priority scheduling
+- `src/kvwarden/cache/` — CacheManager: KV cache tiering across GPU/CPU/SSD
+- `src/kvwarden/tenant/` — TenantManager: multi-tenant isolation and resource budgets
+- `src/kvwarden/engines/` — Adapters for vLLM and SGLang backends
 - `profiling/` — Scheduling overhead profiling scripts
 - `benchmarks/` — Head-to-head comparison benchmarks
 - `scripts/` — Cloud provisioning and GPU setup automation

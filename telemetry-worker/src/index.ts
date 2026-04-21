@@ -1,4 +1,4 @@
-// Telemetry receiver for InferGrid opt-in install stats.
+// Telemetry receiver for KVWarden opt-in install stats.
 //
 // Privacy contract:
 // - The CLI sends a small, bounded JSON body — nothing else.

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # smoke_bench.sh — pre-flight gate that MUST pass before any GPU spend.
 #
-# Local, CPU-only. Stands up a single mock vLLM engine + infergrid serve and
+# Local, CPU-only. Stands up a single mock vLLM engine + kvwarden serve and
 # drives a c=1,8,32 sweep through the multi-model bench harness. Exits non-zero
 # if anything that would burn pod money on a real Gate run is broken.
 #
 # Pass criteria (all must hold):
-#   - mock engine + infergrid come up cleanly
+#   - mock engine + kvwarden come up cleanly
 #   - /v1/models returns 1 entry within 30s
 #   - benchmark completes c=1,8,32 sweep × NUM_REQUESTS in <120s wall
 #   - throughput_tok_per_sec > 0 in every concurrency level
@@ -36,7 +36,7 @@ cleanup() {
     [ -n "${POLLER_PID:-}" ] && kill "$POLLER_PID" 2>/dev/null || true
     pkill -f "mock_engine.py --port 8002" 2>/dev/null || true
     pkill -f "mock_engine.py --port 8003" 2>/dev/null || true
-    pkill -f "infergrid.cli serve.*tmp_config" 2>/dev/null || true
+    pkill -f "kvwarden.cli serve.*tmp_config" 2>/dev/null || true
     sleep 1
 }
 trap cleanup EXIT
@@ -73,12 +73,12 @@ python3 benchmarks/scripts/mock_engine.py --port 8003 \
     > "$LOGDIR/mock_8003.log" 2>&1 &
 sleep 2
 
-# ---- 3. Start infergrid in dev-mode ----
-echo "--- start infergrid serve (dev mode) ---"
-INFERGRID_DEV_SKIP_ENGINE_LAUNCH=1 \
+# ---- 3. Start kvwarden in dev-mode ----
+echo "--- start kvwarden serve (dev mode) ---"
+KVWARDEN_DEV_SKIP_ENGINE_LAUNCH=1 \
 PYTHONPATH="$REPO_ROOT/src:${PYTHONPATH:-}" \
-python3 -m infergrid.cli serve --config "$LOGDIR/tmp_config.yaml" \
-    --log-level INFO > "$LOGDIR/infergrid.log" 2>&1 &
+python3 -m kvwarden.cli serve --config "$LOGDIR/tmp_config.yaml" \
+    --log-level INFO > "$LOGDIR/kvwarden.log" 2>&1 &
 IG_PID=$!
 
 # Wait for /v1/models
@@ -110,10 +110,10 @@ echo "ts,in_flight,queue_depth,admitted_total,rejected_total" > "$ADM_CSV"
 (
   while true; do
     M=$(curl -sf http://localhost:8000/metrics 2>/dev/null) || M=""
-    IF=$(printf '%s\n' "$M" | awk '/^infergrid_admission_in_flight /{print $2; exit}')
-    QD=$(printf '%s\n' "$M" | awk '/^infergrid_admission_queue_depth /{print $2; exit}')
-    AT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_admitted_total /{print $2; exit}')
-    RT=$(printf '%s\n' "$M" | awk '/^infergrid_admission_rejected_total\{/{sum+=$2} END{print sum+0}')
+    IF=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_in_flight /{print $2; exit}')
+    QD=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_queue_depth /{print $2; exit}')
+    AT=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_admitted_total /{print $2; exit}')
+    RT=$(printf '%s\n' "$M" | awk '/^kvwarden_admission_rejected_total\{/{sum+=$2} END{print sum+0}')
     printf "%s,%s,%s,%s,%s\n" "$(date +%s.%N)" "${IF:-0}" "${QD:-0}" "${AT:-0}" "${RT:-0}" >> "$ADM_CSV"
     sleep 0.01
   done

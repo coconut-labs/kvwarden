@@ -27,7 +27,7 @@ The LLM inference orchestration landscape in April 2026 is powerful at datacente
 
 ## Gap Coverage Matrix
 
-| Gap | Dynamo | llm-d | Mammoth | AIBrix | Ollama | Gimlet | InferGrid |
+| Gap | Dynamo | llm-d | Mammoth | AIBrix | Ollama | Gimlet | KVWarden |
 |-----|:------:|:-----:|:-------:|:------:|:------:|:------:|:---------:|
 | 1. Cross-hardware routing | -- | -- | -- | Partial | -- | Yes | Planned |
 | 2. Lightweight orchestration (no K8s) | -- | -- | -- | -- | Partial | -- | **Core** |
@@ -163,9 +163,9 @@ The gap between "counting tokens per API call" and "attributing actual GPU time 
 
 ---
 
-## Where InferGrid Fits
+## Where KVWarden Fits
 
-InferGrid is a middleware orchestration layer sitting on vLLM/SGLang, targeting **Gap #2** (lightweight multi-model orchestration without Kubernetes) with extensions into **Gap #4** (per-request cost attribution) and **Gap #5** (KV cache tiering).
+KVWarden is a middleware orchestration layer sitting on vLLM/SGLang, targeting **Gap #2** (lightweight multi-model orchestration without Kubernetes) with extensions into **Gap #4** (per-request cost attribution) and **Gap #5** (KV cache tiering).
 
 ### Architecture
 
@@ -188,7 +188,7 @@ InferGrid is a middleware orchestration layer sitting on vLLM/SGLang, targeting 
 
 ### Differentiation
 
-1. **No Kubernetes required** — `pip install infergrid` + daemon. The only intelligent orchestrator that runs on bare metal with 1-4 GPUs.
+1. **No Kubernetes required** — `pip install kvwarden` + daemon. The only intelligent orchestrator that runs on bare metal with 1-4 GPUs.
 2. **Intelligent model lifecycle** — Load, evict, and hot-swap models based on request frequency + recency, not naive LRU.
 3. **KV cache tiering** — GPU HBM -> CPU RAM -> SSD via LMCache integration, without datacenter infrastructure.
 4. **Per-tenant isolation** — Software-level resource budgets for multi-user environments.

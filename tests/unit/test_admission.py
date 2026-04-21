@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-from infergrid.router.admission import (
+from kvwarden.router.admission import (
     AdmissionController,
     AdmissionTimeoutError,
 )

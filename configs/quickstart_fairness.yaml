@@ -1,4 +1,4 @@
-# InferGrid Quickstart — Tenant Fairness on a Single Engine
+# KVWarden Quickstart — Tenant Fairness on a Single Engine
 #
 # This is the config the launch-post hero number comes from. It runs
 # Llama-3.1-8B-Instruct on a single GPU (A100/H100/80GB) and applies
@@ -6,13 +6,13 @@
 # neighbor cannot starve a quiet tenant.
 #
 # Empirical anchor (from results/gate2_preprint_v3/, vLLM 0.19.1, 300s steady state):
-#   InferGrid FIFO under flooder, no rate-limit: quiet p99 = 1,585 ms
+#   KVWarden FIFO under flooder, no rate-limit: quiet p99 = 1,585 ms
 #   This config (token-bucket rate-limit):       quiet p99 = 61.5 ms (1.14× solo)
 # Historical (vLLM 0.8.5, 120s — results/gate2_fairness_20260419/):
 #   Vanilla vLLM under flooder showed 523× starvation; fix still matters on 0.19.1.
 #
 # Try it:
-#   infergrid serve --config configs/quickstart_fairness.yaml
+#   kvwarden serve --config configs/quickstart_fairness.yaml
 #
 #   # Wait for /health=200 — engines pre-load at startup; /health
 #   # returns 503 with {missing_models: [...]} until they're ready.

@@ -9,7 +9,7 @@
 
 ## 0. Precondition: Gate 0 outcome branches
 
-Phase B rests on Gate 0 producing real two-model data from `infergrid serve` on an A100. The multi-model benchmark harness has never run on GPU. Two outcomes shape everything downstream.
+Phase B rests on Gate 0 producing real two-model data from `kvwarden serve` on an A100. The multi-model benchmark harness has never run on GPU. Two outcomes shape everything downstream.
 
 - **Gate 0 passes cleanly** (both models load, admission controller stays up, baseline TTFT and throughput recorded): proceed with the Systems+Measurement preprint plan below.
 - **Gate 0 reveals a blocker** (engine adapter bug, GPU OOM, admission controller regression): freeze the preprint outline at the measurement-only fallback (Section 1, variant B) and spend Week 1 fixing the blocker before committing Gate 1 spend.
@@ -22,7 +22,7 @@ Non-negotiable: do not begin preprint drafting until Gate 0 data is in `results/
 
 ### Positioning decision (committed)
 
-**Systems + measurement paper** — not measurement-only. The differentiator is InferGrid's admission controller, validated against vLLM baselines using Gate 1 data. This is higher risk (depends on Gate 1 showing 2-4x p99 TTFT improvement) but meaningfully stronger contribution.
+**Systems + measurement paper** — not measurement-only. The differentiator is KVWarden's admission controller, validated against vLLM baselines using Gate 1 data. This is higher risk (depends on Gate 1 showing 2-4x p99 TTFT improvement) but meaningfully stronger contribution.
 
 **Fallback (variant B):** if Gate 1 noise prevents a clean claim, pivot to measurement-only: "An Empirical Study of the Scheduling Cliff in Production LLM Engines." Lower contribution, zero Gate 1 dependency.
 
@@ -40,9 +40,9 @@ Primary: **cs.DC** (Distributed, Parallel, and Cluster Computing). Cross-list: *
 
 > We show that modern LLM inference engines (vLLM 0.19, SGLang) exhibit a sharp scheduling cliff: doubling concurrency from 128 to 256 yields only +2% throughput but +718% time-to-first-token (TTFT) on A100 and H100 hardware, with GPU utilization held above 95%. The cliff is hardware- and engine-independent — SGLang trails vLLM by <5% in throughput but delivers 2.2x better TTFT at saturation. The bottleneck is scheduling quality, not compute.
 >
-> We introduce InferGrid, a middleware layer that sits in front of vLLM or SGLang and enforces admission control at the HTTP boundary, keeping requests from entering the engine scheduler past its cliff. InferGrid requires no Kubernetes, installs via `pip`, and manages multi-model lifecycle with frequency+recency eviction. On a three-model workload (Llama 8B, Qwen 7B, Phi-3) we measure [Gate 1: Nx p99 TTFT improvement under saturation] at [Gate 1: Y ms] proxy overhead.
+> We introduce KVWarden, a middleware layer that sits in front of vLLM or SGLang and enforces admission control at the HTTP boundary, keeping requests from entering the engine scheduler past its cliff. KVWarden requires no Kubernetes, installs via `pip`, and manages multi-model lifecycle with frequency+recency eviction. On a three-model workload (Llama 8B, Qwen 7B, Phi-3) we measure [Gate 1: Nx p99 TTFT improvement under saturation] at [Gate 1: Y ms] proxy overhead.
 >
-> Between Ollama (no scheduling intelligence) and Dynamo/llm-d (Kubernetes-mandatory datacenter tools), a missing middleware layer can capture most of the latency-SLO benefit for small-cluster deployments. We release InferGrid open-source with a reproducibility artifact.
+> Between Ollama (no scheduling intelligence) and Dynamo/llm-d (Kubernetes-mandatory datacenter tools), a missing middleware layer can capture most of the latency-SLO benefit for small-cluster deployments. We release KVWarden open-source with a reproducibility artifact.
 
 ### Section outline (target: ~10 pages, ACM/IEEE format)
 
@@ -86,7 +86,7 @@ The preprint must match the data, not the pitch. The landing page, pitch, and RE
 
 ## 2. Landing page refresh (Week 2, ~1 day)
 
-Current page: `/Users/shrey/Personal Projects/infergrid-root-pages/infergrid-root/landing_page/index.html`. It is already strong — immersive intro, scheduling-cliff hook, competitive table. The refresh is tightening, not a rebuild.
+Current page: `/Users/shrey/Personal Projects/kvwarden-root-pages/kvwarden-root/landing_page/index.html`. It is already strong — immersive intro, scheduling-cliff hook, competitive table. The refresh is tightening, not a rebuild.
 
 ### Required changes
 
@@ -113,7 +113,7 @@ Current page: `/Users/shrey/Personal Projects/infergrid-root-pages/infergrid-roo
 
 ### HN titles — A/B candidate set
 
-1. **"Show HN: InferGrid – Multi-model LLM serving without Kubernetes"** (safe, matches HN conventions)
+1. **"Show HN: KVWarden – Multi-model LLM serving without Kubernetes"** (safe, matches HN conventions)
 2. **"Show HN: I profiled vLLM and SGLang across 3 GPUs – the scheduling cliff is real"** (findings-first, drives discussion to the data)
 3. **"Show HN: Middleware that keeps LLM inference below the scheduling cliff (pip install)"** (value-prop-first)
 
@@ -128,7 +128,7 @@ Pick #1 if the preprint is the hero. Pick #2 if Gate 1 data is the hero. Pick #3
 ### Launch thread content
 
 - Hook: the scheduling-cliff chart.
-- One-line pitch: "pip install infergrid. Smart multi-model serving on 1-4 GPUs. No cluster."
+- One-line pitch: "pip install kvwarden. Smart multi-model serving on 1-4 GPUs. No cluster."
 - Three bullets: (1) measured cliff on A100+H100, (2) admission-control result from Gate 1, (3) pip install + daemon in under 2 minutes.
 - Links: repo, preprint, landing page.
 - Ask: GitHub star + honest feedback.
@@ -144,9 +144,9 @@ Do not fabricate DMs to "influencers you know." The honest pre-launch list is:
 
 - **Why not K8s?** K8s adds ~30 min of setup on one node. If you already run K8s, use Dynamo or llm-d.
 - **Why not Dynamo?** K8s-mandatory and NVIDIA-only. Different scale.
-- **Is this just Ollama?** Ollama uses LRU, no admission control. InferGrid targets SLO-sensitive mixed traffic.
-- **Isn't vLLM going to add multi-model?** Issue #13633 open since Feb 2025. When it ships, InferGrid's differentiation stays in admission control + tiered cache.
-- **What about LMCache?** Planned dependency; LMCache handles KV tier movement, InferGrid handles orchestration.
+- **Is this just Ollama?** Ollama uses LRU, no admission control. KVWarden targets SLO-sensitive mixed traffic.
+- **Isn't vLLM going to add multi-model?** Issue #13633 open since Feb 2025. When it ships, KVWarden's differentiation stays in admission control + tiered cache.
+- **What about LMCache?** Planned dependency; LMCache handles KV tier movement, KVWarden handles orchestration.
 
 ---
 
@@ -202,15 +202,15 @@ All pricing assumes H100 SXM at $3.5/hour on RunPod (spot). Re-verify at provisi
 
 Three runs, same H100 pod:
 - **A. Baseline vLLM** (no admission): raw `vllm.entrypoints.openai.api_server` at c=64,128,192,256,384 → `results/gate1/vllm_baseline/`
-- **B. InferGrid with admission ON**: `infergrid serve llama-8b --admission-target-ttft 300` → `results/gate1/infergrid_admission_on/`
+- **B. KVWarden with admission ON**: `kvwarden serve llama-8b --admission-target-ttft 300` → `results/gate1/kvwarden_admission_on/`
 - **C. 3-model eviction**: `bash scripts/run_multi_model_demo.sh --models llama-8b,qwen-7b,phi-3 --workload traffic_shift.yaml` → `results/gate1/eviction_comparison/`
 
-**Success criteria:** (1) TTFT p99 at c=256 with admission ON >=2x better than OFF; (2) throughput loss <10% at c=256; (3) InferGrid eviction beats Ollama LRU cold-start count on `traffic_shift.yaml`.
+**Success criteria:** (1) TTFT p99 at c=256 with admission ON >=2x better than OFF; (2) throughput loss <10% at c=256; (3) KVWarden eviction beats Ollama LRU cold-start count on `traffic_shift.yaml`.
 
 ### Gate 2: Heterogeneous 70B+8B on 2xH100 (~$24, ~3.4h at ~$7/h)
 
 ```
-infergrid serve \
+kvwarden serve \
   --model Llama-3.1-70B-Instruct:tp=2 \
   --model Llama-3.1-8B-Instruct:tp=1,gpu=auto \
   --gpu-budget 92%
@@ -249,7 +249,7 @@ Current date: 2026-04-18 (Saturday). Week 1 starts Monday 2026-04-20.
 
 ```
 Week 1 (Apr 20-26, 2026) — GATE 0 + FOUNDATION
-  Mon-Tue  [Gate 0: 2-model infergrid serve on A100 — $4.50]
+  Mon-Tue  [Gate 0: 2-model kvwarden serve on A100 — $4.50]
   Wed      [Curate Gate 0 results, decide variant A/B]
   Thu-Fri  [Lock preprint outline, draft Sec 1-2]
   Sat      [Landing page: fix 95% contradiction, OG image]

@@ -1,4 +1,4 @@
-# Gate 0 — first-ever GPU bring-up of `infergrid serve` with 2 models
+# Gate 0 — first-ever GPU bring-up of `kvwarden serve` with 2 models
 # Target hardware: 1x A100-SXM4-80GB on RunPod
 # Budget: ~$4.50 / 2 hours
 #

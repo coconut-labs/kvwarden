@@ -20,7 +20,7 @@
 #   PASS:    quiet_p99 ≤ 110ms (2× Arm 0 baseline) AND flooder gets 429'd
 #            (verify: tenant_rejected in server.log, count_err > 0 on flooder)
 #   DISCONFIRM: quiet > 275ms (5× baseline) despite flooder throttled
-#               → fundamental limit of InferGrid's current architecture
+#               → fundamental limit of KVWarden's current architecture
 #   PLUMBING:   quiet ALSO getting 429s → rate limit applied to wrong tenant
 
 host: 0.0.0.0

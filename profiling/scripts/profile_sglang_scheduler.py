@@ -492,7 +492,7 @@ async def main() -> None:
     )
 
     logger.info("=" * 60)
-    logger.info("InferGrid Phase 1: SGLang Scheduler Profiling")
+    logger.info("KVWarden Phase 1: SGLang Scheduler Profiling")
     logger.info("=" * 60)
 
     # Log environment and config

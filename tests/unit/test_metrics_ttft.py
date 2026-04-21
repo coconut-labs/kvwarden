@@ -4,17 +4,17 @@ from __future__ import annotations
 
 from prometheus_client import CollectorRegistry
 
-from infergrid.common.metrics import MetricsCollector
+from kvwarden.common.metrics import MetricsCollector
 
 
 def _ttft_count(metrics: MetricsCollector, *, model: str, tenant: str) -> int:
     """Sum the _count sample for a given (model, tenant) pair."""
     for fam in metrics._registry.collect():
-        if fam.name != "infergrid_tenant_ttft_seconds":
+        if fam.name != "kvwarden_tenant_ttft_seconds":
             continue
         for sample in fam.samples:
             if (
-                sample.name == "infergrid_tenant_ttft_seconds_count"
+                sample.name == "kvwarden_tenant_ttft_seconds_count"
                 and sample.labels.get("model") == model
                 and sample.labels.get("tenant") == tenant
             ):
@@ -41,7 +41,7 @@ def test_record_ttft_buckets_present_in_prometheus_output():
     m = MetricsCollector(registry=CollectorRegistry())
     m.record_ttft(model="llama31-8b", tenant="quiet", ttft_s=0.04)
     out = m.prometheus_output().decode()
-    assert "infergrid_tenant_ttft_seconds" in out
+    assert "kvwarden_tenant_ttft_seconds" in out
     # Hero buckets we care about for the launch story
     assert 'le="0.05"' in out
     assert 'le="0.1"' in out

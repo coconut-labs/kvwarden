@@ -1,6 +1,6 @@
-# InferGrid — one-pager
+# KVWarden — one-pager
 
-**Positioning.** InferGrid is open-source middleware that gives small teams per-tenant fairness for LLM inference on a single shared GPU, without Kubernetes.
+**Positioning.** KVWarden is open-source middleware that gives small teams per-tenant fairness for LLM inference on a single shared GPU, without Kubernetes.
 
 ## The problem
 
@@ -10,7 +10,7 @@ Multi-tenant LLM inference on a shared engine is a starvation problem. vLLM's co
 
 Three things engines cannot do internally:
 
-1. **Per-tenant token-bucket rate limiting at the budget gate** — load-bearing mechanism, validated empirically. Quiet-tenant p99 TTFT under contention: 1,585 ms (FIFO) → 61.5 ms (InferGrid token bucket), 1.14× of the solo baseline, A100 + vLLM 0.19.1, 300 s sustained, n=311. Generalized to N=6 tenants at 61.0 ms aggregate p99 (1.13× of solo).
+1. **Per-tenant token-bucket rate limiting at the budget gate** — load-bearing mechanism, validated empirically. Quiet-tenant p99 TTFT under contention: 1,585 ms (FIFO) → 61.5 ms (KVWarden token bucket), 1.14× of the solo baseline, A100 + vLLM 0.19.1, 300 s sustained, n=311. Generalized to N=6 tenants at 61.0 ms aggregate p99 (1.13× of solo).
 2. **Multi-model lifecycle on a single GPU** — frequency+recency eviction, hot-swap routing, no K8s.
 3. **OpenAI-compatible HTTP API** in front of multiple engines, so app code doesn't change.
 
@@ -26,14 +26,14 @@ Ten lines of YAML. No application code change. Tenants routed by HTTP header.
 | Gimlet Labs ($92M Series A) | Managed cloud | Yes | Proprietary cloud, multi-silicon compiler |
 | Ollama | No | No | Single-node, LRU model eviction |
 | Vanilla vLLM/SGLang | No | No | Single engine, one model |
-| **InferGrid** | **No** | **Yes (validated)** | **1–4 GPUs, self-hosted** |
+| **KVWarden** | **No** | **Yes (validated)** | **1–4 GPUs, self-hosted** |
 
-Gimlet is the only production competitor with fairness, and they're a managed multi-silicon cloud — a different category from "self-hosted on your GPU." InferGrid is for the team that keeps the hardware.
+Gimlet is the only production competitor with fairness, and they're a managed multi-silicon cloud — a different category from "self-hosted on your GPU." KVWarden is for the team that keeps the hardware.
 
 ## Traction and validation
 
-- **PyPI:** `infergrid 0.1.2` live.
-- **Landing page:** infergrid.org with waitlist.
+- **PyPI:** `kvwarden 0.1.2` live.
+- **Landing page:** kvwarden.org with waitlist.
 - **Code:** 4,100 LOC src, 2,900 LOC tests, 153 unit tests passing, CI-gated lint + format.
 - **Empirical gate ladder v0.2 — 4 gates, 3 CONFIRM + 1 PASS:**
   - Gate 2.1 (N=8 tenants, A100, Llama-3.1-8B): CONFIRM
@@ -61,4 +61,4 @@ Lower end ($500K) buys ~12 months solo + design partner. Upper end ($1.5M) buys 
 
 Not formally raising today. Talking to angels and pre-seed funds who care about the inference infra gap between Ollama and Dynamo/llm-d and want to see the N=16 saturated-H100 number when it lands. If that's you, happy to share the full gate-ladder writeup and a live demo of the hero bench reproducing on a fresh RunPod pod in ~20 minutes.
 
-Contact: Shrey Patel, patelshrey77@gmail.com. Repo: github.com/coconut-labs/infergrid. Waitlist: infergrid.org.
+Contact: Shrey Patel, patelshrey77@gmail.com. Repo: github.com/coconut-labs/kvwarden. Waitlist: kvwarden.org.

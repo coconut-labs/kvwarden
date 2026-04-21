@@ -22,8 +22,8 @@ Under **flooder = 32 RPS, quiet = 1 RPS, same model, same A100**:
 
 1. **Arm 0 (quiet only):** `quiet_user.p99_TTFT ≤ ~600ms` (steady-state solo baseline).
 2. **Arm 1 (raw vLLM):** `quiet_user.p99_TTFT ≥ 4× Arm 0` — vLLM's scheduler starves the quiet tenant when a flooder shares the model.
-3. **Arm 2 (InferGrid FIFO):** `quiet_user.p99_TTFT ≈ Arm 1` — current shipping scheduling doesn't help because under contention the queue is still dominated by the flooder's arrival rate.
-4. **Arm 3 (InferGrid DRR):** `quiet_user.p99_TTFT ≤ 1.5× Arm 0` — DRR keeps the quiet tenant near-solo-baseline.
+3. **Arm 2 (KVWarden FIFO):** `quiet_user.p99_TTFT ≈ Arm 1` — current shipping scheduling doesn't help because under contention the queue is still dominated by the flooder's arrival rate.
+4. **Arm 3 (KVWarden DRR):** `quiet_user.p99_TTFT ≤ 1.5× Arm 0` — DRR keeps the quiet tenant near-solo-baseline.
 
 **CONFIRM rule (pre-committed):** `Arm 3.quiet.p99_TTFT ≤ 1.5 × Arm 0.quiet.p99_TTFT` AND `Arm 1.quiet.p99_TTFT ≥ 4 × Arm 0.quiet.p99_TTFT`.
 
@@ -51,7 +51,7 @@ python3 - <<'EOF'
 import os, time, runpod, json
 runpod.api_key = os.environ["RUNPOD_API_KEY"]
 pod = runpod.create_pod(
-    name="infergrid-gate2-fairness",
+    name="kvwarden-gate2-fairness",
     image_name="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
     gpu_type_id="NVIDIA A100-SXM4-80GB",
     cloud_type="SECURE",
@@ -94,11 +94,11 @@ REMOTE
 
 Wait for `_DONE` marker, rsync.
 
-### 3. Arm 1 — raw vLLM (bypass InferGrid admission)
+### 3. Arm 1 — raw vLLM (bypass KVWarden admission)
 
-Raw vLLM has no tenant concept. Run the bench against the vLLM engine port directly (InferGrid spawns on 8002+). First confirm the vLLM subprocess port from `server.log`.
+Raw vLLM has no tenant concept. Run the bench against the vLLM engine port directly (KVWarden spawns on 8002+). First confirm the vLLM subprocess port from `server.log`.
 
-Simpler: launch a fresh bootstrap with `max_concurrent: 99999` and `scheduling: fifo` — InferGrid becomes effectively a tenant-unaware passthrough. (Arm 1 is thus operationally `configs/gate2_fairness_fifo.yaml` with max_concurrent bumped to 99999; or use `--admission-bypass` if we grow that flag in a later PR.)
+Simpler: launch a fresh bootstrap with `max_concurrent: 99999` and `scheduling: fifo` — KVWarden becomes effectively a tenant-unaware passthrough. (Arm 1 is thus operationally `configs/gate2_fairness_fifo.yaml` with max_concurrent bumped to 99999; or use `--admission-bypass` if we grow that flag in a later PR.)
 
 ```bash
 # Arm 1: flooder + quiet run together, FIFO scheduling (effectively no-op here)
@@ -115,11 +115,11 @@ REMOTE
 
 **Note on Arm 1 vs Arm 2 separation:** with max_concurrent=256 and aggregate ~33 RPS, the admission cap likely doesn't bind at all in either arm — so Arm 1 and Arm 2 will look identical. That's OK; Arm 2 is a sanity check that no regression vs raw passthrough exists. The decisive delta is Arm 2 vs Arm 3.
 
-### 4. Arm 2 — InferGrid FIFO (same as Arm 1 in practice)
+### 4. Arm 2 — KVWarden FIFO (same as Arm 1 in practice)
 
 Skip as separate run if you want — use Arm 1's numbers. Keep the arm in the runbook for experimental cleanliness: if your PR #42 accidentally regressed the `fifo` default path, Arm 2 would catch it.
 
-### 5. Arm 3 — InferGrid DRR (the bet)
+### 5. Arm 3 — KVWarden DRR (the bet)
 
 ```bash
 ssh -p $POD_PORT root@$POD_IP <<'REMOTE'
@@ -166,7 +166,7 @@ drr_penalty    = Arm3.quiet_user.ttft_p99_ms / quiet_baseline
 | Engine pre-load > 10 min | A100 wheel cache cold | Wait up to 15 min; if no progress, `touch /workspace/ABORT` |
 | `count_err > 5%` in any arm | Timeout, rate-limit, or OOM | Check `server.log` for `tenant_rejected` reason; raise `max_concurrent_requests` if budget exceeded |
 | Arm 1 quiet p99 ≈ Arm 0 quiet p99 | No starvation observed — vLLM was fairer than expected OR flooder never loaded enough | Check flooder's summary: if `count_ok < 32 × 120 × 0.7 = 2688`, flooder underfired; bump `--flooder-rps 48` |
-| Arm 3 quiet p99 > Arm 1 quiet p99 | DRR regressed (priority inversion?) | Check `src/infergrid/tenant/manager.py::priority_score` — a sign flip would invert. Bail Gate 2-FAIRNESS, not a launch-blocker to debug |
+| Arm 3 quiet p99 > Arm 1 quiet p99 | DRR regressed (priority inversion?) | Check `src/kvwarden/tenant/manager.py::priority_score` — a sign flip would invert. Bail Gate 2-FAIRNESS, not a launch-blocker to debug |
 | `/workspace/COST_CAP_HIT` | Pod exceeded MAX_POD_SECS | Terminate from RunPod console immediately |
 
 ## After Gate 2-FAIRNESS

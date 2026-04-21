@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# InferGrid — Cloud Benchmark Runner
+# KVWarden — Cloud Benchmark Runner
 # =============================================================================
 # Designed to run INSIDE a pre-built engine container (vllm/vllm-openai or
 # lmsysorg/sglang). Installs only profiling deps, starts the engine, and
@@ -156,7 +156,7 @@ cleanup() {
     fi
     # Package results
     if [[ -d "$RESULTS_DIR" ]]; then
-        local tarball="${PROJECT_ROOT}/infergrid_${ENGINE}_${GPU_LABEL}_$(date +%Y%m%d_%H%M%S).tar.gz"
+        local tarball="${PROJECT_ROOT}/kvwarden_${ENGINE}_${GPU_LABEL}_$(date +%Y%m%d_%H%M%S).tar.gz"
         tar -czf "$tarball" -C "$(dirname "$RESULTS_DIR")" "$(basename "$RESULTS_DIR")" 2>/dev/null || true
         log_info "Results packaged: $tarball"
     fi

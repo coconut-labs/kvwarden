@@ -1,4 +1,4 @@
-name = "infergrid-telemetry"
+name = "kvwarden-telemetry"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 
@@ -8,11 +8,11 @@ compatibility_date = "2024-11-01"
 crons = ["17 3 * * *"]
 
 # D1 binding. Create the database once with:
-#   wrangler d1 create infergrid-telemetry
+#   wrangler d1 create kvwarden-telemetry
 # then paste the returned database_id into this block.
 [[d1_databases]]
 binding = "DB"
-database_name = "infergrid-telemetry"
+database_name = "kvwarden-telemetry"
 database_id = "REPLACE_WITH_WRANGLER_OUTPUT"
 
 # KV binding for the per-install_id 24h rate limiter.

@@ -1,4 +1,4 @@
-# InferGrid benchmark environment
+# KVWarden benchmark environment
 # Usage: docker compose -f docker/docker-compose.yml up vllm-server
 
 version: "3.8"

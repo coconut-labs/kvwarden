@@ -1,12 +1,12 @@
 #!/bin/bash
 # Track D Runner: OOM-under-burst on co-loaded Llama+Qwen.
-# D1: gate2_multi_tenant.yaml (InferGrid full stack — admission + budget)
+# D1: gate2_multi_tenant.yaml (KVWarden full stack — admission + budget)
 # D2: gate2_round_robin.yaml  (thin proxy — admission off)
 #
 # Same physical pod, same model load, so model warmup time only paid once.
 
 set -euo pipefail
-cd /workspace/infergrid
+cd /workspace/kvwarden
 # HF_TOKEN must be exported in the calling shell — DO NOT bake it in.
 : "${HF_TOKEN:?HF_TOKEN env var must be set before invoking this runner}"
 export CUDA_VISIBLE_DEVICES=0
@@ -33,7 +33,7 @@ wait_gpu_clear() {
 }
 
 STAMP=$(date -u +%Y%m%d_%H%M%S)
-OUT=/workspace/infergrid/results/gate2_d_$STAMP
+OUT=/workspace/kvwarden/results/gate2_d_$STAMP
 mkdir -p $OUT
 CHAT="meta-llama/Llama-3.1-8B-Instruct"
 RAG="Qwen/Qwen2.5-7B-Instruct"
@@ -49,13 +49,13 @@ run_arm() {
     echo "Track D arm: $name ($cfg)"
     echo "============================================================"
 
-    # NOTE: pkill -f infergrid would self-kill — this script's path
-    # contains 'infergrid'. We instead kill the engine workers (which
+    # NOTE: pkill -f kvwarden would self-kill — this script's path
+    # contains 'kvwarden'. We instead kill the engine workers (which
     # don't share that pattern) by full cmdline + targeted PIDs.
     if pgrep -f "vllm.entrypoints" > /dev/null 2>&1; then
         echo "Killing prior vLLM engine workers..."
         pkill -9 -f "vllm.entrypoints" 2>/dev/null || true
-        for pid in $(pgrep -f "infergrid serve" 2>/dev/null); do
+        for pid in $(pgrep -f "kvwarden serve" 2>/dev/null); do
             if [ "$pid" != "$$" ] && [ "$pid" != "$BASHPID" ]; then
                 kill -9 $pid 2>/dev/null || true
             fi
@@ -66,7 +66,7 @@ run_arm() {
         echo "Fresh pod / no prior workers — skipping cleanup."
     fi
 
-    nohup infergrid serve --config $cfg > $d/server.log 2>&1 &
+    nohup kvwarden serve --config $cfg > $d/server.log 2>&1 &
     local pid=$!
     echo "Server pid=$pid — waiting up to 600s (two models cold-load)..."
     for i in $(seq 1 120); do
@@ -101,7 +101,7 @@ run_arm() {
     kill $pid 2>/dev/null || true
     sleep 3
     pkill -9 -f "vllm.entrypoints" 2>/dev/null || true
-    for ipid in $(pgrep -f "infergrid serve" 2>/dev/null); do
+    for ipid in $(pgrep -f "kvwarden serve" 2>/dev/null); do
         if [ "$ipid" != "$$" ] && [ "$ipid" != "$BASHPID" ]; then
             kill -9 $ipid 2>/dev/null || true
         fi
@@ -111,7 +111,7 @@ run_arm() {
 
 echo "=== TRACK D ==="
 date -u
-run_arm "d1_inferGrid"   "configs/gate2_multi_tenant.yaml"
+run_arm "d1_kvwarden"   "configs/gate2_multi_tenant.yaml"
 run_arm "d2_roundRobin"  "configs/gate2_round_robin.yaml"
 
 tar czf /workspace/track_d_results_$STAMP.tgz -C $(dirname $OUT) $(basename $OUT)

@@ -1,10 +1,10 @@
-# Twitter thread — InferGrid launch
+# Twitter thread — KVWarden launch
 
 **1/**
 A100 + Llama-3.1-8B + vLLM 0.19.1. One flooder at 32 RPS, one quiet user at 1 RPS, sharing the engine for 300 s.
 
 Vanilla FIFO: quiet user's p99 TTFT = 1,585 ms.
-With InferGrid's per-tenant token bucket: 61.5 ms. 1.14× of solo baseline.
+With KVWarden's per-tenant token bucket: 61.5 ms. 1.14× of solo baseline.
 
 Ten lines of YAML.
 
@@ -43,8 +43,8 @@ Tenants matched on X-Tenant-ID header.
 Install and run:
 
 ```
-pip install infergrid
-infergrid serve --config configs/quickstart_fairness.yaml
+pip install kvwarden
+kvwarden serve --config configs/quickstart_fairness.yaml
 curl localhost:8000/v1/completions -H "X-Tenant-ID: quiet" -d '{...}'
 ```
 
@@ -64,15 +64,15 @@ What's NOT validated: H100 replication under our offered load had smaller deltas
 Also not proven: "works at 70B." Gate 2.3 ran the same code path on Llama-3.1-70B TP=4 across 4× H100 cleanly — zero engine OOMs, zero NCCL errors, mechanism engages — but the offered-load TTFT delta there is 1.62× because the engine isn't starved. Scale-invariant code path, not scale-invariant starvation.
 
 **10/**
-Competitive wedge. Dynamo and llm-d require Kubernetes and target datacenter shapes. Ollama gives you LRU model eviction but no per-tenant fairness. Vanilla vLLM/SGLang is one model per process, no tenant concept. The "multi-tenant on a small shared GPU without K8s" cell was empty. InferGrid fills it.
+Competitive wedge. Dynamo and llm-d require Kubernetes and target datacenter shapes. Ollama gives you LRU model eviction but no per-tenant fairness. Vanilla vLLM/SGLang is one model per process, no tenant concept. The "multi-tenant on a small shared GPU without K8s" cell was empty. KVWarden fills it.
 
 **11/**
 Full launch post with all 5 arms, the per-window traces, the warmup-window caveat, and the 70B replication details:
 
-https://github.com/coconut-labs/infergrid/blob/main/docs/launch/gate0_launch_post.md
+https://github.com/coconut-labs/kvwarden/blob/main/docs/launch/gate0_launch_post.md
 
-Repo: https://github.com/coconut-labs/infergrid
-Waitlist: https://infergrid.org
+Repo: https://github.com/coconut-labs/kvwarden
+Waitlist: https://kvwarden.org
 
 **12/**
 What I actually need: adversarial benches. Run it against your real traffic, your real tenant shape, your real prompt distribution. File an issue with prometheus_dump.txt + server.log when it breaks. That's worth more than a star — it's the data that tells me where the mechanism stops holding.

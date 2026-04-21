@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-InferGrid — Automated RunPod A100 Provisioning & Profiling Launcher
+KVWarden — Automated RunPod A100 Provisioning & Profiling Launcher
 
-Provisions an A100 80GB pod on RunPod, clones the infergrid repo,
+Provisions an A100 80GB pod on RunPod, clones the kvwarden repo,
 sets up the environment, and launches baseline profiling.
 
 Usage:
@@ -28,7 +28,7 @@ except ImportError:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Provision RunPod for InferGrid profiling")
+    parser = argparse.ArgumentParser(description="Provision RunPod for KVWarden profiling")
     parser.add_argument("--gpu", default="NVIDIA A100 80GB PCIe",
                         help="GPU type to request (default: NVIDIA A100 80GB PCIe)")
     parser.add_argument("--cloud-type", default="SECURE", choices=["SECURE", "COMMUNITY", "ALL"],
@@ -37,7 +37,7 @@ def main():
                         help="Docker image")
     parser.add_argument("--disk", type=int, default=100, help="Disk size in GB (default: 100)")
     parser.add_argument("--volume", type=int, default=50, help="Volume size in GB (default: 50)")
-    parser.add_argument("--repo-url", default="https://github.com/coconut-labs/infergrid.git",
+    parser.add_argument("--repo-url", default="https://github.com/coconut-labs/kvwarden.git",
                         help="Git repo URL to clone")
     parser.add_argument("--branch", default="main", help="Git branch to clone")
     parser.add_argument("--model-config", default="configs/models/llama31_8b.yaml",
@@ -65,13 +65,13 @@ def main():
     startup_script = f"""#!/bin/bash
 set -euo pipefail
 
-echo "=== InferGrid Profiling Setup ==="
+echo "=== KVWarden Profiling Setup ==="
 echo "Started at: $(date -u)"
 
 # Clone repo
 cd /workspace
-git clone --branch {args.branch} {args.repo_url} infergrid
-cd infergrid
+git clone --branch {args.branch} {args.repo_url} kvwarden
+cd kvwarden
 
 # Set HF token
 export HF_TOKEN="{hf_token}"
@@ -88,11 +88,11 @@ nohup bash scripts/run_all_baselines.sh \\
 
 echo "=== Profiling launched in background ==="
 echo "Monitor with: tail -f /workspace/profiling_run.log"
-echo "Results will be in /workspace/infergrid/results_*/"
+echo "Results will be in /workspace/kvwarden/results_*/"
 """
 
     pod_config = {
-        "name": "infergrid-profiling",
+        "name": "kvwarden-profiling",
         "image_name": args.image,
         "gpu_type_id": args.gpu,
         "cloud_type": args.cloud_type,
@@ -102,11 +102,11 @@ echo "Results will be in /workspace/infergrid/results_*/"
         "docker_args": "",
         "env": {
             "HF_TOKEN": hf_token,
-            "JUPYTER_PASSWORD": "infergrid",
+            "JUPYTER_PASSWORD": "kvwarden",
         },
     }
 
-    print("\n=== InferGrid RunPod Provisioner ===")
+    print("\n=== KVWarden RunPod Provisioner ===")
     print(f"GPU:     {args.gpu}")
     print(f"Image:   {args.image}")
     print(f"Disk:    {args.disk}GB + {args.volume}GB volume")
@@ -144,7 +144,7 @@ echo "Results will be in /workspace/infergrid/results_*/"
                 print(f"  # The startup script should be running. Check progress:")
                 print(f"  tail -f /workspace/profiling_run.log")
                 print(f"\n  # Or run manually:")
-                print(f"  cd /workspace/infergrid")
+                print(f"  cd /workspace/kvwarden")
                 print(f"  export HF_TOKEN='{hf_token[:8]}...'")
                 print(f"  source scripts/setup_venv.sh")
                 print(f"  bash scripts/setup_gpu_env.sh --model-config {args.model_config}")

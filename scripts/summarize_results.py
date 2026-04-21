@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Post-run summary generator for InferGrid profiling results.
+"""Post-run summary generator for KVWarden profiling results.
 
 Reads JSON/CSV results from profiling and benchmark runs, then produces
 a markdown summary with key numbers for docs/phase1_findings.md.

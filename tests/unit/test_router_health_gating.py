@@ -13,12 +13,12 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from infergrid.common.config import InferGridConfig, ModelConfig
-from infergrid.router.router import WorkloadRouter
+from kvwarden.common.config import KVWardenConfig, ModelConfig
+from kvwarden.router.router import WorkloadRouter
 
 
-def _cfg(model_ids: list[str]) -> InferGridConfig:
-    return InferGridConfig(
+def _cfg(model_ids: list[str]) -> KVWardenConfig:
+    return KVWardenConfig(
         models=[
             ModelConfig(model_id=mid, short_name=mid, engine="vllm", dtype="bfloat16")
             for mid in model_ids

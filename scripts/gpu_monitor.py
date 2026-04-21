@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Background GPU metrics collector for InferGrid experiments.
+"""Background GPU metrics collector for KVWarden experiments.
 
 Polls GPU metrics via pynvml every 500ms and writes incrementally to CSV.
 Designed to run as a background process during profiling runs.
@@ -278,7 +278,7 @@ def run_collector(
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description="Background GPU metrics collector for InferGrid experiments",
+        description="Background GPU metrics collector for KVWarden experiments",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(

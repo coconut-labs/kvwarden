@@ -4,11 +4,11 @@ Pins the three pillars of the 2026-04-21 audit fix:
 
 1. Four dead metrics (cache_hits, cache_misses, cache_memory_bytes,
    gpu_memory_used_bytes) are no longer registered.
-2. `infergrid_requests_total` has the new `engine` label.
+2. `kvwarden_requests_total` has the new `engine` label.
 3. Three new metrics are registered with the right names + labels:
-   - `infergrid_engine_up{model,engine}` gauge
-   - `infergrid_engine_cold_start_seconds{model,engine}` histogram
-   - `infergrid_sse_stream_disconnect_total{reason}` counter
+   - `kvwarden_engine_up{model,engine}` gauge
+   - `kvwarden_engine_cold_start_seconds{model,engine}` histogram
+   - `kvwarden_sse_stream_disconnect_total{reason}` counter
 
 Each test creates an isolated ``CollectorRegistry`` so the suite stays
 process-safe regardless of ordering.
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from prometheus_client import CollectorRegistry
 
-from infergrid.common.metrics import MetricsCollector
+from kvwarden.common.metrics import MetricsCollector
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -29,7 +29,7 @@ def _registered_metric_names(m: MetricsCollector) -> set[str]:
     """Return every metric family name currently in the collector's registry.
 
     ``fam.name`` is the prometheus_client "stem" — for a Counter declared
-    as ``infergrid_requests_total`` it returns ``infergrid_requests``.
+    as ``kvwarden_requests_total`` it returns ``kvwarden_requests``.
     """
     return {fam.name for fam in m._registry.collect()}
 
@@ -38,7 +38,7 @@ def _label_names_for(m: MetricsCollector, metric_stem: str) -> set[str]:
     """Return the label names present on samples for ``metric_stem``.
 
     ``metric_stem`` is the family-level name as prometheus_client reports
-    it (e.g. ``infergrid_requests`` for the ``infergrid_requests_total``
+    it (e.g. ``kvwarden_requests`` for the ``kvwarden_requests_total``
     counter). Drops the histogram-only ``le`` label.
     """
     labels: set[str] = set()
@@ -61,19 +61,19 @@ class TestDeadMetricsRemoved:
 
     def test_cache_hits_not_registered(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
-        assert "infergrid_cache_hits" not in _registered_metric_names(m)
+        assert "kvwarden_cache_hits" not in _registered_metric_names(m)
 
     def test_cache_misses_not_registered(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
-        assert "infergrid_cache_misses" not in _registered_metric_names(m)
+        assert "kvwarden_cache_misses" not in _registered_metric_names(m)
 
     def test_cache_memory_bytes_not_registered(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
-        assert "infergrid_cache_memory_bytes" not in _registered_metric_names(m)
+        assert "kvwarden_cache_memory_bytes" not in _registered_metric_names(m)
 
     def test_gpu_memory_used_bytes_not_registered(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
-        assert "infergrid_gpu_memory_used_bytes" not in _registered_metric_names(m)
+        assert "kvwarden_gpu_memory_used_bytes" not in _registered_metric_names(m)
 
     def test_no_dead_metrics_in_prometheus_output(self) -> None:
         """Belt-and-braces: a fresh collector must not render any of the
@@ -81,10 +81,10 @@ class TestDeadMetricsRemoved:
         m = MetricsCollector(registry=CollectorRegistry())
         out = m.prometheus_output().decode()
         for name in (
-            "infergrid_cache_hits_total",
-            "infergrid_cache_misses_total",
-            "infergrid_cache_memory_bytes",
-            "infergrid_gpu_memory_used_bytes",
+            "kvwarden_cache_hits_total",
+            "kvwarden_cache_misses_total",
+            "kvwarden_cache_memory_bytes",
+            "kvwarden_gpu_memory_used_bytes",
         ):
             assert name not in out, f"dead metric {name} still exposed"
 
@@ -99,12 +99,12 @@ class TestDeadMetricsRemoved:
 
 
 # ---------------------------------------------------------------------------
-# 2. `engine` label on infergrid_requests_total
+# 2. `engine` label on kvwarden_requests_total
 # ---------------------------------------------------------------------------
 
 
 class TestRequestsTotalEngineLabel:
-    """`infergrid_requests_total` must carry a `{engine}` label so
+    """`kvwarden_requests_total` must carry a `{engine}` label so
     dashboards can split 5xx by engine kind (vllm / sglang)."""
 
     def test_requests_total_has_engine_label(self) -> None:
@@ -117,8 +117,8 @@ class TestRequestsTotalEngineLabel:
             engine="vllm",
         )
         # prometheus_client's family name strips the `_total` suffix on
-        # counters — the wire-level metric stays `infergrid_requests_total`.
-        assert "engine" in _label_names_for(m, "infergrid_requests")
+        # counters — the wire-level metric stays `kvwarden_requests_total`.
+        assert "engine" in _label_names_for(m, "kvwarden_requests")
 
     def test_requests_total_splits_by_engine(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
@@ -160,24 +160,24 @@ class TestNewMetricsRegistered:
     def test_engine_up_registered_with_labels(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.set_engine_up(model="llama31-8b", engine="vllm", up=True)
-        assert "infergrid_engine_up" in _registered_metric_names(m)
-        assert _label_names_for(m, "infergrid_engine_up") == {"model", "engine"}
+        assert "kvwarden_engine_up" in _registered_metric_names(m)
+        assert _label_names_for(m, "kvwarden_engine_up") == {"model", "engine"}
 
     def test_engine_up_values(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.set_engine_up(model="m", engine="vllm", up=True)
         m.set_engine_up(model="m2", engine="sglang", up=False)
         out = m.prometheus_output().decode()
-        assert 'infergrid_engine_up{engine="vllm",model="m"} 1.0' in out
-        assert 'infergrid_engine_up{engine="sglang",model="m2"} 0.0' in out
+        assert 'kvwarden_engine_up{engine="vllm",model="m"} 1.0' in out
+        assert 'kvwarden_engine_up{engine="sglang",model="m2"} 0.0' in out
 
     # ---- engine_cold_start_seconds ---------------------------------
 
     def test_cold_start_histogram_registered_with_labels(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.record_cold_start(model="m", engine="vllm", duration_s=42.0)
-        assert "infergrid_engine_cold_start_seconds" in _registered_metric_names(m)
-        labels = _label_names_for(m, "infergrid_engine_cold_start_seconds")
+        assert "kvwarden_engine_cold_start_seconds" in _registered_metric_names(m)
+        labels = _label_names_for(m, "kvwarden_engine_cold_start_seconds")
         assert labels == {"model", "engine"}
 
     def test_cold_start_buckets_cover_10s_to_600s(self) -> None:
@@ -195,7 +195,7 @@ class TestNewMetricsRegistered:
         out = m.prometheus_output().decode()
         # No observations landed → _count stays 0.
         assert (
-            'infergrid_engine_cold_start_seconds_count{engine="vllm",model="m"}'
+            'kvwarden_engine_cold_start_seconds_count{engine="vllm",model="m"}'
             not in out
         )
 
@@ -204,8 +204,8 @@ class TestNewMetricsRegistered:
     def test_sse_disconnect_counter_registered_with_reason_label(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.record_sse_disconnect(reason="client_disconnect")
-        assert "infergrid_sse_stream_disconnect" in _registered_metric_names(m)
-        assert _label_names_for(m, "infergrid_sse_stream_disconnect") == {"reason"}
+        assert "kvwarden_sse_stream_disconnect" in _registered_metric_names(m)
+        assert _label_names_for(m, "kvwarden_sse_stream_disconnect") == {"reason"}
 
     def test_sse_disconnect_three_reasons(self) -> None:
         """All three reason values must round-trip through the counter."""
@@ -231,20 +231,20 @@ class TestSurvivingMetricsIntact:
     def test_tenant_ttft_still_present(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.record_ttft(model="m", tenant="t", ttft_s=0.05)
-        assert "infergrid_tenant_ttft_seconds" in _registered_metric_names(m)
+        assert "kvwarden_tenant_ttft_seconds" in _registered_metric_names(m)
 
     def test_request_latency_still_present(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.record_request(
             model="m", tenant="t", status="ok", latency_s=0.1, engine="vllm"
         )
-        assert "infergrid_request_latency_seconds" in _registered_metric_names(m)
+        assert "kvwarden_request_latency_seconds" in _registered_metric_names(m)
 
     def test_models_loaded_gauge_still_present(self) -> None:
         m = MetricsCollector(registry=CollectorRegistry())
         m.models_loaded.inc()
         out = m.prometheus_output().decode()
-        assert "infergrid_models_loaded" in out
+        assert "kvwarden_models_loaded" in out
 
     def test_snapshot_still_returns_dict_without_cache_keys(self) -> None:
         """`snapshot()` used to emit cache_hit_rate / cache_hits / cache_misses
