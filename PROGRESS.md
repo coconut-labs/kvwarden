@@ -1,6 +1,6 @@
 # InferGrid — Project Progress
 
-**Last updated:** April 19, 2026 (pre-launch sprint, post PR #61)
+**Last updated:** April 21, 2026 (post-launch-polish + PyPI 0.1.2 + LP live at infergrid.org, through PR #76)
 **Repository:** [coconut-labs/infergrid](https://github.com/coconut-labs/infergrid)
 **Author:** Shrey Patel (patelshrey77@gmail.com)
 
