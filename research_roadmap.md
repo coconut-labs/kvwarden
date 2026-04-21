@@ -1,6 +1,10 @@
 # Research Roadmap: InferGrid
 
-> **Status update (April 19, 2026):** Phase 1 profiling complete. Gate 0 (system bring-up) and Gate 1 (admission control hypothesis) shipped. **The Phase 1 "scheduling cliff" claim was measured with a broken TTFT path** (PR #28/#31 fixed it: pre-fix bench timed SSE first-frame RTT, not first non-empty token). Gate 1 on H100 SXM5 with honest TTFT did NOT reproduce the 7× cliff at c=128→c=256 — but Gate 1's bench wall (10s/cell) was too short to test the hypothesis under sustained cap pressure (Little's Law, see `results/gate1_20260419/GATE1_OUTCOME.md`). **Gate 1.5 (rerun with `--num-requests 4000`) is the next cliff-test**; Gate 2-lite (multi-model contention) is the next test of the actual InferGrid pitch. See `PROGRESS.md` "Strategic Plan" section for the 4-week roadmap.
+> **Status update (April 21, 2026):** the scheduling-cliff thesis has been *robustly DISCONFIRMED* (Gate 1.5, H100 SXM5, 16k requests/arm — see [`results/gate1_5_20260419/GATE1_5_OUTCOME.md`](results/gate1_5_20260419/GATE1_5_OUTCOME.md)). The project has pivoted to a **tenant-fairness hero**: quiet-tenant TTFT p99 under a 32-RPS flooder drops from 1,585 ms (FIFO) to 61.5 ms (token-bucket rate-limit), within 1.14× of the 53.9 ms solo baseline — CONFIRMED at N=2 (Gate 2-FAIRNESS v3) and N=6 (Track C). See the [launch post](docs/launch/gate0_launch_post.md) for the full story.
+>
+> **Post-launch gate ladder** (queued for execution at ~$63 of a $72 RunPod budget, configs already on `main`): Gate 2.1 (N=8 scaling), Gate 2.4 (Mixtral-8×7B MoE, TP=2), Gate 2.3 (Llama-3.1-70B, TP=4). Gate 2.2 (mixed prompt-length distribution) is blocked on a prerequisite harness PR. Gate 2.5 (32K long-context + memory-pressure fairness) defers to v0.3 when [LMCache](https://github.com/LMCache/LMCache) lands in the hot path. See the [post-launch tracking issue](https://github.com/coconut-labs/infergrid/issues/69) for the full backlog.
+>
+> The sections below are **pre-pivot** (April 19) and are kept for provenance. Read the launch post and the tracking issue first; use this file only for the historical claim-ledger.
 
 ## Revised Thesis: Middleware-Level Admission Control and Multi-Model Lifecycle for LLM Inference
 

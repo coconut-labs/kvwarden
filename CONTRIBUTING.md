@@ -9,13 +9,23 @@ Thank you for your interest in contributing to InferGrid! This document provides
 git clone https://github.com/coconut-labs/infergrid.git
 cd infergrid
 
-# Install with dev dependencies
+# Install with dev dependencies (pulls pytest, ruff, pytest-asyncio, etc.)
 pip install -e ".[dev,profiling]"
 
-# Run tests
+# Run the unit test suite (no GPU needed, ~10 s)
 pytest tests/unit/ -v
+
+# Run the integration suite (needs a running server or a mocked engine)
 pytest tests/integration/ -v
+
+# The lint + format gates CI enforces — run these before you push so the
+# PR doesn't bounce on the ruff check:
+ruff check src/ tests/
+ruff format --check src/ tests/
 ```
+
+CI runs the test matrix on Python 3.11 and 3.12 plus the ruff gate; a red
+PR cannot merge to `main`. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Architecture Overview
 
@@ -66,7 +76,8 @@ See `scripts/cloud_benchmark.sh` for full options.
 - Keep PRs focused — one feature or fix per PR
 - Include benchmark results if your change affects performance
 - Add type hints to all public functions
-- Follow existing code style (no linter enforced, just be consistent)
+- Style is enforced by `ruff` in CI (see Development Setup above). `ruff check` + `ruff format --check` must pass; run `ruff format src/ tests/` locally to fix formatting automatically.
+- Branch protection requires all 3 CI checks (`test (py3.11)`, `test (py3.12)`, `lint (ruff)`) passing + 1 review.
 
 ## Reporting Issues
 
