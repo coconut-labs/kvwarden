@@ -4,7 +4,7 @@
 **Hardware:** 1x NVIDIA H100 80GB HBM3 SXM5 on RunPod (SECURE on-demand, $2.99/hr, pod `cpjk1k4rzzh1qb`)
 **Model:** `meta-llama/Llama-3.1-8B-Instruct`, bfloat16, max_model_len=4096, gpu_memory_utilization=0.85 (0.80 for N=32)
 **main tip at bench start:** `64b19a7` (launch: Show HN + Twitter + FAQ + one-pager drafts, #87)
-**Total bench wall-clock:** ~51 min (13:31 -> 14:22 UTC). Pod lifetime ~87 min -> **~$4.33 actual cost** (ceiling $20; cut-scope trigger at $15 never hit).
+**Total bench wall-clock:** ~51 min (13:31 -> 14:22 UTC). Pod lifetime 93.1 min (12:55:38 created -> 14:28:47 deleted UTC) -> **$4.64 actual cost** (ceiling $20; cut-scope trigger at $15 never hit).
 **vllm:** 0.19.1 - **transformers:** 4.57.6 (pinned <5.0, post-PR #16 hardening)
 
 ## TL;DR
