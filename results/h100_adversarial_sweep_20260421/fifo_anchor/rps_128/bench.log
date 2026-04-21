@@ -1,0 +1,16 @@
+2026-04-21 14:00:54,931 [INFO] __main__: Bench: 1 flooder @ 128.0 RPS + 7 quiet @ 1.0 RPS each, duration=180s, model=meta-llama/Llama-3.1-8B-Instruct
+2026-04-21 14:00:54,932 [INFO] __main__: TCPConnector limit=2025
+2026-04-21 14:03:58,920 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_flooder.csv (21465 rows)
+2026-04-21 14:03:59,013 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_0.csv (196 rows)
+2026-04-21 14:03:59,074 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_1.csv (174 rows)
+2026-04-21 14:03:59,139 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_2.csv (177 rows)
+2026-04-21 14:03:59,246 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_3.csv (185 rows)
+2026-04-21 14:03:59,287 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_4.csv (177 rows)
+2026-04-21 14:03:59,327 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_5.csv (173 rows)
+2026-04-21 14:03:59,346 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/tenant_quiet_6.csv (175 rows)
+2026-04-21 14:03:59,424 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/fifo_anchor/rps_128/summary.json
+2026-04-21 14:03:59,425 [INFO] __main__: ============================================================
+2026-04-21 14:03:59,426 [INFO] __main__: QUIET AGG (n=1257) p50=46.8ms p99=91.2ms max=160.8ms
+2026-04-21 14:03:59,427 [INFO] __main__: FLOOD     (n=21465) p50=45.8ms p99=67.6ms max=169.7ms
+2026-04-21 14:03:59,428 [INFO] __main__: Per-quiet p99 spread: min=64.1 max=136.6 ratio=2.13x
+2026-04-21 14:03:59,428 [INFO] __main__: ============================================================

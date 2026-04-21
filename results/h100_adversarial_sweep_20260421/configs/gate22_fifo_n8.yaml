@@ -1,0 +1,27 @@
+# Gate 2.2 Arm 1 — N=8 FIFO (no fairness), mixed prompt distribution.
+# Derived from prior Gate 2.1 FIFO config (committed on repo at
+# results/gate21_n8_20260421/gate21_fifo/config.yaml), reused for Gate 2.2.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 512
+admission_queue_size: 4096
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 256
+  rate_limit_rpm: 999999
+  priority: 1
+  scheduling: fifo
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1

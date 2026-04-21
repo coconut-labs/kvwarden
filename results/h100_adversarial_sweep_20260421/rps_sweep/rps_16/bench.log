@@ -1,0 +1,16 @@
+2026-04-21 13:41:42,035 [INFO] __main__: Bench: 1 flooder @ 16.0 RPS + 7 quiet @ 1.0 RPS each, duration=180s, model=meta-llama/Llama-3.1-8B-Instruct
+2026-04-21 13:41:42,036 [INFO] __main__: TCPConnector limit=345
+2026-04-21 13:44:45,587 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_flooder.csv (2881 rows)
+2026-04-21 13:44:45,617 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_0.csv (196 rows)
+2026-04-21 13:44:45,842 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_1.csv (174 rows)
+2026-04-21 13:44:45,866 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_2.csv (177 rows)
+2026-04-21 13:44:45,883 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_3.csv (185 rows)
+2026-04-21 13:44:45,907 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_4.csv (177 rows)
+2026-04-21 13:44:45,923 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_5.csv (173 rows)
+2026-04-21 13:44:45,938 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/tenant_quiet_6.csv (175 rows)
+2026-04-21 13:44:45,953 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/rps_sweep/rps_16/summary.json
+2026-04-21 13:44:45,954 [INFO] __main__: ============================================================
+2026-04-21 13:44:45,954 [INFO] __main__: QUIET AGG (n=1257) p50=37.0ms p99=1980.6ms max=2564.7ms
+2026-04-21 13:44:45,954 [INFO] __main__: FLOOD     (n=1807) p50=36.5ms p99=1856.5ms max=2573.5ms
+2026-04-21 13:44:45,955 [INFO] __main__: Per-quiet p99 spread: min=1781.8 max=2315.5 ratio=1.30x
+2026-04-21 13:44:45,955 [INFO] __main__: ============================================================

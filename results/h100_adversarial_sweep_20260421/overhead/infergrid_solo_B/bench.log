@@ -1,0 +1,10 @@
+2026-04-21 13:35:03,735 [INFO] __main__: Bench: 1 flooder @ 0.0 RPS + 1 quiet @ 1.0 RPS each, duration=120s, model=meta-llama/Llama-3.1-8B-Instruct
+2026-04-21 13:35:03,735 [INFO] __main__: TCPConnector limit=256
+2026-04-21 13:37:05,545 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/overhead/infergrid_solo_B/tenant_flooder.csv (0 rows)
+2026-04-21 13:37:05,585 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/overhead/infergrid_solo_B/tenant_quiet_0.csv (113 rows)
+2026-04-21 13:37:05,634 [INFO] __main__: Wrote /workspace/results/h100_adversarial_sweep_20260421/overhead/infergrid_solo_B/summary.json
+2026-04-21 13:37:05,634 [INFO] __main__: ============================================================
+2026-04-21 13:37:05,635 [INFO] __main__: QUIET AGG (n=113) p50=33.6ms p99=58.9ms max=60.3ms
+2026-04-21 13:37:05,635 [INFO] __main__: FLOOD     (n=0) p50=-1ms p99=-1ms max=-1ms
+2026-04-21 13:37:05,636 [INFO] __main__: Per-quiet p99 spread: min=58.9 max=58.9 ratio=1.00x
+2026-04-21 13:37:05,636 [INFO] __main__: ============================================================
