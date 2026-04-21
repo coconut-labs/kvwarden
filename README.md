@@ -76,6 +76,16 @@ curl localhost:8000/metrics | grep -E "tenant_rejected|admission_queue_depth"
 
 The [`quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily commented. For a deeper "when to use which lever" treatment, see the [Tuning Guide](docs/tuning_guide.md) — every recommendation in it traces back to a specific experiment.
 
+More CLI surface (0.1.2+):
+
+```bash
+infergrid --version         # "infergrid 0.1.2"
+infergrid doctor            # env check: Python, GPU, engines, port, PyPI version
+infergrid man               # overview of commands + mental model
+infergrid man tenants       # fairness mental model + v3 numbers
+infergrid man topics        # list all bundled help pages
+```
+
 ## Architecture
 
 ```
@@ -103,7 +113,7 @@ The [`quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily co
 | TenantManager | Per-tenant budgets, **token-bucket rate limiting** (refill + burst capacity), DRR priority scoring | `src/infergrid/tenant/manager.py` (267 LOC) |
 | Engine Adapters | Subprocess management for vLLM/SGLang, health checks, HTTP proxying | `src/infergrid/engines/` (277 LOC) |
 
-Total: 2,872 LOC src + 2,400+ LOC tests (144 unit tests passing).
+Total: 4,100 LOC src + 2,900 LOC tests (153 unit tests passing, ~10 s on CPU).
 
 ## Empirical results
 
@@ -124,7 +134,9 @@ Total compute spend: ~$13. Full raw artifacts and per-window traces in `results/
 ## Tests
 
 ```bash
-pytest tests/unit/        # 144 tests, no GPU required, ~10 s
+pytest tests/unit/        # 153 tests, no GPU required, ~10 s
+ruff check src/ tests/    # lint gate enforced in CI
+ruff format --check src/ tests/
 ```
 
 ## Roadmap
@@ -137,19 +149,25 @@ pytest tests/unit/        # 144 tests, no GPU required, ~10 s
 | Gate 0.6 — bench harness validation | ✅ Done | Real vLLM end-to-end |
 | Gate 1.5 — single-model admission test | ✅ Done | Falsified the original "scheduling cliff" pitch |
 | Gate 2-FAIRNESS — multi-tenant fairness | ✅ Done | Hero number; this README's lead chart |
-| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page; ship-gated on waitlist backend (Cloudflare Worker) |
-| Gate 2-lite — multi-model contention | Post-launch | InferGrid's other differentiator vs Ollama; never benchmarked |
-| KV cache tiering (LMCache integration) | Post-launch | Phase 3 of original roadmap |
-| Multi-engine routing (vLLM ↔ SGLang) | Post-launch | Phase 1 hinted SGLang 2.2× better at TTFT at c=256 |
+| **Launch** | **Tue 2026-05-12** | HN + r/LocalLLaMA + landing page at [infergrid.org](https://infergrid.org); waitlist backend + launch post merged (PR #20) |
+| Gate 2.1 — N=8 tenant scaling | Post-launch, day 1 | Extends N=6 CONFIRM to N=8 on 1×A100; config: [`gate21_fairness_n8.yaml`](configs/gate21_fairness_n8.yaml) |
+| Gate 2.4 — Mixtral-8×7B MoE fairness | Post-launch | First MoE test; 2×A100 TP=2; config: [`gate24_fairness_mixtral_tp2.yaml`](configs/gate24_fairness_mixtral_tp2.yaml) |
+| Gate 2.3 — Llama-3.1-70B on 4×A100 TP=4 | Post-launch | Frontier credibility; config: [`gate23_fairness_70b_tp4.yaml`](configs/gate23_fairness_70b_tp4.yaml). ~$36 spend, on-demand SECURE required |
+| Gate 2.2 — mixed prompt-length distribution | Post-launch | Blocked on harness PR (`benchmark_n_tenant_single_model.py` needs a `--prompt-length-dist` flag) |
+| Gate 2-lite — multi-model contention vs Ollama | Post-launch | InferGrid's other differentiator vs Ollama; never benchmarked |
+| KV cache tiering (LMCache integration) | v0.3 | Phase 3 of original roadmap; unblocks Gate 2.5 (32K long-context fairness) |
+| Multi-engine routing (vLLM ↔ SGLang) | v0.2.1 | Phase 1 hinted SGLang 2.2× better at TTFT at c=256 — needs re-validation on v0.19 |
 
 ## Research artifacts
 
+- [**Launch post**: "your quiet tenant doesn't have to lose to the noisy one"](docs/launch/gate0_launch_post.md) — the story of the hero number and how it was measured
 - [Gate 2-FAIRNESS OUTCOME](results/gate2_fairness_20260419/GATE2_FAIRNESS_OUTCOME.md) + [SUPPLEMENT (Arm 5b)](results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm5b.md) + [SUPPLEMENT (Arm 6)](results/gate2_fairness_20260419/GATE2_FAIRNESS_SUPPLEMENT_arm6.md)
 - [Gate 1.5 OUTCOME](results/gate1_5_20260419/GATE1_5_OUTCOME.md)
 - [Gate 1 OUTCOME (with Little's Law caveat)](results/gate1_20260419/GATE1_OUTCOME.md)
 - [Tuning Guide](docs/tuning_guide.md) — when to use which lever, with empirical evidence
 - [Inference Orchestration Gap Analysis](docs/inference_orchestration_gaps_report.md) — competitive landscape (April 2026)
 - [Corrections / measurement honesty log](results/CORRECTIONS.md) — every metric we under-counted and the fix
+- [Post-launch tracking backlog](https://github.com/coconut-labs/infergrid/issues/69) — gates 2.1-2.5 + community/infra/docs items
 
 ## Contributing
 
