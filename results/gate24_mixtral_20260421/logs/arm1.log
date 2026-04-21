@@ -1,0 +1,12 @@
+2026-04-21 04:42:31,898 [INFO] __main__: Bench: 1 flooder @ 16.0 RPS + 3 quiet @ 1.0 RPS each, duration=300s, model=mistralai/Mixtral-8x7B-Instruct-v0.1
+2026-04-21 04:42:31,898 [INFO] __main__: TCPConnector limit=285
+2026-04-21 04:47:34,295 [INFO] __main__: Wrote /workspace/gate24_fifo/tenant_flooder.csv (4781 rows)
+2026-04-21 04:47:34,298 [INFO] __main__: Wrote /workspace/gate24_fifo/tenant_quiet_0.csv (321 rows)
+2026-04-21 04:47:34,301 [INFO] __main__: Wrote /workspace/gate24_fifo/tenant_quiet_1.csv (297 rows)
+2026-04-21 04:47:34,304 [INFO] __main__: Wrote /workspace/gate24_fifo/tenant_quiet_2.csv (298 rows)
+2026-04-21 04:47:34,307 [INFO] __main__: Wrote /workspace/gate24_fifo/summary.json
+2026-04-21 04:47:34,307 [INFO] __main__: ============================================================
+2026-04-21 04:47:34,308 [INFO] __main__: QUIET AGG (n=916) p50=97.4ms p99=122.7ms max=424.0ms
+2026-04-21 04:47:34,308 [INFO] __main__: FLOOD     (n=4781) p50=97.2ms p99=116.0ms max=393.4ms
+2026-04-21 04:47:34,308 [INFO] __main__: Per-quiet p99 spread: min=117.0 max=175.6 ratio=1.50x
+2026-04-21 04:47:34,308 [INFO] __main__: ============================================================

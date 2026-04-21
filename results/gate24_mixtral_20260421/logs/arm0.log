@@ -1,0 +1,8 @@
+2026-04-21 04:30:55,975 [INFO] __main__: Bench: 1 flooder @ 1.0 RPS + 0 quiet @ 0.0 RPS each, duration=300s, model=mistralai/Mixtral-8x7B-Instruct-v0.1
+2026-04-21 04:30:55,976 [INFO] __main__: TCPConnector limit=256
+2026-04-21 04:35:56,756 [INFO] __main__: Wrote /workspace/gate24_solo/tenant_flooder.csv (300 rows)
+2026-04-21 04:35:56,757 [INFO] __main__: Wrote /workspace/gate24_solo/summary.json
+2026-04-21 04:35:56,757 [INFO] __main__: ============================================================
+2026-04-21 04:35:56,758 [INFO] __main__: QUIET AGG (n=0) p50=-1ms p99=-1ms max=-1ms
+2026-04-21 04:35:56,758 [INFO] __main__: FLOOD     (n=300) p50=48.1ms p99=84.9ms max=160.5ms
+2026-04-21 04:35:56,758 [INFO] __main__: ============================================================

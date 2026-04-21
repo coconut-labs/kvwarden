@@ -1,0 +1,36 @@
+{
+  "wall_time_s": 300.77,
+  "flooder": {
+    "count_ok": 300,
+    "count_err": 0,
+    "ttft_p50_ms": 48.1,
+    "ttft_p95_ms": 75.3,
+    "ttft_p99_ms": 84.9,
+    "ttft_max_ms": 160.5,
+    "total_p50_ms": 1046.4,
+    "total_p99_ms": 1868.5,
+    "tokens_out_mean": 110.8
+  },
+  "quiet_aggregate": {
+    "count_ok": 0,
+    "count_err": 0,
+    "ttft_p50_ms": -1,
+    "ttft_p95_ms": -1,
+    "ttft_p99_ms": -1,
+    "ttft_max_ms": -1,
+    "total_p50_ms": -1,
+    "total_p99_ms": -1,
+    "tokens_out_mean": 0
+  },
+  "quiet_per_tenant": {},
+  "bench_args": {
+    "flooder_rps": 1.0,
+    "quiet_rps": 0.0,
+    "num_quiet": 0,
+    "duration_s": 300.0,
+    "max_tokens": 128,
+    "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "seed": 42,
+    "prompt_length_dist": ""
+  }
+}

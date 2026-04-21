@@ -1,0 +1,12 @@
+2026-04-21 04:53:08,137 [INFO] __main__: Bench: 1 flooder @ 16.0 RPS + 3 quiet @ 1.0 RPS each, duration=300s, model=mistralai/Mixtral-8x7B-Instruct-v0.1
+2026-04-21 04:53:08,137 [INFO] __main__: TCPConnector limit=285
+2026-04-21 04:58:10,258 [INFO] __main__: Wrote /workspace/gate24_tokenbucket/tenant_flooder.csv (4786 rows)
+2026-04-21 04:58:10,262 [INFO] __main__: Wrote /workspace/gate24_tokenbucket/tenant_quiet_0.csv (321 rows)
+2026-04-21 04:58:10,265 [INFO] __main__: Wrote /workspace/gate24_tokenbucket/tenant_quiet_1.csv (297 rows)
+2026-04-21 04:58:10,268 [INFO] __main__: Wrote /workspace/gate24_tokenbucket/tenant_quiet_2.csv (298 rows)
+2026-04-21 04:58:10,270 [INFO] __main__: Wrote /workspace/gate24_tokenbucket/summary.json
+2026-04-21 04:58:10,271 [INFO] __main__: ============================================================
+2026-04-21 04:58:10,271 [INFO] __main__: QUIET AGG (n=916) p50=93.1ms p99=109.7ms max=173.0ms
+2026-04-21 04:58:10,271 [INFO] __main__: FLOOD     (n=3009) p50=92.9ms p99=109.0ms max=159.0ms
+2026-04-21 04:58:10,271 [INFO] __main__: Per-quiet p99 spread: min=108.9 max=111.0 ratio=1.02x
+2026-04-21 04:58:10,271 [INFO] __main__: ============================================================

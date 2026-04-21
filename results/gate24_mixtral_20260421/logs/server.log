@@ -1,0 +1,921 @@
+2026-04-21 04:24:04,521 [infergrid.router.admission] INFO: AdmissionController initialized: max_concurrent=256, queue_size=2048
+2026-04-21 04:24:04,521 [infergrid.engines.base] INFO: Starting vLLM server: python -m vllm.entrypoints.openai.api_server --model mistralai/Mixtral-8x7B-Instruct-v0.1 --port 8002 --gpu-memory-utilization 0.88 --tensor-parallel-size 2 --dtype bfloat16 --max-model-len 4096
+2026-04-21 04:24:04,522 [infergrid.engines.base] INFO: vLLM engine log: /tmp/infergrid_engine_vllm_mistralai_Mixtral-8x7B-Instruct-v0.1_p8002.log
+2026-04-21 04:26:58,927 [infergrid.engines.base] INFO: vLLM server ready on port 8002 for model mistralai/Mixtral-8x7B-Instruct-v0.1
+2026-04-21 04:26:58,927 [infergrid.router.router] INFO: Loaded model mistralai/Mixtral-8x7B-Instruct-v0.1 on port 8002
+2026-04-21 04:26:58,927 [infergrid.router.router] INFO: WorkloadRouter started with 1 models, 8 queue workers
+✓ InferGrid serving on http://0.0.0.0:8000 with 1 model(s)
+  Models: mistralai/Mixtral-8x7B-Instruct-v0.1
+  GPU budget: 92%
+  /health ready check: curl -fs localhost:8000/health
+2026-04-21 04:27:19,364 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:27:19 +0000] "GET /health HTTP/1.1" 200 234 "-" "curl/7.81.0"
+2026-04-21 04:28:05,130 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:28:05 +0000] "GET /health HTTP/1.1" 200 234 "-" "curl/7.81.0"
+2026-04-21 04:28:50,890 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:28:50 +0000] "GET /health HTTP/1.1" 200 234 "-" "curl/7.81.0"
+2026-04-21 04:29:36,661 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:29:36 +0000] "GET /health HTTP/1.1" 200 234 "-" "curl/7.81.0"
+2026-04-21 04:30:32,296 [infergrid.router.router] INFO: req_id=r745832296 ENTER model=mixtral-8x7b tenant=test stream=False path=/v1/completions
+2026-04-21 04:30:32,297 [infergrid.router.router] WARNING: req_id=r745832296 EXIT 404 value_error detail=Unknown model 'mixtral-8x7b'. Known models: ['mistralai/Mixtral-8x7B-Instruct-v0.1']
+2026-04-21 04:30:32,297 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:32 +0000] "POST /v1/completions HTTP/1.1" 404 263 "-" "curl/7.81.0"
+2026-04-21 04:30:37,588 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:37 +0000] "GET /v1/models HTTP/1.1" 200 315 "-" "curl/7.81.0"
+2026-04-21 04:30:43,627 [infergrid.router.router] INFO: req_id=r745843627 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=smoke stream=False path=/v1/completions
+2026-04-21 04:30:44,298 [infergrid.router.router] INFO: req_id=r745843627 EXIT 200 json_complete
+2026-04-21 04:30:44,300 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:43 +0000] "POST /v1/completions HTTP/1.1" 200 687 "-" "curl/7.81.0"
+2026-04-21 04:30:55,981 [infergrid.router.router] INFO: req_id=r745855981 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:56,003 [infergrid.router.router] INFO: req_id=r745856003 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:56,285 [infergrid.router.router] INFO: req_id=r745856285 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:57,317 [infergrid.router.router] INFO: req_id=r745855981 EXIT 200 stream_complete
+2026-04-21 04:30:57,320 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:55 +0000] "POST /v1/completions HTTP/1.1" 200 32455 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:30:57,479 [infergrid.router.router] INFO: req_id=r745856003 EXIT 200 stream_complete
+2026-04-21 04:30:57,479 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:56 +0000] "POST /v1/completions HTTP/1.1" 200 36941 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:30:57,622 [infergrid.router.router] INFO: req_id=r745857622 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:57,675 [infergrid.router.router] INFO: req_id=r745856285 EXIT 200 stream_complete
+2026-04-21 04:30:57,676 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:56 +0000] "POST /v1/completions HTTP/1.1" 200 37123 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:30:58,461 [infergrid.router.router] INFO: req_id=r745857622 EXIT 200 stream_complete
+2026-04-21 04:30:58,462 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:57 +0000] "POST /v1/completions HTTP/1.1" 200 37062 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:30:58,513 [infergrid.router.router] INFO: req_id=r745858513 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:58,544 [infergrid.router.router] INFO: req_id=r745858544 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:58,809 [infergrid.router.router] INFO: req_id=r745858809 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:58,903 [infergrid.router.router] INFO: req_id=r745858544 EXIT 200 stream_complete
+2026-04-21 04:30:58,903 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:58 +0000] "POST /v1/completions HTTP/1.1" 200 6783 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:30:59,634 [infergrid.router.router] INFO: req_id=r745859634 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:30:59,848 [infergrid.router.router] INFO: req_id=r745858513 EXIT 200 stream_complete
+2026-04-21 04:30:59,848 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:58 +0000] "POST /v1/completions HTTP/1.1" 200 37070 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:30:59,885 [infergrid.router.router] INFO: req_id=r745859885 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:00,111 [infergrid.router.router] INFO: req_id=r745858809 EXIT 200 stream_complete
+2026-04-21 04:31:00,112 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:58 +0000] "POST /v1/completions HTTP/1.1" 200 37090 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:00,928 [infergrid.router.router] INFO: req_id=r745859634 EXIT 200 stream_complete
+2026-04-21 04:31:00,929 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:59 +0000] "POST /v1/completions HTTP/1.1" 200 37011 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:01,045 [infergrid.router.router] INFO: req_id=r745859885 EXIT 200 stream_complete
+2026-04-21 04:31:01,045 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:30:59 +0000] "POST /v1/completions HTTP/1.1" 200 36438 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:01,543 [infergrid.router.router] INFO: req_id=r745861543 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:02,373 [infergrid.router.router] INFO: req_id=r745861543 EXIT 200 stream_complete
+2026-04-21 04:31:02,373 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:01 +0000] "POST /v1/completions HTTP/1.1" 200 37105 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:02,967 [infergrid.router.router] INFO: req_id=r745862967 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:03,797 [infergrid.router.router] INFO: req_id=r745862967 EXIT 200 stream_complete
+2026-04-21 04:31:03,798 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:02 +0000] "POST /v1/completions HTTP/1.1" 200 37147 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:04,166 [infergrid.router.router] INFO: req_id=r745864166 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:04,493 [infergrid.router.router] INFO: req_id=r745864492 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:05,207 [infergrid.router.router] INFO: req_id=r745864166 EXIT 200 stream_complete
+2026-04-21 04:31:05,207 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:04 +0000] "POST /v1/completions HTTP/1.1" 200 37181 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:05,527 [infergrid.router.router] INFO: req_id=r745864492 EXIT 200 stream_complete
+2026-04-21 04:31:05,528 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:04 +0000] "POST /v1/completions HTTP/1.1" 200 37043 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:07,648 [infergrid.router.router] INFO: req_id=r745867648 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:07,755 [infergrid.router.router] INFO: req_id=r745867755 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:07,858 [infergrid.router.router] INFO: req_id=r745867858 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:08,785 [infergrid.router.router] INFO: req_id=r745868785 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:09,165 [infergrid.router.router] INFO: req_id=r745867648 EXIT 200 stream_complete
+2026-04-21 04:31:09,165 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:07 +0000] "POST /v1/completions HTTP/1.1" 200 37152 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:09,352 [infergrid.router.router] INFO: req_id=r745867755 EXIT 200 stream_complete
+2026-04-21 04:31:09,352 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:07 +0000] "POST /v1/completions HTTP/1.1" 200 37037 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:09,449 [infergrid.router.router] INFO: req_id=r745867858 EXIT 200 stream_complete
+2026-04-21 04:31:09,449 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:07 +0000] "POST /v1/completions HTTP/1.1" 200 37094 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:09,915 [infergrid.router.router] INFO: req_id=r745868785 EXIT 200 stream_complete
+2026-04-21 04:31:09,915 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:08 +0000] "POST /v1/completions HTTP/1.1" 200 37094 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:10,093 [infergrid.router.router] INFO: req_id=r745870093 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:10,912 [infergrid.router.router] INFO: req_id=r745870093 EXIT 200 stream_complete
+2026-04-21 04:31:10,912 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:10 +0000] "POST /v1/completions HTTP/1.1" 200 37021 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:13,714 [infergrid.router.router] INFO: req_id=r745873714 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:13,797 [infergrid.router.router] INFO: req_id=r745873797 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:14,052 [infergrid.router.router] INFO: req_id=r745873797 EXIT 200 stream_complete
+2026-04-21 04:31:14,053 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:13 +0000] "POST /v1/completions HTTP/1.1" 200 7635 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:14,621 [infergrid.router.router] INFO: req_id=r745873714 EXIT 200 stream_complete
+2026-04-21 04:31:14,622 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:13 +0000] "POST /v1/completions HTTP/1.1" 200 37014 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:15,568 [infergrid.router.router] INFO: req_id=r745875568 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:16,398 [infergrid.router.router] INFO: req_id=r745875568 EXIT 200 stream_complete
+2026-04-21 04:31:16,399 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:15 +0000] "POST /v1/completions HTTP/1.1" 200 37116 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:16,431 [infergrid.router.router] INFO: req_id=r745876430 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:16,477 [infergrid.router.router] INFO: req_id=r745876477 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:17,170 [infergrid.router.router] INFO: req_id=r745876430 EXIT 200 stream_complete
+2026-04-21 04:31:17,170 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:16 +0000] "POST /v1/completions HTTP/1.1" 200 24061 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:17,512 [infergrid.router.router] INFO: req_id=r745876477 EXIT 200 stream_complete
+2026-04-21 04:31:17,512 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:16 +0000] "POST /v1/completions HTTP/1.1" 200 36956 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:17,961 [infergrid.router.router] INFO: req_id=r745877961 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:18,781 [infergrid.router.router] INFO: req_id=r745877961 EXIT 200 stream_complete
+2026-04-21 04:31:18,781 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:17 +0000] "POST /v1/completions HTTP/1.1" 200 36990 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:19,904 [infergrid.router.router] INFO: req_id=r745879904 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:20,377 [infergrid.router.router] INFO: req_id=r745880376 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:20,667 [infergrid.router.router] INFO: req_id=r745879904 EXIT 200 stream_complete
+2026-04-21 04:31:20,667 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:19 +0000] "POST /v1/completions HTTP/1.1" 200 30387 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:21,306 [infergrid.router.router] INFO: req_id=r745880376 EXIT 200 stream_complete
+2026-04-21 04:31:21,307 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:20 +0000] "POST /v1/completions HTTP/1.1" 200 37038 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:21,387 [infergrid.router.router] INFO: req_id=r745881387 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:21,566 [infergrid.router.router] INFO: req_id=r745881566 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:21,801 [infergrid.router.router] INFO: req_id=r745881801 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:22,755 [infergrid.router.router] INFO: req_id=r745881387 EXIT 200 stream_complete
+2026-04-21 04:31:22,756 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:21 +0000] "POST /v1/completions HTTP/1.1" 200 37111 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:22,991 [infergrid.router.router] INFO: req_id=r745881801 EXIT 200 stream_complete
+2026-04-21 04:31:22,992 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:21 +0000] "POST /v1/completions HTTP/1.1" 200 29199 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:23,000 [infergrid.router.router] INFO: req_id=r745881566 EXIT 200 stream_complete
+2026-04-21 04:31:23,001 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:21 +0000] "POST /v1/completions HTTP/1.1" 200 37199 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:23,012 [infergrid.router.router] INFO: req_id=r745883012 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:23,835 [infergrid.router.router] INFO: req_id=r745883012 EXIT 200 stream_complete
+2026-04-21 04:31:23,836 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:23 +0000] "POST /v1/completions HTTP/1.1" 200 37028 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:23,953 [infergrid.router.router] INFO: req_id=r745883953 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:24,719 [infergrid.router.router] INFO: req_id=r745884719 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:24,807 [infergrid.router.router] INFO: req_id=r745883953 EXIT 200 stream_complete
+2026-04-21 04:31:24,807 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:23 +0000] "POST /v1/completions HTTP/1.1" 200 37133 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:24,898 [infergrid.router.router] INFO: req_id=r745884898 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:25,214 [infergrid.router.router] INFO: req_id=r745885214 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:26,108 [infergrid.router.router] INFO: req_id=r745884719 EXIT 200 stream_complete
+2026-04-21 04:31:26,109 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:24 +0000] "POST /v1/completions HTTP/1.1" 200 36939 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:26,321 [infergrid.router.router] INFO: req_id=r745884898 EXIT 200 stream_complete
+2026-04-21 04:31:26,322 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:24 +0000] "POST /v1/completions HTTP/1.1" 200 37050 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:26,367 [infergrid.router.router] INFO: req_id=r745886367 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:26,611 [infergrid.router.router] INFO: req_id=r745885214 EXIT 200 stream_complete
+2026-04-21 04:31:26,611 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:25 +0000] "POST /v1/completions HTTP/1.1" 200 36952 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:26,629 [infergrid.router.router] INFO: req_id=r745886629 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:27,442 [infergrid.router.router] INFO: req_id=r745886367 EXIT 200 stream_complete
+2026-04-21 04:31:27,443 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:26 +0000] "POST /v1/completions HTTP/1.1" 200 34485 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:27,691 [infergrid.router.router] INFO: req_id=r745886629 EXIT 200 stream_complete
+2026-04-21 04:31:27,692 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:26 +0000] "POST /v1/completions HTTP/1.1" 200 37124 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:28,265 [infergrid.router.router] INFO: req_id=r745888265 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:28,577 [infergrid.router.router] INFO: req_id=r745888577 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:29,191 [infergrid.router.router] INFO: req_id=r745888265 EXIT 200 stream_complete
+2026-04-21 04:31:29,191 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:28 +0000] "POST /v1/completions HTTP/1.1" 200 33278 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:29,584 [infergrid.router.router] INFO: req_id=r745888577 EXIT 200 stream_complete
+2026-04-21 04:31:29,585 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:28 +0000] "POST /v1/completions HTTP/1.1" 200 37023 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:31,025 [infergrid.router.router] INFO: req_id=r745891025 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:31,263 [infergrid.router.router] INFO: req_id=r745891263 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:31,767 [infergrid.router.router] INFO: req_id=r745891767 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:31,922 [infergrid.router.router] INFO: req_id=r745891922 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:32,207 [infergrid.router.router] INFO: req_id=r745892207 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:32,230 [infergrid.router.router] INFO: req_id=r745891025 EXIT 200 stream_complete
+2026-04-21 04:31:32,230 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:31 +0000] "POST /v1/completions HTTP/1.1" 200 37109 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:32,447 [infergrid.router.router] INFO: req_id=r745891263 EXIT 200 stream_complete
+2026-04-21 04:31:32,447 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:31 +0000] "POST /v1/completions HTTP/1.1" 200 31258 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:33,373 [infergrid.router.router] INFO: req_id=r745891767 EXIT 200 stream_complete
+2026-04-21 04:31:33,374 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:31 +0000] "POST /v1/completions HTTP/1.1" 200 36190 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:33,518 [infergrid.router.router] INFO: req_id=r745891922 EXIT 200 stream_complete
+2026-04-21 04:31:33,518 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:31 +0000] "POST /v1/completions HTTP/1.1" 200 37149 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:33,581 [infergrid.router.router] INFO: req_id=r745893581 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:33,683 [infergrid.router.router] INFO: req_id=r745892207 EXIT 200 stream_complete
+2026-04-21 04:31:33,683 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:32 +0000] "POST /v1/completions HTTP/1.1" 200 37010 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:34,374 [infergrid.router.router] INFO: req_id=r745893581 EXIT 200 stream_complete
+2026-04-21 04:31:34,375 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:33 +0000] "POST /v1/completions HTTP/1.1" 200 33914 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:35,864 [infergrid.router.router] INFO: req_id=r745895864 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:36,314 [infergrid.router.router] INFO: req_id=r745896314 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:36,858 [infergrid.router.router] INFO: req_id=r745895864 EXIT 200 stream_complete
+2026-04-21 04:31:36,859 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:35 +0000] "POST /v1/completions HTTP/1.1" 200 37063 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:37,027 [infergrid.router.router] INFO: req_id=r745897027 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:37,413 [infergrid.router.router] INFO: req_id=r745896314 EXIT 200 stream_complete
+2026-04-21 04:31:37,414 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:36 +0000] "POST /v1/completions HTTP/1.1" 200 37115 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:37,961 [infergrid.router.router] INFO: req_id=r745897027 EXIT 200 stream_complete
+2026-04-21 04:31:37,962 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:37 +0000] "POST /v1/completions HTTP/1.1" 200 37064 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:38,441 [infergrid.router.router] INFO: req_id=r745898441 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:38,606 [infergrid.router.router] INFO: req_id=r745898606 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:39,529 [infergrid.router.router] INFO: req_id=r745898441 EXIT 200 stream_complete
+2026-04-21 04:31:39,529 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:38 +0000] "POST /v1/completions HTTP/1.1" 200 37020 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:39,699 [infergrid.router.router] INFO: req_id=r745898606 EXIT 200 stream_complete
+2026-04-21 04:31:39,699 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:38 +0000] "POST /v1/completions HTTP/1.1" 200 37141 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:40,180 [infergrid.router.router] INFO: req_id=r745900180 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:41,011 [infergrid.router.router] INFO: req_id=r745900180 EXIT 200 stream_complete
+2026-04-21 04:31:41,012 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:40 +0000] "POST /v1/completions HTTP/1.1" 200 37056 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:41,092 [infergrid.router.router] INFO: req_id=r745901092 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:41,569 [infergrid.router.router] INFO: req_id=r745901569 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:42,074 [infergrid.router.router] INFO: req_id=r745901092 EXIT 200 stream_complete
+2026-04-21 04:31:42,075 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:41 +0000] "POST /v1/completions HTTP/1.1" 200 37008 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:42,323 [infergrid.router.router] INFO: req_id=r745902323 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:42,633 [infergrid.router.router] INFO: req_id=r745901569 EXIT 200 stream_complete
+2026-04-21 04:31:42,633 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:41 +0000] "POST /v1/completions HTTP/1.1" 200 37090 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:43,237 [infergrid.router.router] INFO: req_id=r745902323 EXIT 200 stream_complete
+2026-04-21 04:31:43,237 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:42 +0000] "POST /v1/completions HTTP/1.1" 200 37116 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:43,465 [infergrid.router.router] INFO: req_id=r745903465 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:44,284 [infergrid.router.router] INFO: req_id=r745903465 EXIT 200 stream_complete
+2026-04-21 04:31:44,285 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:43 +0000] "POST /v1/completions HTTP/1.1" 200 37037 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:44,611 [infergrid.router.router] INFO: req_id=r745904611 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:45,442 [infergrid.router.router] INFO: req_id=r745904611 EXIT 200 stream_complete
+2026-04-21 04:31:45,442 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:44 +0000] "POST /v1/completions HTTP/1.1" 200 37005 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:46,076 [infergrid.router.router] INFO: req_id=r745906076 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:46,195 [infergrid.router.router] INFO: req_id=r745906195 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:46,369 [infergrid.router.router] INFO: req_id=r745906369 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:47,523 [infergrid.router.router] INFO: req_id=r745906076 EXIT 200 stream_complete
+2026-04-21 04:31:47,524 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:46 +0000] "POST /v1/completions HTTP/1.1" 200 37129 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:47,540 [infergrid.router.router] INFO: req_id=r745906369 EXIT 200 stream_complete
+2026-04-21 04:31:47,541 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:46 +0000] "POST /v1/completions HTTP/1.1" 200 26737 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:47,644 [infergrid.router.router] INFO: req_id=r745906195 EXIT 200 stream_complete
+2026-04-21 04:31:47,645 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:46 +0000] "POST /v1/completions HTTP/1.1" 200 36994 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:49,446 [infergrid.router.router] INFO: req_id=r745909446 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:49,623 [infergrid.router.router] INFO: req_id=r745909446 EXIT 200 stream_complete
+2026-04-21 04:31:49,624 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:49 +0000] "POST /v1/completions HTTP/1.1" 200 7064 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:53,022 [infergrid.router.router] INFO: req_id=r745913022 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:53,733 [infergrid.router.router] INFO: req_id=r745913733 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:53,893 [infergrid.router.router] INFO: req_id=r745913022 EXIT 200 stream_complete
+2026-04-21 04:31:53,894 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:53 +0000] "POST /v1/completions HTTP/1.1" 200 37115 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:54,358 [infergrid.router.router] INFO: req_id=r745913733 EXIT 200 stream_complete
+2026-04-21 04:31:54,359 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:53 +0000] "POST /v1/completions HTTP/1.1" 200 25784 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:55,779 [infergrid.router.router] INFO: req_id=r745915779 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:55,961 [infergrid.router.router] INFO: req_id=r745915779 EXIT 200 stream_complete
+2026-04-21 04:31:55,962 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:55 +0000] "POST /v1/completions HTTP/1.1" 200 7352 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:57,624 [infergrid.router.router] INFO: req_id=r745917624 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:57,790 [infergrid.router.router] INFO: req_id=r745917790 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:58,566 [infergrid.router.router] INFO: req_id=r745918566 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:58,788 [infergrid.router.router] INFO: req_id=r745917624 EXIT 200 stream_complete
+2026-04-21 04:31:58,788 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:57 +0000] "POST /v1/completions HTTP/1.1" 200 37046 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:59,017 [infergrid.router.router] INFO: req_id=r745917790 EXIT 200 stream_complete
+2026-04-21 04:31:59,017 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:57 +0000] "POST /v1/completions HTTP/1.1" 200 37142 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:31:59,481 [infergrid.router.router] INFO: req_id=r745919481 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:59,502 [infergrid.router.router] INFO: req_id=r745919502 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:31:59,633 [infergrid.router.router] INFO: req_id=r745918566 EXIT 200 stream_complete
+2026-04-21 04:31:59,633 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:58 +0000] "POST /v1/completions HTTP/1.1" 200 37077 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:00,677 [infergrid.router.router] INFO: req_id=r745919481 EXIT 200 stream_complete
+2026-04-21 04:32:00,678 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:59 +0000] "POST /v1/completions HTTP/1.1" 200 37081 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:00,689 [infergrid.router.router] INFO: req_id=r745919502 EXIT 200 stream_complete
+2026-04-21 04:32:00,690 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:31:59 +0000] "POST /v1/completions HTTP/1.1" 200 37187 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:01,611 [infergrid.router.router] INFO: req_id=r745921611 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:01,886 [infergrid.router.router] INFO: req_id=r745921886 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:02,667 [infergrid.router.router] INFO: req_id=r745921611 EXIT 200 stream_complete
+2026-04-21 04:32:02,667 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:01 +0000] "POST /v1/completions HTTP/1.1" 200 37022 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:02,937 [infergrid.router.router] INFO: req_id=r745921886 EXIT 200 stream_complete
+2026-04-21 04:32:02,938 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:01 +0000] "POST /v1/completions HTTP/1.1" 200 36884 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:03,991 [infergrid.router.router] INFO: req_id=r745923991 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:04,083 [infergrid.router.router] INFO: req_id=r745924083 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:04,795 [infergrid.router.router] INFO: req_id=r745924083 EXIT 200 stream_complete
+2026-04-21 04:32:04,795 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:04 +0000] "POST /v1/completions HTTP/1.1" 200 22399 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:05,025 [infergrid.router.router] INFO: req_id=r745923991 EXIT 200 stream_complete
+2026-04-21 04:32:05,025 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:03 +0000] "POST /v1/completions HTTP/1.1" 200 37000 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:05,781 [infergrid.router.router] INFO: req_id=r745925781 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:05,915 [infergrid.router.router] INFO: req_id=r745925915 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:06,901 [infergrid.router.router] INFO: req_id=r745925781 EXIT 200 stream_complete
+2026-04-21 04:32:06,902 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:05 +0000] "POST /v1/completions HTTP/1.1" 200 37154 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:07,034 [infergrid.router.router] INFO: req_id=r745925915 EXIT 200 stream_complete
+2026-04-21 04:32:07,034 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:05 +0000] "POST /v1/completions HTTP/1.1" 200 37024 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:08,852 [infergrid.router.router] INFO: req_id=r745928852 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:09,161 [infergrid.router.router] INFO: req_id=r745929161 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:09,896 [infergrid.router.router] INFO: req_id=r745928852 EXIT 200 stream_complete
+2026-04-21 04:32:09,897 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:08 +0000] "POST /v1/completions HTTP/1.1" 200 37108 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:10,205 [infergrid.router.router] INFO: req_id=r745929161 EXIT 200 stream_complete
+2026-04-21 04:32:10,205 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:09 +0000] "POST /v1/completions HTTP/1.1" 200 37018 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:12,499 [infergrid.router.router] INFO: req_id=r745932498 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:13,331 [infergrid.router.router] INFO: req_id=r745932498 EXIT 200 stream_complete
+2026-04-21 04:32:13,332 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:12 +0000] "POST /v1/completions HTTP/1.1" 200 36934 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:13,750 [infergrid.router.router] INFO: req_id=r745933750 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:14,579 [infergrid.router.router] INFO: req_id=r745933750 EXIT 200 stream_complete
+2026-04-21 04:32:14,579 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:13 +0000] "POST /v1/completions HTTP/1.1" 200 37070 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:19,085 [infergrid.router.router] INFO: req_id=r745939085 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:19,659 [infergrid.router.router] INFO: req_id=r745939659 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:19,789 [infergrid.router.router] INFO: req_id=r745939789 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:19,858 [infergrid.router.router] INFO: req_id=r745939858 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:20,122 [infergrid.router.router] INFO: req_id=r745939085 EXIT 200 stream_complete
+2026-04-21 04:32:20,123 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:19 +0000] "POST /v1/completions HTTP/1.1" 200 37139 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:20,746 [infergrid.router.router] INFO: req_id=r745940746 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:20,951 [infergrid.router.router] INFO: req_id=r745940746 EXIT 200 stream_complete
+2026-04-21 04:32:20,951 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:20 +0000] "POST /v1/completions HTTP/1.1" 200 4188 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:21,255 [infergrid.router.router] INFO: req_id=r745939659 EXIT 200 stream_complete
+2026-04-21 04:32:21,255 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:19 +0000] "POST /v1/completions HTTP/1.1" 200 37016 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:21,376 [infergrid.router.router] INFO: req_id=r745939789 EXIT 200 stream_complete
+2026-04-21 04:32:21,377 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:19 +0000] "POST /v1/completions HTTP/1.1" 200 36988 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:21,414 [infergrid.router.router] INFO: req_id=r745939858 EXIT 200 stream_complete
+2026-04-21 04:32:21,414 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:19 +0000] "POST /v1/completions HTTP/1.1" 200 37004 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:21,634 [infergrid.router.router] INFO: req_id=r745941634 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:21,708 [infergrid.router.router] INFO: req_id=r745941708 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:21,970 [infergrid.router.router] INFO: req_id=r745941970 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:22,806 [infergrid.router.router] INFO: req_id=r745941708 EXIT 200 stream_complete
+2026-04-21 04:32:22,807 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:21 +0000] "POST /v1/completions HTTP/1.1" 200 27610 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:22,908 [infergrid.router.router] INFO: req_id=r745941634 EXIT 200 stream_complete
+2026-04-21 04:32:22,908 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:21 +0000] "POST /v1/completions HTTP/1.1" 200 34253 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:23,238 [infergrid.router.router] INFO: req_id=r745941970 EXIT 200 stream_complete
+2026-04-21 04:32:23,238 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:21 +0000] "POST /v1/completions HTTP/1.1" 200 37021 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:23,935 [infergrid.router.router] INFO: req_id=r745943935 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:24,658 [infergrid.router.router] INFO: req_id=r745944658 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:24,795 [infergrid.router.router] INFO: req_id=r745943935 EXIT 200 stream_complete
+2026-04-21 04:32:24,795 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:23 +0000] "POST /v1/completions HTTP/1.1" 200 37041 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:24,907 [infergrid.router.router] INFO: req_id=r745944658 EXIT 200 stream_complete
+2026-04-21 04:32:24,908 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:24 +0000] "POST /v1/completions HTTP/1.1" 200 8780 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:25,765 [infergrid.router.router] INFO: req_id=r745945765 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:26,541 [infergrid.router.router] INFO: req_id=r745946541 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:26,614 [infergrid.router.router] INFO: req_id=r745945765 EXIT 200 stream_complete
+2026-04-21 04:32:26,614 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:25 +0000] "POST /v1/completions HTTP/1.1" 200 37006 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:26,820 [infergrid.router.router] INFO: req_id=r745946820 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:26,965 [infergrid.router.router] INFO: req_id=r745946541 EXIT 200 stream_complete
+2026-04-21 04:32:26,965 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:26 +0000] "POST /v1/completions HTTP/1.1" 200 15749 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:27,690 [infergrid.router.router] INFO: req_id=r745946820 EXIT 200 stream_complete
+2026-04-21 04:32:27,690 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:26 +0000] "POST /v1/completions HTTP/1.1" 200 37083 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:28,469 [infergrid.router.router] INFO: req_id=r745948469 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:28,569 [infergrid.router.router] INFO: req_id=r745948569 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:29,006 [infergrid.router.router] INFO: req_id=r745949006 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:29,638 [infergrid.router.router] INFO: req_id=r745949638 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:29,830 [infergrid.router.router] INFO: req_id=r745948469 EXIT 200 stream_complete
+2026-04-21 04:32:29,830 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:28 +0000] "POST /v1/completions HTTP/1.1" 200 37128 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:30,020 [infergrid.router.router] INFO: req_id=r745948569 EXIT 200 stream_complete
+2026-04-21 04:32:30,021 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:28 +0000] "POST /v1/completions HTTP/1.1" 200 37042 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:30,457 [infergrid.router.router] INFO: req_id=r745949006 EXIT 200 stream_complete
+2026-04-21 04:32:30,458 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:29 +0000] "POST /v1/completions HTTP/1.1" 200 36960 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:30,755 [infergrid.router.router] INFO: req_id=r745950755 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:30,778 [infergrid.router.router] INFO: req_id=r745949638 EXIT 200 stream_complete
+2026-04-21 04:32:30,778 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:29 +0000] "POST /v1/completions HTTP/1.1" 200 37127 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:30,818 [infergrid.router.router] INFO: req_id=r745950818 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:31,894 [infergrid.router.router] INFO: req_id=r745950755 EXIT 200 stream_complete
+2026-04-21 04:32:31,894 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:30 +0000] "POST /v1/completions HTTP/1.1" 200 37012 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:31,957 [infergrid.router.router] INFO: req_id=r745950818 EXIT 200 stream_complete
+2026-04-21 04:32:31,957 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:30 +0000] "POST /v1/completions HTTP/1.1" 200 37172 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:32,432 [infergrid.router.router] INFO: req_id=r745952432 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:32,719 [infergrid.router.router] INFO: req_id=r745952719 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:33,463 [infergrid.router.router] INFO: req_id=r745952432 EXIT 200 stream_complete
+2026-04-21 04:32:33,465 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:32 +0000] "POST /v1/completions HTTP/1.1" 200 36984 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:33,492 [infergrid.router.router] INFO: req_id=r745953492 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:33,864 [infergrid.router.router] INFO: req_id=r745952719 EXIT 200 stream_complete
+2026-04-21 04:32:33,864 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:32 +0000] "POST /v1/completions HTTP/1.1" 200 36991 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:34,038 [infergrid.router.router] INFO: req_id=r745954038 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:34,593 [infergrid.router.router] INFO: req_id=r745953492 EXIT 200 stream_complete
+2026-04-21 04:32:34,594 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:33 +0000] "POST /v1/completions HTTP/1.1" 200 37140 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:34,659 [infergrid.router.router] INFO: req_id=r745954659 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:35,092 [infergrid.router.router] INFO: req_id=r745954038 EXIT 200 stream_complete
+2026-04-21 04:32:35,092 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:34 +0000] "POST /v1/completions HTTP/1.1" 200 34409 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:35,246 [infergrid.router.router] INFO: req_id=r745955246 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:35,299 [infergrid.router.router] INFO: req_id=r745955299 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:35,923 [infergrid.router.router] INFO: req_id=r745954659 EXIT 200 stream_complete
+2026-04-21 04:32:35,924 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:34 +0000] "POST /v1/completions HTTP/1.1" 200 37038 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:36,578 [infergrid.router.router] INFO: req_id=r745955246 EXIT 200 stream_complete
+2026-04-21 04:32:36,578 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:35 +0000] "POST /v1/completions HTTP/1.1" 200 37086 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:36,615 [infergrid.router.router] INFO: req_id=r745955299 EXIT 200 stream_complete
+2026-04-21 04:32:36,616 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:35 +0000] "POST /v1/completions HTTP/1.1" 200 37038 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:38,774 [infergrid.router.router] INFO: req_id=r745958774 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:38,957 [infergrid.router.router] INFO: req_id=r745958957 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:39,614 [infergrid.router.router] INFO: req_id=r745959614 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:39,942 [infergrid.router.router] INFO: req_id=r745958957 EXIT 200 stream_complete
+2026-04-21 04:32:39,943 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:38 +0000] "POST /v1/completions HTTP/1.1" 200 28447 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:39,963 [infergrid.router.router] INFO: req_id=r745958774 EXIT 200 stream_complete
+2026-04-21 04:32:39,963 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:38 +0000] "POST /v1/completions HTTP/1.1" 200 37056 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:40,605 [infergrid.router.router] INFO: req_id=r745959614 EXIT 200 stream_complete
+2026-04-21 04:32:40,605 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:39 +0000] "POST /v1/completions HTTP/1.1" 200 37099 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:41,943 [infergrid.router.router] INFO: req_id=r745961943 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:42,420 [infergrid.router.router] INFO: req_id=r745962420 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:42,730 [infergrid.router.router] INFO: req_id=r745962730 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:42,989 [infergrid.router.router] INFO: req_id=r745961943 EXIT 200 stream_complete
+2026-04-21 04:32:42,990 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:41 +0000] "POST /v1/completions HTTP/1.1" 200 37132 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:43,065 [infergrid.router.router] INFO: req_id=r745963065 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:43,234 [infergrid.router.router] INFO: req_id=r745963234 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:43,481 [infergrid.router.router] INFO: req_id=r745963481 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:43,719 [infergrid.router.router] INFO: req_id=r745963234 EXIT 200 stream_complete
+2026-04-21 04:32:43,720 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:43 +0000] "POST /v1/completions HTTP/1.1" 200 9637 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:43,932 [infergrid.router.router] INFO: req_id=r745962420 EXIT 200 stream_complete
+2026-04-21 04:32:43,932 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:42 +0000] "POST /v1/completions HTTP/1.1" 200 37032 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:44,345 [infergrid.router.router] INFO: req_id=r745964345 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:44,356 [infergrid.router.router] INFO: req_id=r745962730 EXIT 200 stream_complete
+2026-04-21 04:32:44,356 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:42 +0000] "POST /v1/completions HTTP/1.1" 200 37185 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:44,364 [infergrid.router.router] INFO: req_id=r745963065 EXIT 200 stream_complete
+2026-04-21 04:32:44,365 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:43 +0000] "POST /v1/completions HTTP/1.1" 200 28713 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:44,568 [infergrid.router.router] INFO: req_id=r745963481 EXIT 200 stream_complete
+2026-04-21 04:32:44,568 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:43 +0000] "POST /v1/completions HTTP/1.1" 200 25261 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:45,244 [infergrid.router.router] INFO: req_id=r745964345 EXIT 200 stream_complete
+2026-04-21 04:32:45,244 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:44 +0000] "POST /v1/completions HTTP/1.1" 200 37084 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:45,726 [infergrid.router.router] INFO: req_id=r745965726 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:45,780 [infergrid.router.router] INFO: req_id=r745965780 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:46,341 [infergrid.router.router] INFO: req_id=r745965780 EXIT 200 stream_complete
+2026-04-21 04:32:46,342 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:45 +0000] "POST /v1/completions HTTP/1.1" 200 17470 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:46,479 [infergrid.router.router] INFO: req_id=r745966479 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:46,538 [infergrid.router.router] INFO: req_id=r745966538 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:46,575 [infergrid.router.router] INFO: req_id=r745965726 EXIT 200 stream_complete
+2026-04-21 04:32:46,576 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:45 +0000] "POST /v1/completions HTTP/1.1" 200 29040 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:47,657 [infergrid.router.router] INFO: req_id=r745966479 EXIT 200 stream_complete
+2026-04-21 04:32:47,658 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:46 +0000] "POST /v1/completions HTTP/1.1" 200 37044 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:47,695 [infergrid.router.router] INFO: req_id=r745966538 EXIT 200 stream_complete
+2026-04-21 04:32:47,695 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:46 +0000] "POST /v1/completions HTTP/1.1" 200 36982 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:48,445 [infergrid.router.router] INFO: req_id=r745968445 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:49,266 [infergrid.router.router] INFO: req_id=r745968445 EXIT 200 stream_complete
+2026-04-21 04:32:49,266 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:48 +0000] "POST /v1/completions HTTP/1.1" 200 37060 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:49,351 [infergrid.router.router] INFO: req_id=r745969351 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:49,868 [infergrid.router.router] INFO: req_id=r745969868 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:50,208 [infergrid.router.router] INFO: req_id=r745969351 EXIT 200 stream_complete
+2026-04-21 04:32:50,208 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:49 +0000] "POST /v1/completions HTTP/1.1" 200 33780 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:50,733 [infergrid.router.router] INFO: req_id=r745970733 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:50,818 [infergrid.router.router] INFO: req_id=r745969868 EXIT 200 stream_complete
+2026-04-21 04:32:50,818 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:49 +0000] "POST /v1/completions HTTP/1.1" 200 37018 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:51,585 [infergrid.router.router] INFO: req_id=r745970733 EXIT 200 stream_complete
+2026-04-21 04:32:51,586 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:50 +0000] "POST /v1/completions HTTP/1.1" 200 37098 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:51,702 [infergrid.router.router] INFO: req_id=r745971702 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:52,532 [infergrid.router.router] INFO: req_id=r745971702 EXIT 200 stream_complete
+2026-04-21 04:32:52,532 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:51 +0000] "POST /v1/completions HTTP/1.1" 200 37014 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:52,775 [infergrid.router.router] INFO: req_id=r745972775 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:53,604 [infergrid.router.router] INFO: req_id=r745972775 EXIT 200 stream_complete
+2026-04-21 04:32:53,604 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:52 +0000] "POST /v1/completions HTTP/1.1" 200 37114 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:55,506 [infergrid.router.router] INFO: req_id=r745975506 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:56,337 [infergrid.router.router] INFO: req_id=r745975506 EXIT 200 stream_complete
+2026-04-21 04:32:56,338 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:55 +0000] "POST /v1/completions HTTP/1.1" 200 36992 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:56,615 [infergrid.router.router] INFO: req_id=r745976614 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:56,888 [infergrid.router.router] INFO: req_id=r745976888 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:57,029 [infergrid.router.router] INFO: req_id=r745977029 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:57,642 [infergrid.router.router] INFO: req_id=r745977642 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:57,651 [infergrid.router.router] INFO: req_id=r745977651 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:57,730 [infergrid.router.router] INFO: req_id=r745977730 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:57,982 [infergrid.router.router] INFO: req_id=r745976614 EXIT 200 stream_complete
+2026-04-21 04:32:57,983 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:56 +0000] "POST /v1/completions HTTP/1.1" 200 36904 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:58,435 [infergrid.router.router] INFO: req_id=r745978435 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:32:58,649 [infergrid.router.router] INFO: req_id=r745976888 EXIT 200 stream_complete
+2026-04-21 04:32:58,650 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:56 +0000] "POST /v1/completions HTTP/1.1" 200 37064 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:58,896 [infergrid.router.router] INFO: req_id=r745977029 EXIT 200 stream_complete
+2026-04-21 04:32:58,896 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:57 +0000] "POST /v1/completions HTTP/1.1" 200 36927 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:59,507 [infergrid.router.router] INFO: req_id=r745977642 EXIT 200 stream_complete
+2026-04-21 04:32:59,508 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:57 +0000] "POST /v1/completions HTTP/1.1" 200 37103 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:59,520 [infergrid.router.router] INFO: req_id=r745977651 EXIT 200 stream_complete
+2026-04-21 04:32:59,520 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:57 +0000] "POST /v1/completions HTTP/1.1" 200 36999 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:59,564 [infergrid.router.router] INFO: req_id=r745977730 EXIT 200 stream_complete
+2026-04-21 04:32:59,564 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:57 +0000] "POST /v1/completions HTTP/1.1" 200 36932 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:32:59,854 [infergrid.router.router] INFO: req_id=r745978435 EXIT 200 stream_complete
+2026-04-21 04:32:59,854 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:32:58 +0000] "POST /v1/completions HTTP/1.1" 200 37137 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:01,144 [infergrid.router.router] INFO: req_id=r745981144 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:01,965 [infergrid.router.router] INFO: req_id=r745981144 EXIT 200 stream_complete
+2026-04-21 04:33:01,965 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:01 +0000] "POST /v1/completions HTTP/1.1" 200 36956 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:03,260 [infergrid.router.router] INFO: req_id=r745983259 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:03,595 [infergrid.router.router] INFO: req_id=r745983595 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:04,293 [infergrid.router.router] INFO: req_id=r745983259 EXIT 200 stream_complete
+2026-04-21 04:33:04,294 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:03 +0000] "POST /v1/completions HTTP/1.1" 200 37085 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:04,620 [infergrid.router.router] INFO: req_id=r745983595 EXIT 200 stream_complete
+2026-04-21 04:33:04,621 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:03 +0000] "POST /v1/completions HTTP/1.1" 200 37067 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:05,394 [infergrid.router.router] INFO: req_id=r745985394 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:05,595 [infergrid.router.router] INFO: req_id=r745985394 EXIT 200 stream_complete
+2026-04-21 04:33:05,595 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:05 +0000] "POST /v1/completions HTTP/1.1" 200 8201 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:06,340 [infergrid.router.router] INFO: req_id=r745986340 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:07,165 [infergrid.router.router] INFO: req_id=r745986340 EXIT 200 stream_complete
+2026-04-21 04:33:07,165 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:06 +0000] "POST /v1/completions HTTP/1.1" 200 37067 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:07,443 [infergrid.router.router] INFO: req_id=r745987443 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:08,274 [infergrid.router.router] INFO: req_id=r745987443 EXIT 200 stream_complete
+2026-04-21 04:33:08,274 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:07 +0000] "POST /v1/completions HTTP/1.1" 200 36989 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:10,131 [infergrid.router.router] INFO: req_id=r745990130 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:10,951 [infergrid.router.router] INFO: req_id=r745990130 EXIT 200 stream_complete
+2026-04-21 04:33:10,951 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:10 +0000] "POST /v1/completions HTTP/1.1" 200 37019 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:12,929 [infergrid.router.router] INFO: req_id=r745992929 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:13,238 [infergrid.router.router] INFO: req_id=r745993237 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:13,968 [infergrid.router.router] INFO: req_id=r745992929 EXIT 200 stream_complete
+2026-04-21 04:33:13,969 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:12 +0000] "POST /v1/completions HTTP/1.1" 200 37017 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:14,271 [infergrid.router.router] INFO: req_id=r745993237 EXIT 200 stream_complete
+2026-04-21 04:33:14,271 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:13 +0000] "POST /v1/completions HTTP/1.1" 200 37013 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:14,595 [infergrid.router.router] INFO: req_id=r745994595 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:14,913 [infergrid.router.router] INFO: req_id=r745994913 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:15,641 [infergrid.router.router] INFO: req_id=r745994595 EXIT 200 stream_complete
+2026-04-21 04:33:15,641 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:14 +0000] "POST /v1/completions HTTP/1.1" 200 37135 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:15,823 [infergrid.router.router] INFO: req_id=r745994913 EXIT 200 stream_complete
+2026-04-21 04:33:15,823 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:14 +0000] "POST /v1/completions HTTP/1.1" 200 30962 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:16,178 [infergrid.router.router] INFO: req_id=r745996178 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:17,007 [infergrid.router.router] INFO: req_id=r745996178 EXIT 200 stream_complete
+2026-04-21 04:33:17,007 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:16 +0000] "POST /v1/completions HTTP/1.1" 200 36874 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:17,343 [infergrid.router.router] INFO: req_id=r745997343 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:17,520 [infergrid.router.router] INFO: req_id=r745997343 EXIT 200 stream_complete
+2026-04-21 04:33:17,520 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:17 +0000] "POST /v1/completions HTTP/1.1" 200 7061 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:18,053 [infergrid.router.router] INFO: req_id=r745998053 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:18,732 [infergrid.router.router] INFO: req_id=r745998053 EXIT 200 stream_complete
+2026-04-21 04:33:18,732 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:18 +0000] "POST /v1/completions HTTP/1.1" 200 30051 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:20,409 [infergrid.router.router] INFO: req_id=r746000409 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:20,506 [infergrid.router.router] INFO: req_id=r746000506 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:21,536 [infergrid.router.router] INFO: req_id=r746000409 EXIT 200 stream_complete
+2026-04-21 04:33:21,536 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:20 +0000] "POST /v1/completions HTTP/1.1" 200 37109 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:21,630 [infergrid.router.router] INFO: req_id=r746000506 EXIT 200 stream_complete
+2026-04-21 04:33:21,630 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:20 +0000] "POST /v1/completions HTTP/1.1" 200 37042 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:22,276 [infergrid.router.router] INFO: req_id=r746002275 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:22,280 [infergrid.router.router] INFO: req_id=r746002280 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:23,295 [infergrid.router.router] INFO: req_id=r746003295 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:23,471 [infergrid.router.router] INFO: req_id=r746003471 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:23,483 [infergrid.router.router] INFO: req_id=r746002280 EXIT 200 stream_complete
+2026-04-21 04:33:23,483 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:22 +0000] "POST /v1/completions HTTP/1.1" 200 37118 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:23,485 [infergrid.router.router] INFO: req_id=r746002275 EXIT 200 stream_complete
+2026-04-21 04:33:23,485 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:22 +0000] "POST /v1/completions HTTP/1.1" 200 37108 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:24,227 [infergrid.router.router] INFO: req_id=r746003471 EXIT 200 stream_complete
+2026-04-21 04:33:24,227 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:23 +0000] "POST /v1/completions HTTP/1.1" 200 23550 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:24,275 [infergrid.router.router] INFO: req_id=r746004275 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:24,506 [infergrid.router.router] INFO: req_id=r746003295 EXIT 200 stream_complete
+2026-04-21 04:33:24,506 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:23 +0000] "POST /v1/completions HTTP/1.1" 200 37068 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:25,098 [infergrid.router.router] INFO: req_id=r746005098 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:25,177 [infergrid.router.router] INFO: req_id=r746005177 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:25,193 [infergrid.router.router] INFO: req_id=r746004275 EXIT 200 stream_complete
+2026-04-21 04:33:25,193 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:24 +0000] "POST /v1/completions HTTP/1.1" 200 37066 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:25,966 [infergrid.router.router] INFO: req_id=r746005966 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:26,135 [infergrid.router.router] INFO: req_id=r746005098 EXIT 200 stream_complete
+2026-04-21 04:33:26,135 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:25 +0000] "POST /v1/completions HTTP/1.1" 200 31283 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:26,377 [infergrid.router.router] INFO: req_id=r746005177 EXIT 200 stream_complete
+2026-04-21 04:33:26,378 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:25 +0000] "POST /v1/completions HTTP/1.1" 200 36545 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:26,840 [infergrid.router.router] INFO: req_id=r746006840 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:26,992 [infergrid.router.router] INFO: req_id=r746005966 EXIT 200 stream_complete
+2026-04-21 04:33:26,992 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:25 +0000] "POST /v1/completions HTTP/1.1" 200 37088 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:27,402 [infergrid.router.router] INFO: req_id=r746007402 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:27,771 [infergrid.router.router] INFO: req_id=r746007771 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:27,852 [infergrid.router.router] INFO: req_id=r746006840 EXIT 200 stream_complete
+2026-04-21 04:33:27,853 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:26 +0000] "POST /v1/completions HTTP/1.1" 200 37084 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:28,506 [infergrid.router.router] INFO: req_id=r746007402 EXIT 200 stream_complete
+2026-04-21 04:33:28,507 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:27 +0000] "POST /v1/completions HTTP/1.1" 200 34498 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:28,703 [infergrid.router.router] INFO: req_id=r746007771 EXIT 200 stream_complete
+2026-04-21 04:33:28,704 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:27 +0000] "POST /v1/completions HTTP/1.1" 200 31650 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:30,066 [infergrid.router.router] INFO: req_id=r746010066 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:30,898 [infergrid.router.router] INFO: req_id=r746010066 EXIT 200 stream_complete
+2026-04-21 04:33:30,898 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:30 +0000] "POST /v1/completions HTTP/1.1" 200 37091 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:31,214 [infergrid.router.router] INFO: req_id=r746011214 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:31,650 [infergrid.router.router] INFO: req_id=r746011650 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:32,189 [infergrid.router.router] INFO: req_id=r746011214 EXIT 200 stream_complete
+2026-04-21 04:33:32,189 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:31 +0000] "POST /v1/completions HTTP/1.1" 200 37044 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:32,636 [infergrid.router.router] INFO: req_id=r746011650 EXIT 200 stream_complete
+2026-04-21 04:33:32,636 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:31 +0000] "POST /v1/completions HTTP/1.1" 200 37053 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:35,297 [infergrid.router.router] INFO: req_id=r746015297 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:36,128 [infergrid.router.router] INFO: req_id=r746015297 EXIT 200 stream_complete
+2026-04-21 04:33:36,129 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:35 +0000] "POST /v1/completions HTTP/1.1" 200 37147 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:37,901 [infergrid.router.router] INFO: req_id=r746017901 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:38,732 [infergrid.router.router] INFO: req_id=r746017901 EXIT 200 stream_complete
+2026-04-21 04:33:38,732 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:37 +0000] "POST /v1/completions HTTP/1.1" 200 36997 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:39,902 [infergrid.router.router] INFO: req_id=r746019902 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:40,733 [infergrid.router.router] INFO: req_id=r746019902 EXIT 200 stream_complete
+2026-04-21 04:33:40,734 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:39 +0000] "POST /v1/completions HTTP/1.1" 200 37143 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:42,037 [infergrid.router.router] INFO: req_id=r746022037 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:42,235 [infergrid.router.router] INFO: req_id=r746022235 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:43,117 [infergrid.router.router] INFO: req_id=r746022037 EXIT 200 stream_complete
+2026-04-21 04:33:43,117 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:42 +0000] "POST /v1/completions HTTP/1.1" 200 37068 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:43,318 [infergrid.router.router] INFO: req_id=r746022235 EXIT 200 stream_complete
+2026-04-21 04:33:43,319 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:42 +0000] "POST /v1/completions HTTP/1.1" 200 37077 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:43,761 [infergrid.router.router] INFO: req_id=r746023761 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:44,591 [infergrid.router.router] INFO: req_id=r746023761 EXIT 200 stream_complete
+2026-04-21 04:33:44,591 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:43 +0000] "POST /v1/completions HTTP/1.1" 200 36981 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:45,383 [infergrid.router.router] INFO: req_id=r746025383 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:45,694 [infergrid.router.router] INFO: req_id=r746025694 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:46,178 [infergrid.router.router] INFO: req_id=r746026178 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:46,508 [infergrid.router.router] INFO: req_id=r746025383 EXIT 200 stream_complete
+2026-04-21 04:33:46,508 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:45 +0000] "POST /v1/completions HTTP/1.1" 200 36963 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:46,945 [infergrid.router.router] INFO: req_id=r746025694 EXIT 200 stream_complete
+2026-04-21 04:33:46,946 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:45 +0000] "POST /v1/completions HTTP/1.1" 200 37033 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:47,228 [infergrid.router.router] INFO: req_id=r746026178 EXIT 200 stream_complete
+2026-04-21 04:33:47,228 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:46 +0000] "POST /v1/completions HTTP/1.1" 200 34199 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:48,135 [infergrid.router.router] INFO: req_id=r746028135 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:48,358 [infergrid.router.router] INFO: req_id=r746028358 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:48,789 [infergrid.router.router] INFO: req_id=r746028789 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:49,043 [infergrid.router.router] INFO: req_id=r746029043 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:49,395 [infergrid.router.router] INFO: req_id=r746028135 EXIT 200 stream_complete
+2026-04-21 04:33:49,396 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:48 +0000] "POST /v1/completions HTTP/1.1" 200 36980 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:49,551 [infergrid.router.router] INFO: req_id=r746029551 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:49,827 [infergrid.router.router] INFO: req_id=r746028358 EXIT 200 stream_complete
+2026-04-21 04:33:49,828 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:48 +0000] "POST /v1/completions HTTP/1.1" 200 37021 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:49,899 [infergrid.router.router] INFO: req_id=r746029551 EXIT 200 stream_complete
+2026-04-21 04:33:49,900 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:49 +0000] "POST /v1/completions HTTP/1.1" 200 7355 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:50,278 [infergrid.router.router] INFO: req_id=r746028789 EXIT 200 stream_complete
+2026-04-21 04:33:50,279 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:48 +0000] "POST /v1/completions HTTP/1.1" 200 37015 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:50,411 [infergrid.router.router] INFO: req_id=r746029043 EXIT 200 stream_complete
+2026-04-21 04:33:50,411 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:49 +0000] "POST /v1/completions HTTP/1.1" 200 36983 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:51,551 [infergrid.router.router] INFO: req_id=r746031551 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:51,984 [infergrid.router.router] INFO: req_id=r746031984 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:52,550 [infergrid.router.router] INFO: req_id=r746031551 EXIT 200 stream_complete
+2026-04-21 04:33:52,550 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:51 +0000] "POST /v1/completions HTTP/1.1" 200 37061 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:52,978 [infergrid.router.router] INFO: req_id=r746031984 EXIT 200 stream_complete
+2026-04-21 04:33:52,979 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:51 +0000] "POST /v1/completions HTTP/1.1" 200 37074 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:53,125 [infergrid.router.router] INFO: req_id=r746033125 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:53,956 [infergrid.router.router] INFO: req_id=r746033125 EXIT 200 stream_complete
+2026-04-21 04:33:53,956 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:53 +0000] "POST /v1/completions HTTP/1.1" 200 37153 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:55,928 [infergrid.router.router] INFO: req_id=r746035928 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:56,746 [infergrid.router.router] INFO: req_id=r746035928 EXIT 200 stream_complete
+2026-04-21 04:33:56,747 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:55 +0000] "POST /v1/completions HTTP/1.1" 200 36949 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:58,030 [infergrid.router.router] INFO: req_id=r746038030 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:58,226 [infergrid.router.router] INFO: req_id=r746038226 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:58,265 [infergrid.router.router] INFO: req_id=r746038265 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:58,690 [infergrid.router.router] INFO: req_id=r746038690 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:59,150 [infergrid.router.router] INFO: req_id=r746038030 EXIT 200 stream_complete
+2026-04-21 04:33:59,151 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:58 +0000] "POST /v1/completions HTTP/1.1" 200 29816 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:59,266 [infergrid.router.router] INFO: req_id=r746039266 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:59,753 [infergrid.router.router] INFO: req_id=r746039753 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:33:59,881 [infergrid.router.router] INFO: req_id=r746038226 EXIT 200 stream_complete
+2026-04-21 04:33:59,882 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:58 +0000] "POST /v1/completions HTTP/1.1" 200 37053 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:33:59,930 [infergrid.router.router] INFO: req_id=r746038265 EXIT 200 stream_complete
+2026-04-21 04:33:59,931 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:58 +0000] "POST /v1/completions HTTP/1.1" 200 37022 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:00,047 [infergrid.router.router] INFO: req_id=r746040047 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:00,050 [infergrid.router.router] INFO: req_id=r746040050 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:00,162 [infergrid.router.router] INFO: req_id=r746038690 EXIT 200 stream_complete
+2026-04-21 04:34:00,163 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:58 +0000] "POST /v1/completions HTTP/1.1" 200 32316 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:00,504 [infergrid.router.router] INFO: req_id=r746040504 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:01,027 [infergrid.router.router] INFO: req_id=r746039266 EXIT 200 stream_complete
+2026-04-21 04:34:01,027 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:59 +0000] "POST /v1/completions HTTP/1.1" 200 37032 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:01,510 [infergrid.router.router] INFO: req_id=r746039753 EXIT 200 stream_complete
+2026-04-21 04:34:01,510 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:33:59 +0000] "POST /v1/completions HTTP/1.1" 200 36954 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:01,787 [infergrid.router.router] INFO: req_id=r746040050 EXIT 200 stream_complete
+2026-04-21 04:34:01,787 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:00 +0000] "POST /v1/completions HTTP/1.1" 200 36966 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:01,787 [infergrid.router.router] INFO: req_id=r746040047 EXIT 200 stream_complete
+2026-04-21 04:34:01,787 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:00 +0000] "POST /v1/completions HTTP/1.1" 200 37072 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:02,007 [infergrid.router.router] INFO: req_id=r746040504 EXIT 200 stream_complete
+2026-04-21 04:34:02,008 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:00 +0000] "POST /v1/completions HTTP/1.1" 200 37086 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:03,479 [infergrid.router.router] INFO: req_id=r746043479 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:04,309 [infergrid.router.router] INFO: req_id=r746043479 EXIT 200 stream_complete
+2026-04-21 04:34:04,310 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:03 +0000] "POST /v1/completions HTTP/1.1" 200 37104 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:04,456 [infergrid.router.router] INFO: req_id=r746044456 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:05,275 [infergrid.router.router] INFO: req_id=r746044456 EXIT 200 stream_complete
+2026-04-21 04:34:05,275 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:04 +0000] "POST /v1/completions HTTP/1.1" 200 37055 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:05,729 [infergrid.router.router] INFO: req_id=r746045729 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:06,437 [infergrid.router.router] INFO: req_id=r746046437 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:06,600 [infergrid.router.router] INFO: req_id=r746045729 EXIT 200 stream_complete
+2026-04-21 04:34:06,600 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:05 +0000] "POST /v1/completions HTTP/1.1" 200 36948 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:06,833 [infergrid.router.router] INFO: req_id=r746046832 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:07,511 [infergrid.router.router] INFO: req_id=r746046437 EXIT 200 stream_complete
+2026-04-21 04:34:07,512 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:06 +0000] "POST /v1/completions HTTP/1.1" 200 37025 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:07,641 [infergrid.router.router] INFO: req_id=r746047641 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:07,945 [infergrid.router.router] INFO: req_id=r746046832 EXIT 200 stream_complete
+2026-04-21 04:34:07,946 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:06 +0000] "POST /v1/completions HTTP/1.1" 200 37070 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:08,187 [infergrid.router.router] INFO: req_id=r746048187 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:08,703 [infergrid.router.router] INFO: req_id=r746047641 EXIT 200 stream_complete
+2026-04-21 04:34:08,703 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:07 +0000] "POST /v1/completions HTTP/1.1" 200 36993 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:09,163 [infergrid.router.router] INFO: req_id=r746048187 EXIT 200 stream_complete
+2026-04-21 04:34:09,163 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:08 +0000] "POST /v1/completions HTTP/1.1" 200 37046 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:09,321 [infergrid.router.router] INFO: req_id=r746049321 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:10,151 [infergrid.router.router] INFO: req_id=r746049321 EXIT 200 stream_complete
+2026-04-21 04:34:10,151 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:09 +0000] "POST /v1/completions HTTP/1.1" 200 37040 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:10,277 [infergrid.router.router] INFO: req_id=r746050277 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:10,458 [infergrid.router.router] INFO: req_id=r746050277 EXIT 200 stream_complete
+2026-04-21 04:34:10,458 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:10 +0000] "POST /v1/completions HTTP/1.1" 200 7343 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:10,799 [infergrid.router.router] INFO: req_id=r746050799 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:11,162 [infergrid.router.router] INFO: req_id=r746051161 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:11,724 [infergrid.router.router] INFO: req_id=r746051724 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:11,841 [infergrid.router.router] INFO: req_id=r746050799 EXIT 200 stream_complete
+2026-04-21 04:34:11,841 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:10 +0000] "POST /v1/completions HTTP/1.1" 200 37080 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:12,349 [infergrid.router.router] INFO: req_id=r746052349 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:12,354 [infergrid.router.router] INFO: req_id=r746051161 EXIT 200 stream_complete
+2026-04-21 04:34:12,354 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:11 +0000] "POST /v1/completions HTTP/1.1" 200 37058 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:12,911 [infergrid.router.router] INFO: req_id=r746051724 EXIT 200 stream_complete
+2026-04-21 04:34:12,912 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:11 +0000] "POST /v1/completions HTTP/1.1" 200 37056 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:13,238 [infergrid.router.router] INFO: req_id=r746052349 EXIT 200 stream_complete
+2026-04-21 04:34:13,238 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:12 +0000] "POST /v1/completions HTTP/1.1" 200 32478 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:13,478 [infergrid.router.router] INFO: req_id=r746053478 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:14,307 [infergrid.router.router] INFO: req_id=r746053478 EXIT 200 stream_complete
+2026-04-21 04:34:14,308 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:13 +0000] "POST /v1/completions HTTP/1.1" 200 37022 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:15,058 [infergrid.router.router] INFO: req_id=r746055058 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:15,888 [infergrid.router.router] INFO: req_id=r746055058 EXIT 200 stream_complete
+2026-04-21 04:34:15,889 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:15 +0000] "POST /v1/completions HTTP/1.1" 200 37111 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:16,134 [infergrid.router.router] INFO: req_id=r746056134 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:16,859 [infergrid.router.router] INFO: req_id=r746056859 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:16,958 [infergrid.router.router] INFO: req_id=r746056958 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:17,021 [infergrid.router.router] INFO: req_id=r746056134 EXIT 200 stream_complete
+2026-04-21 04:34:17,022 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:16 +0000] "POST /v1/completions HTTP/1.1" 200 37045 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:18,039 [infergrid.router.router] INFO: req_id=r746056859 EXIT 200 stream_complete
+2026-04-21 04:34:18,039 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:16 +0000] "POST /v1/completions HTTP/1.1" 200 37179 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:18,076 [infergrid.router.router] INFO: req_id=r746058076 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:18,102 [infergrid.router.router] INFO: req_id=r746056958 EXIT 200 stream_complete
+2026-04-21 04:34:18,102 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:16 +0000] "POST /v1/completions HTTP/1.1" 200 37026 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:18,918 [infergrid.router.router] INFO: req_id=r746058076 EXIT 200 stream_complete
+2026-04-21 04:34:18,918 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:18 +0000] "POST /v1/completions HTTP/1.1" 200 36941 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:19,722 [infergrid.router.router] INFO: req_id=r746059722 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:19,745 [infergrid.router.router] INFO: req_id=r746059745 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:20,885 [infergrid.router.router] INFO: req_id=r746059722 EXIT 200 stream_complete
+2026-04-21 04:34:20,886 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:19 +0000] "POST /v1/completions HTTP/1.1" 200 37156 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:20,905 [infergrid.router.router] INFO: req_id=r746059745 EXIT 200 stream_complete
+2026-04-21 04:34:20,905 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:19 +0000] "POST /v1/completions HTTP/1.1" 200 37034 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:23,880 [infergrid.router.router] INFO: req_id=r746063880 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:24,348 [infergrid.router.router] INFO: req_id=r746063880 EXIT 200 stream_complete
+2026-04-21 04:34:24,349 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:23 +0000] "POST /v1/completions HTTP/1.1" 200 20887 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:24,489 [infergrid.router.router] INFO: req_id=r746064489 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:25,320 [infergrid.router.router] INFO: req_id=r746064489 EXIT 200 stream_complete
+2026-04-21 04:34:25,320 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:24 +0000] "POST /v1/completions HTTP/1.1" 200 36966 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:25,757 [infergrid.router.router] INFO: req_id=r746065757 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:26,439 [infergrid.router.router] INFO: req_id=r746066439 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:26,600 [infergrid.router.router] INFO: req_id=r746066600 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:26,655 [infergrid.router.router] INFO: req_id=r746065757 EXIT 200 stream_complete
+2026-04-21 04:34:26,655 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:25 +0000] "POST /v1/completions HTTP/1.1" 200 37017 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:27,611 [infergrid.router.router] INFO: req_id=r746066439 EXIT 200 stream_complete
+2026-04-21 04:34:27,611 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:26 +0000] "POST /v1/completions HTTP/1.1" 200 37048 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:27,725 [infergrid.router.router] INFO: req_id=r746066600 EXIT 200 stream_complete
+2026-04-21 04:34:27,725 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:26 +0000] "POST /v1/completions HTTP/1.1" 200 37071 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:28,833 [infergrid.router.router] INFO: req_id=r746068833 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:29,653 [infergrid.router.router] INFO: req_id=r746068833 EXIT 200 stream_complete
+2026-04-21 04:34:29,653 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:28 +0000] "POST /v1/completions HTTP/1.1" 200 37017 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:30,342 [infergrid.router.router] INFO: req_id=r746070341 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:30,538 [infergrid.router.router] INFO: req_id=r746070538 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:30,588 [infergrid.router.router] INFO: req_id=r746070588 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:31,763 [infergrid.router.router] INFO: req_id=r746070341 EXIT 200 stream_complete
+2026-04-21 04:34:31,763 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:30 +0000] "POST /v1/completions HTTP/1.1" 200 37011 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:32,036 [infergrid.router.router] INFO: req_id=r746070538 EXIT 200 stream_complete
+2026-04-21 04:34:32,037 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:30 +0000] "POST /v1/completions HTTP/1.1" 200 37027 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:32,068 [infergrid.router.router] INFO: req_id=r746070588 EXIT 200 stream_complete
+2026-04-21 04:34:32,068 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:30 +0000] "POST /v1/completions HTTP/1.1" 200 37047 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:33,085 [infergrid.router.router] INFO: req_id=r746073085 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:33,695 [infergrid.router.router] INFO: req_id=r746073695 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:33,990 [infergrid.router.router] INFO: req_id=r746073085 EXIT 200 stream_complete
+2026-04-21 04:34:33,990 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:33 +0000] "POST /v1/completions HTTP/1.1" 200 37021 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:34,606 [infergrid.router.router] INFO: req_id=r746073695 EXIT 200 stream_complete
+2026-04-21 04:34:34,607 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:33 +0000] "POST /v1/completions HTTP/1.1" 200 37038 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:34,797 [infergrid.router.router] INFO: req_id=r746074797 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:35,627 [infergrid.router.router] INFO: req_id=r746074797 EXIT 200 stream_complete
+2026-04-21 04:34:35,627 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:34 +0000] "POST /v1/completions HTTP/1.1" 200 37147 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:37,796 [infergrid.router.router] INFO: req_id=r746077796 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:38,631 [infergrid.router.router] INFO: req_id=r746077796 EXIT 200 stream_complete
+2026-04-21 04:34:38,631 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:37 +0000] "POST /v1/completions HTTP/1.1" 200 37112 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:38,746 [infergrid.router.router] INFO: req_id=r746078746 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:39,576 [infergrid.router.router] INFO: req_id=r746078746 EXIT 200 stream_complete
+2026-04-21 04:34:39,576 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:38 +0000] "POST /v1/completions HTTP/1.1" 200 37040 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:40,525 [infergrid.router.router] INFO: req_id=r746080524 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:41,354 [infergrid.router.router] INFO: req_id=r746080524 EXIT 200 stream_complete
+2026-04-21 04:34:41,354 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:40 +0000] "POST /v1/completions HTTP/1.1" 200 37101 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:42,803 [infergrid.router.router] INFO: req_id=r746082803 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:43,381 [infergrid.router.router] INFO: req_id=r746082803 EXIT 200 stream_complete
+2026-04-21 04:34:43,382 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:42 +0000] "POST /v1/completions HTTP/1.1" 200 25539 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:43,400 [infergrid.router.router] INFO: req_id=r746083400 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:44,229 [infergrid.router.router] INFO: req_id=r746083400 EXIT 200 stream_complete
+2026-04-21 04:34:44,229 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:43 +0000] "POST /v1/completions HTTP/1.1" 200 37044 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:45,235 [infergrid.router.router] INFO: req_id=r746085235 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:45,449 [infergrid.router.router] INFO: req_id=r746085235 EXIT 200 stream_complete
+2026-04-21 04:34:45,449 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:45 +0000] "POST /v1/completions HTTP/1.1" 200 8779 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:46,688 [infergrid.router.router] INFO: req_id=r746086688 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:47,117 [infergrid.router.router] INFO: req_id=r746086688 EXIT 200 stream_complete
+2026-04-21 04:34:47,118 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:46 +0000] "POST /v1/completions HTTP/1.1" 200 18607 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:47,675 [infergrid.router.router] INFO: req_id=r746087675 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:47,833 [infergrid.router.router] INFO: req_id=r746087675 EXIT 200 stream_complete
+2026-04-21 04:34:47,833 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:47 +0000] "POST /v1/completions HTTP/1.1" 200 6204 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:48,256 [infergrid.router.router] INFO: req_id=r746088256 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:48,431 [infergrid.router.router] INFO: req_id=r746088256 EXIT 200 stream_complete
+2026-04-21 04:34:48,431 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:48 +0000] "POST /v1/completions HTTP/1.1" 200 7065 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:48,524 [infergrid.router.router] INFO: req_id=r746088524 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:48,910 [infergrid.router.router] INFO: req_id=r746088910 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:49,059 [infergrid.router.router] INFO: req_id=r746089059 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:49,542 [infergrid.router.router] INFO: req_id=r746089542 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:49,720 [infergrid.router.router] INFO: req_id=r746088524 EXIT 200 stream_complete
+2026-04-21 04:34:49,720 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:48 +0000] "POST /v1/completions HTTP/1.1" 200 37187 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:50,481 [infergrid.router.router] INFO: req_id=r746088910 EXIT 200 stream_complete
+2026-04-21 04:34:50,481 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:48 +0000] "POST /v1/completions HTTP/1.1" 200 36991 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:50,631 [infergrid.router.router] INFO: req_id=r746089059 EXIT 200 stream_complete
+2026-04-21 04:34:50,631 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:49 +0000] "POST /v1/completions HTTP/1.1" 200 37000 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:50,768 [infergrid.router.router] INFO: req_id=r746090768 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:50,914 [infergrid.router.router] INFO: req_id=r746089542 EXIT 200 stream_complete
+2026-04-21 04:34:50,914 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:49 +0000] "POST /v1/completions HTTP/1.1" 200 37088 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:51,305 [infergrid.router.router] INFO: req_id=r746091305 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:51,764 [infergrid.router.router] INFO: req_id=r746090768 EXIT 200 stream_complete
+2026-04-21 04:34:51,764 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:50 +0000] "POST /v1/completions HTTP/1.1" 200 37064 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:52,088 [infergrid.router.router] INFO: req_id=r746092088 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:52,153 [infergrid.router.router] INFO: req_id=r746092153 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:52,396 [infergrid.router.router] INFO: req_id=r746091305 EXIT 200 stream_complete
+2026-04-21 04:34:52,397 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:51 +0000] "POST /v1/completions HTTP/1.1" 200 37062 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:52,648 [infergrid.router.router] INFO: req_id=r746092648 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:53,570 [infergrid.router.router] INFO: req_id=r746092088 EXIT 200 stream_complete
+2026-04-21 04:34:53,570 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:52 +0000] "POST /v1/completions HTTP/1.1" 200 36998 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:53,631 [infergrid.router.router] INFO: req_id=r746092153 EXIT 200 stream_complete
+2026-04-21 04:34:53,631 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:52 +0000] "POST /v1/completions HTTP/1.1" 200 36957 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:53,940 [infergrid.router.router] INFO: req_id=r746092648 EXIT 200 stream_complete
+2026-04-21 04:34:53,940 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:52 +0000] "POST /v1/completions HTTP/1.1" 200 37167 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:54,591 [infergrid.router.router] INFO: req_id=r746094591 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:55,240 [infergrid.router.router] INFO: req_id=r746095240 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:55,494 [infergrid.router.router] INFO: req_id=r746094591 EXIT 200 stream_complete
+2026-04-21 04:34:55,495 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:54 +0000] "POST /v1/completions HTTP/1.1" 200 37045 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:55,597 [infergrid.router.router] INFO: req_id=r746095596 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:56,368 [infergrid.router.router] INFO: req_id=r746095240 EXIT 200 stream_complete
+2026-04-21 04:34:56,368 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:55 +0000] "POST /v1/completions HTTP/1.1" 200 37073 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:56,651 [infergrid.router.router] INFO: req_id=r746095596 EXIT 200 stream_complete
+2026-04-21 04:34:56,652 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:55 +0000] "POST /v1/completions HTTP/1.1" 200 36999 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:57,518 [infergrid.router.router] INFO: req_id=r746097518 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:58,292 [infergrid.router.router] INFO: req_id=r746098291 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:58,371 [infergrid.router.router] INFO: req_id=r746097518 EXIT 200 stream_complete
+2026-04-21 04:34:58,371 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:57 +0000] "POST /v1/completions HTTP/1.1" 200 37022 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:58,917 [infergrid.router.router] INFO: req_id=r746098291 EXIT 200 stream_complete
+2026-04-21 04:34:58,918 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:58 +0000] "POST /v1/completions HTTP/1.1" 200 26897 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:34:58,961 [infergrid.router.router] INFO: req_id=r746098961 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:59,534 [infergrid.router.router] INFO: req_id=r746099534 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:34:59,892 [infergrid.router.router] INFO: req_id=r746098961 EXIT 200 stream_complete
+2026-04-21 04:34:59,893 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:58 +0000] "POST /v1/completions HTTP/1.1" 200 37022 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:00,027 [infergrid.router.router] INFO: req_id=r746100027 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:00,639 [infergrid.router.router] INFO: req_id=r746099534 EXIT 200 stream_complete
+2026-04-21 04:35:00,640 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:34:59 +0000] "POST /v1/completions HTTP/1.1" 200 37074 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:01,036 [infergrid.router.router] INFO: req_id=r746100027 EXIT 200 stream_complete
+2026-04-21 04:35:01,036 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:00 +0000] "POST /v1/completions HTTP/1.1" 200 37029 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:01,316 [infergrid.router.router] INFO: req_id=r746101316 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:02,146 [infergrid.router.router] INFO: req_id=r746101316 EXIT 200 stream_complete
+2026-04-21 04:35:02,147 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:01 +0000] "POST /v1/completions HTTP/1.1" 200 37150 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:03,840 [infergrid.router.router] INFO: req_id=r746103840 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:04,667 [infergrid.router.router] INFO: req_id=r746103840 EXIT 200 stream_complete
+2026-04-21 04:35:04,667 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:03 +0000] "POST /v1/completions HTTP/1.1" 200 37072 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:06,216 [infergrid.router.router] INFO: req_id=r746106216 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:06,304 [infergrid.router.router] INFO: req_id=r746106304 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:06,451 [infergrid.router.router] INFO: req_id=r746106451 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:06,652 [infergrid.router.router] INFO: req_id=r746106652 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:06,983 [infergrid.router.router] INFO: req_id=r746106652 EXIT 200 stream_complete
+2026-04-21 04:35:06,984 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:06 +0000] "POST /v1/completions HTTP/1.1" 200 7077 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:07,022 [infergrid.router.router] INFO: req_id=r746106216 EXIT 200 stream_complete
+2026-04-21 04:35:07,022 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:06 +0000] "POST /v1/completions HTTP/1.1" 200 21221 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:07,130 [infergrid.router.router] INFO: req_id=r746107130 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:07,580 [infergrid.router.router] INFO: req_id=r746106451 EXIT 200 stream_complete
+2026-04-21 04:35:07,580 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:06 +0000] "POST /v1/completions HTTP/1.1" 200 26392 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:07,736 [infergrid.router.router] INFO: req_id=r746107736 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:07,776 [infergrid.router.router] INFO: req_id=r746106304 EXIT 200 stream_complete
+2026-04-21 04:35:07,777 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:06 +0000] "POST /v1/completions HTTP/1.1" 200 37071 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:08,430 [infergrid.router.router] INFO: req_id=r746107130 EXIT 200 stream_complete
+2026-04-21 04:35:08,430 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:07 +0000] "POST /v1/completions HTTP/1.1" 200 37022 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:08,763 [infergrid.router.router] INFO: req_id=r746107736 EXIT 200 stream_complete
+2026-04-21 04:35:08,763 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:07 +0000] "POST /v1/completions HTTP/1.1" 200 37136 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:09,170 [infergrid.router.router] INFO: req_id=r746109170 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:09,497 [infergrid.router.router] INFO: req_id=r746109497 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:09,788 [infergrid.router.router] INFO: req_id=r746109788 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:10,363 [infergrid.router.router] INFO: req_id=r746109170 EXIT 200 stream_complete
+2026-04-21 04:35:10,364 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:09 +0000] "POST /v1/completions HTTP/1.1" 200 37030 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:10,425 [infergrid.router.router] INFO: req_id=r746110424 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:10,968 [infergrid.router.router] INFO: req_id=r746109497 EXIT 200 stream_complete
+2026-04-21 04:35:10,969 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:09 +0000] "POST /v1/completions HTTP/1.1" 200 37064 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:11,262 [infergrid.router.router] INFO: req_id=r746109788 EXIT 200 stream_complete
+2026-04-21 04:35:11,262 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:09 +0000] "POST /v1/completions HTTP/1.1" 200 37045 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:11,602 [infergrid.router.router] INFO: req_id=r746110424 EXIT 200 stream_complete
+2026-04-21 04:35:11,603 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:10 +0000] "POST /v1/completions HTTP/1.1" 200 37070 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:19,717 [infergrid.router.router] INFO: req_id=r746119717 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:19,974 [infergrid.router.router] INFO: req_id=r746119974 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:20,781 [infergrid.router.router] INFO: req_id=r746119717 EXIT 200 stream_complete
+2026-04-21 04:35:20,781 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:19 +0000] "POST /v1/completions HTTP/1.1" 200 37203 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:21,033 [infergrid.router.router] INFO: req_id=r746119974 EXIT 200 stream_complete
+2026-04-21 04:35:21,033 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:19 +0000] "POST /v1/completions HTTP/1.1" 200 37054 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:21,493 [infergrid.router.router] INFO: req_id=r746121493 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:22,316 [infergrid.router.router] INFO: req_id=r746121493 EXIT 200 stream_complete
+2026-04-21 04:35:22,317 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:21 +0000] "POST /v1/completions HTTP/1.1" 200 37139 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:22,899 [infergrid.router.router] INFO: req_id=r746122899 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:23,122 [infergrid.router.router] INFO: req_id=r746123122 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:23,986 [infergrid.router.router] INFO: req_id=r746122899 EXIT 200 stream_complete
+2026-04-21 04:35:23,986 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:22 +0000] "POST /v1/completions HTTP/1.1" 200 36985 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:24,093 [infergrid.router.router] INFO: req_id=r746124093 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:24,230 [infergrid.router.router] INFO: req_id=r746124230 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:24,253 [infergrid.router.router] INFO: req_id=r746123122 EXIT 200 stream_complete
+2026-04-21 04:35:24,253 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:23 +0000] "POST /v1/completions HTTP/1.1" 200 37166 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:25,060 [infergrid.router.router] INFO: req_id=r746125060 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:25,329 [infergrid.router.router] INFO: req_id=r746124093 EXIT 200 stream_complete
+2026-04-21 04:35:25,330 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:24 +0000] "POST /v1/completions HTTP/1.1" 200 36928 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:25,445 [infergrid.router.router] INFO: req_id=r746124230 EXIT 200 stream_complete
+2026-04-21 04:35:25,445 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:24 +0000] "POST /v1/completions HTTP/1.1" 200 36430 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:25,686 [infergrid.router.router] INFO: req_id=r746125686 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:25,966 [infergrid.router.router] INFO: req_id=r746125686 EXIT 200 stream_complete
+2026-04-21 04:35:25,967 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:25 +0000] "POST /v1/completions HTTP/1.1" 200 8496 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:26,132 [infergrid.router.router] INFO: req_id=r746125060 EXIT 200 stream_complete
+2026-04-21 04:35:26,133 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:25 +0000] "POST /v1/completions HTTP/1.1" 200 36973 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:27,145 [infergrid.router.router] INFO: req_id=r746127145 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:27,977 [infergrid.router.router] INFO: req_id=r746127145 EXIT 200 stream_complete
+2026-04-21 04:35:27,977 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:27 +0000] "POST /v1/completions HTTP/1.1" 200 37117 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:28,077 [infergrid.router.router] INFO: req_id=r746128077 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:28,896 [infergrid.router.router] INFO: req_id=r746128077 EXIT 200 stream_complete
+2026-04-21 04:35:28,896 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:28 +0000] "POST /v1/completions HTTP/1.1" 200 37037 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:29,583 [infergrid.router.router] INFO: req_id=r746129583 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:30,415 [infergrid.router.router] INFO: req_id=r746129583 EXIT 200 stream_complete
+2026-04-21 04:35:30,415 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:29 +0000] "POST /v1/completions HTTP/1.1" 200 37116 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:32,932 [infergrid.router.router] INFO: req_id=r746132932 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:33,753 [infergrid.router.router] INFO: req_id=r746132932 EXIT 200 stream_complete
+2026-04-21 04:35:33,753 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:32 +0000] "POST /v1/completions HTTP/1.1" 200 37059 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:33,796 [infergrid.router.router] INFO: req_id=r746133796 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:34,624 [infergrid.router.router] INFO: req_id=r746133796 EXIT 200 stream_complete
+2026-04-21 04:35:34,625 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:33 +0000] "POST /v1/completions HTTP/1.1" 200 36917 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:34,654 [infergrid.router.router] INFO: req_id=r746134654 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:35,161 [infergrid.router.router] INFO: req_id=r746135161 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:35,241 [infergrid.router.router] INFO: req_id=r746135241 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:35,349 [infergrid.router.router] INFO: req_id=r746135349 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:35,698 [infergrid.router.router] INFO: req_id=r746135349 EXIT 200 stream_complete
+2026-04-21 04:35:35,699 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:35 +0000] "POST /v1/completions HTTP/1.1" 200 7062 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:35,769 [infergrid.router.router] INFO: req_id=r746134654 EXIT 200 stream_complete
+2026-04-21 04:35:35,770 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:34 +0000] "POST /v1/completions HTTP/1.1" 200 37008 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:36,478 [infergrid.router.router] INFO: req_id=r746135161 EXIT 200 stream_complete
+2026-04-21 04:35:36,478 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:35 +0000] "POST /v1/completions HTTP/1.1" 200 37109 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:36,535 [infergrid.router.router] INFO: req_id=r746135241 EXIT 200 stream_complete
+2026-04-21 04:35:36,535 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:35 +0000] "POST /v1/completions HTTP/1.1" 200 36932 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:37,249 [infergrid.router.router] INFO: req_id=r746137249 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:38,067 [infergrid.router.router] INFO: req_id=r746137249 EXIT 200 stream_complete
+2026-04-21 04:35:38,067 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:37 +0000] "POST /v1/completions HTTP/1.1" 200 37009 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:38,842 [infergrid.router.router] INFO: req_id=r746138842 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:39,269 [infergrid.router.router] INFO: req_id=r746139269 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:39,830 [infergrid.router.router] INFO: req_id=r746138842 EXIT 200 stream_complete
+2026-04-21 04:35:39,831 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:38 +0000] "POST /v1/completions HTTP/1.1" 200 37117 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:40,259 [infergrid.router.router] INFO: req_id=r746139269 EXIT 200 stream_complete
+2026-04-21 04:35:40,259 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:39 +0000] "POST /v1/completions HTTP/1.1" 200 37004 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:40,353 [infergrid.router.router] INFO: req_id=r746140353 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:41,059 [infergrid.router.router] INFO: req_id=r746141059 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:41,073 [infergrid.router.router] INFO: req_id=r746141073 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:41,267 [infergrid.router.router] INFO: req_id=r746140353 EXIT 200 stream_complete
+2026-04-21 04:35:41,267 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:40 +0000] "POST /v1/completions HTTP/1.1" 200 37063 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:42,270 [infergrid.router.router] INFO: req_id=r746141059 EXIT 200 stream_complete
+2026-04-21 04:35:42,271 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:41 +0000] "POST /v1/completions HTTP/1.1" 200 37177 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:42,283 [infergrid.router.router] INFO: req_id=r746141073 EXIT 200 stream_complete
+2026-04-21 04:35:42,283 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:41 +0000] "POST /v1/completions HTTP/1.1" 200 37047 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:42,801 [infergrid.router.router] INFO: req_id=r746142801 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:43,371 [infergrid.router.router] INFO: req_id=r746143370 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:43,720 [infergrid.router.router] INFO: req_id=r746142801 EXIT 200 stream_complete
+2026-04-21 04:35:43,721 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:42 +0000] "POST /v1/completions HTTP/1.1" 200 37025 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:44,236 [infergrid.router.router] INFO: req_id=r746143370 EXIT 200 stream_complete
+2026-04-21 04:35:44,236 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:43 +0000] "POST /v1/completions HTTP/1.1" 200 34351 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:44,382 [infergrid.router.router] INFO: req_id=r746144382 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:45,211 [infergrid.router.router] INFO: req_id=r746144382 EXIT 200 stream_complete
+2026-04-21 04:35:45,211 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:44 +0000] "POST /v1/completions HTTP/1.1" 200 37115 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:45,612 [infergrid.router.router] INFO: req_id=r746145612 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:45,808 [infergrid.router.router] INFO: req_id=r746145808 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:46,704 [infergrid.router.router] INFO: req_id=r746145612 EXIT 200 stream_complete
+2026-04-21 04:35:46,705 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:45 +0000] "POST /v1/completions HTTP/1.1" 200 36975 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:46,765 [infergrid.router.router] INFO: req_id=r746146764 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:46,946 [infergrid.router.router] INFO: req_id=r746145808 EXIT 200 stream_complete
+2026-04-21 04:35:46,946 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:45 +0000] "POST /v1/completions HTTP/1.1" 200 37074 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:47,379 [infergrid.router.router] INFO: req_id=r746146764 EXIT 200 stream_complete
+2026-04-21 04:35:47,379 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:46 +0000] "POST /v1/completions HTTP/1.1" 200 24983 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:47,391 [infergrid.router.router] INFO: req_id=r746147391 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:47,782 [infergrid.router.router] INFO: req_id=r746147782 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:48,400 [infergrid.router.router] INFO: req_id=r746147391 EXIT 200 stream_complete
+2026-04-21 04:35:48,401 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:47 +0000] "POST /v1/completions HTTP/1.1" 200 36945 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:48,790 [infergrid.router.router] INFO: req_id=r746147782 EXIT 200 stream_complete
+2026-04-21 04:35:48,791 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:47 +0000] "POST /v1/completions HTTP/1.1" 200 36995 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:49,559 [infergrid.router.router] INFO: req_id=r746149559 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:49,888 [infergrid.router.router] INFO: req_id=r746149888 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:50,169 [infergrid.router.router] INFO: req_id=r746150168 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:50,726 [infergrid.router.router] INFO: req_id=r746149559 EXIT 200 stream_complete
+2026-04-21 04:35:50,727 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:49 +0000] "POST /v1/completions HTTP/1.1" 200 37075 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:51,012 [infergrid.router.router] INFO: req_id=r746151012 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:51,017 [infergrid.router.router] INFO: req_id=r746149888 EXIT 200 stream_complete
+2026-04-21 04:35:51,017 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:49 +0000] "POST /v1/completions HTTP/1.1" 200 31020 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:51,422 [infergrid.router.router] INFO: req_id=r746151422 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:51,523 [infergrid.router.router] INFO: req_id=r746150168 EXIT 200 stream_complete
+2026-04-21 04:35:51,523 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:50 +0000] "POST /v1/completions HTTP/1.1" 200 37068 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:52,167 [infergrid.router.router] INFO: req_id=r746151422 EXIT 200 stream_complete
+2026-04-21 04:35:52,168 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:51 +0000] "POST /v1/completions HTTP/1.1" 200 22701 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:52,201 [infergrid.router.router] INFO: req_id=r746151012 EXIT 200 stream_complete
+2026-04-21 04:35:52,202 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:51 +0000] "POST /v1/completions HTTP/1.1" 200 37056 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:53,327 [infergrid.router.router] INFO: req_id=r746153327 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:53,997 [infergrid.router.router] INFO: req_id=r746153997 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:54,222 [infergrid.router.router] INFO: req_id=r746153327 EXIT 200 stream_complete
+2026-04-21 04:35:54,223 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:53 +0000] "POST /v1/completions HTTP/1.1" 200 37051 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:54,891 [infergrid.router.router] INFO: req_id=r746153997 EXIT 200 stream_complete
+2026-04-21 04:35:54,891 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:53 +0000] "POST /v1/completions HTTP/1.1" 200 37121 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:55,598 [infergrid.router.router] INFO: req_id=r746155598 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:55,928 [infergrid.router.router] INFO: req_id=r746155928 ENTER model=mistralai/Mixtral-8x7B-Instruct-v0.1 tenant=flooder stream=True path=/v1/completions
+2026-04-21 04:35:56,196 [infergrid.router.router] INFO: req_id=r746155928 EXIT 200 stream_complete
+2026-04-21 04:35:56,197 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:55 +0000] "POST /v1/completions HTTP/1.1" 200 7926 "-" "Python/3.11 aiohttp/3.13.5"
+2026-04-21 04:35:56,508 [infergrid.router.router] INFO: req_id=r746155598 EXIT 200 stream_complete
+2026-04-21 04:35:56,508 [aiohttp.access] INFO: 127.0.0.1 [21/Apr/2026:04:35:55 +0000] "POST /v1/completions HTTP/1.1" 200 37154 "-" "Python/3.11 aiohttp/3.13.5"
