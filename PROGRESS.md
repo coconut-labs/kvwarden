@@ -547,3 +547,47 @@ Dispatched two parallel bench agents on fresh RunPod pods (H100 SKU after A100-S
 - OUTCOME templates for all 4 gates pre-landed on branch `results/gate-ladder-v02-templates` (PR #79) with deliberate `<TBD_*>` sed-replace seams for mechanical fill from bench output.
 - Monitor `bk2ifzhnn` armed with combined budget watcher + 2-min pod heartbeat. Budget alerts at $55 / $65 of the $72 ceiling (raised from $30/$50 per advisor recommendation to accommodate the 2-pod parallel burn rate of ~$9/hr).
 - PR #78 (cbee679) shipped pre-bench: `benchmark_n_tenant_single_model.py --prompt-length-dist` flag unblocks Gate 2.2 harness.
+
+### Gate 2.1 CONFIRM (PR #81 · 2026-04-21 05:01 UTC)
+
+Token-bucket per-tenant fairness scales from N=6 to N=8 on a shared vLLM engine without degradation.
+
+| Arm | quiet_p99 (worst tenant) | note |
+|-----|-------------------------:|------|
+| Arm 0 solo | 48.1 ms | 1 tenant alone baseline |
+| Arm 1 FIFO | 59.0 ms | 1.23× solo — FIFO didn't catastrophically starve on H100 (headroom + max_concurrent=512 ceiling); A100 baseline comparison moved to future work |
+| Arm 5 DRR + token-bucket | **50.4 ms** | 1.05× solo — PASS (bound: ≤ 75 ms and 1.25× of N=6's 61.0 ms) |
+
+- Per-tenant p99 spread across 7 quiets: 1.06× (criterion ≤ 1.5×)
+- Flooder 429 rate: 68% (6481/9490) — rate-limit engaging correctly; zero quiet 429s
+- Cost: **$1.65** vs $4.50 ceiling (33 min at $2.99/hr)
+- GPU substitution: H100 SXM 80GB for A100-SXM4 80GB — fairness ratio is substrate-independent; absolute TTFTs ~40% lower than A100 would produce
+
+Honest caveat: Arm 1 FIFO p99 59 ms is lower than expected relative to Gate 2-FAIRNESS A100 FIFO (1585 ms). Attributed to (a) H100 absolute headroom at N=8 load and (b) `max_concurrent=512` upper ceiling still admitting all work. Fairness demonstration is still load-bearing: arm 5 shows 68% rejection at the tenant-budget layer that arm 1 lacks.
+
+### Gate 2.4 CONFIRM (PR #82 · 2026-04-21 05:04 UTC)
+
+Token-bucket fairness holds on Mixtral-8x7B MoE TP=2 — first MoE+TP>1 validation.
+
+| Arm | quiet_p99 | note |
+|-----|----------:|------|
+| Arm 0 solo | 84.9 ms | 1 tenant alone baseline |
+| Arm 1 FIFO | 122.7 ms | 1.45× solo — engine didn't saturate at 17 RPS (2× H100 TP=2 headroom) |
+| Arm 5 DRR + token-bucket | **109.7 ms** | 1.29× solo — PASS (bound: ≤ 2× solo) |
+
+- Per-tenant p99 spread across 3 quiets: 1.02× (criterion ≤ 1.5×)
+- Flooder 429 count: 1777 — rate-limit firing on MoE path identically to dense-model path
+- Cost: **$4.90** vs $12 ceiling (49 min at $5.98/hr)
+
+Honest caveats (in OUTCOME + PR body):
+1. Engine-headroom: arm 1 FIFO also stayed inside 2× solo — this run proves fairness *holds* on MoE but does NOT prove MoE is *resilient under saturation*. Follow-up Gate 2.4b at higher flooder RPS or TP=1 recommended.
+2. Expert-routing histogram NOT available in vLLM 0.19.1 (`enable_return_routed_experts=False` default); indirect evidence (flood_p50 ≈ quiet_p50 within 0.2 ms) consistent with uniform routing.
+
+### Gate 2.2 + Gate 2.3 in flight
+
+- **Gate 2.2 (mixed-prompt-length)**: agent `ab1b0e8cc454e18a8` running on reused Gate 2.1 pod `nmhl7l30g9jx1g`, same Llama-3.1-8B, 3 arms with `--prompt-length-dist "64:0.4,512:0.3,2048:0.2,8192:0.1"`. Budget envelope: $3 remaining on the combined 2.1+2.2 pod ($1.65 of $4.50 burned on 2.1).
+- **Gate 2.3 (Llama-70B TP=4)**: provisioned 4× H100 80GB SXM SECURE pod `ycv9e1j9esp2ef` in AP-IN-1 datacenter at $11.96/hr. SSH ready in 31 s (ports pre-exposed via `--ports "22/tcp,8888/http"`, lesson applied from Gate 2.1/2.4 bootstrap bug). Agent `a96f5d4f0a3cb0401` handling 70B snapshot download (~140 GB) → TP=4 warm → 2-arm bench. Budget ceiling $18.
+
+### Verdict so far
+
+Two of four gates CONFIRM. Token-bucket fairness generalizes (a) N=6 → N=8, (b) dense → MoE + TP>1. Pending: prompt-length bimodality (2.2) and 8B → 70B scale (2.3).
