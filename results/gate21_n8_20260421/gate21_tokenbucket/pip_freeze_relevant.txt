@@ -1,0 +1,7 @@
+huggingface_hub==1.11.0
+-e git+https://github.com/coconut-labs/infergrid.git@6e77a409d72167d5d1914afd6dde17d0bf320849#egg=infergrid
+torch==2.10.0
+torch_c_dlpack_ext==0.1.5
+torchaudio==2.10.0
+torchvision==0.25.0
+vllm==0.19.1

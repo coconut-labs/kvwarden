@@ -1,0 +1,43 @@
+# Gate 2.1 — N=8 tenants (1 flooder + 7 quiet) on 1×A100, Llama-3.1-8B.
+# Extension of configs/gate2_fairness_token_bucket_n6.yaml (N=6 CONFIRM).
+#
+# Hypothesis: token-bucket per-tenant fairness guarantee scales to N=8
+# without any quiet tenant degrading >1.25× of the N=6 aggregate p99.
+#
+# Pre-committed PASS:
+#   aggregate quiet_p99 (post-warmup, first 10s excluded) ≤ 75 ms
+#   AND worst-tenant p99 ≤ 80 ms
+#   (N=6 landed 61.0 ms agg / 65.0 ms worst; 75/80 ms = 1.23× slack.)
+# Pre-committed DISCONFIRM:
+#   aggregate quiet_p99 > 120 ms OR any quiet tenant p99 > 150 ms
+#   (signals queue pressure from additional tenants — re-examine
+#   rate_limit_burst.)
+#
+# Bench invocation (see scripts/gate_pod_bootstrap.sh):
+#   benchmarks/scripts/benchmark_n_tenant_single_model.py
+#     --flooder-rps 32 --quiet-rps 1 --num-quiet 7 --duration-s 300
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 512       # 8 tenants × 64 ceiling
+admission_queue_size: 4096
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 256
+  rate_limit_rpm: 600      # 10 RPS sustained per tenant (matches N=6)
+  rate_limit_burst: 10     # 1 second's burst (matches N=6)
+  priority: 1
+  scheduling: drr
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1
