@@ -1,0 +1,12 @@
+2026-04-21 05:37:22,232 [INFO] __main__: Bench: 1 flooder @ 32.0 RPS + 3 quiet @ 1.0 RPS each, duration=300s, model=meta-llama/Llama-3.1-70B-Instruct
+2026-04-21 05:37:22,232 [INFO] __main__: TCPConnector limit=525
+2026-04-21 05:42:24,335 [INFO] __main__: Wrote /workspace/gate23_contended/tenant_flooder.csv (9474 rows)
+2026-04-21 05:42:24,339 [INFO] __main__: Wrote /workspace/gate23_contended/tenant_quiet_0.csv (321 rows)
+2026-04-21 05:42:24,342 [INFO] __main__: Wrote /workspace/gate23_contended/tenant_quiet_1.csv (297 rows)
+2026-04-21 05:42:24,346 [INFO] __main__: Wrote /workspace/gate23_contended/tenant_quiet_2.csv (298 rows)
+2026-04-21 05:42:24,349 [INFO] __main__: Wrote /workspace/gate23_contended/summary.json
+2026-04-21 05:42:24,349 [INFO] __main__: ============================================================
+2026-04-21 05:42:24,349 [INFO] __main__: QUIET AGG (n=916) p50=57.8ms p99=1238.6ms max=2220.0ms
+2026-04-21 05:42:24,349 [INFO] __main__: FLOOD     (n=3009) p50=56.5ms p99=82.2ms max=2380.2ms
+2026-04-21 05:42:24,349 [INFO] __main__: Per-quiet p99 spread: min=79.2 max=2090.3 ratio=26.39x
+2026-04-21 05:42:24,349 [INFO] __main__: ============================================================

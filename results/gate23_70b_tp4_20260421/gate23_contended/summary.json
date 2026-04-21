@@ -1,0 +1,70 @@
+{
+  "wall_time_s": 301.94,
+  "flooder": {
+    "count_ok": 3009,
+    "count_err": 6465,
+    "ttft_p50_ms": 56.5,
+    "ttft_p95_ms": 75.6,
+    "ttft_p99_ms": 82.2,
+    "ttft_max_ms": 2380.2,
+    "total_p50_ms": 1106.1,
+    "total_p99_ms": 1732.6,
+    "tokens_out_mean": 61.6
+  },
+  "quiet_aggregate": {
+    "count_ok": 916,
+    "count_err": 0,
+    "ttft_p50_ms": 57.8,
+    "ttft_p95_ms": 76.9,
+    "ttft_p99_ms": 1238.6,
+    "ttft_max_ms": 2220.0,
+    "total_p50_ms": 1110.6,
+    "total_p99_ms": 2969.4,
+    "tokens_out_mean": 61.7
+  },
+  "quiet_per_tenant": {
+    "quiet_0": {
+      "count_ok": 321,
+      "count_err": 0,
+      "ttft_p50_ms": 56.6,
+      "ttft_p95_ms": 75.4,
+      "ttft_p99_ms": 79.2,
+      "ttft_max_ms": 2220.0,
+      "total_p50_ms": 1110.3,
+      "total_p99_ms": 1146.7,
+      "tokens_out_mean": 61.8
+    },
+    "quiet_1": {
+      "count_ok": 297,
+      "count_err": 0,
+      "ttft_p50_ms": 57.8,
+      "ttft_p95_ms": 76.8,
+      "ttft_p99_ms": 1466.9,
+      "ttft_max_ms": 2006.1,
+      "total_p50_ms": 1110.7,
+      "total_p99_ms": 2969.4,
+      "tokens_out_mean": 61.8
+    },
+    "quiet_2": {
+      "count_ok": 298,
+      "count_err": 0,
+      "ttft_p50_ms": 58.7,
+      "ttft_p95_ms": 78.0,
+      "ttft_p99_ms": 2090.3,
+      "ttft_max_ms": 2213.8,
+      "total_p50_ms": 1110.6,
+      "total_p99_ms": 3255.4,
+      "tokens_out_mean": 61.6
+    }
+  },
+  "bench_args": {
+    "flooder_rps": 32.0,
+    "quiet_rps": 1.0,
+    "num_quiet": 3,
+    "duration_s": 300.0,
+    "max_tokens": 64,
+    "model": "meta-llama/Llama-3.1-70B-Instruct",
+    "seed": 42,
+    "prompt_length_dist": ""
+  }
+}

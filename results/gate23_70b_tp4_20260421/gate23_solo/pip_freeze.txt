@@ -1,0 +1,12 @@
+cuda-bindings==12.9.4
+cuda-pathfinder==1.5.3
+cuda-python==12.9.4
+hf-xet==1.4.3
+hf_transfer==0.1.9
+huggingface_hub==1.11.0
+torch==2.10.0
+torch_c_dlpack_ext==0.1.5
+torchaudio==2.10.0
+torchvision==0.25.0
+transformers==5.5.4
+vllm==0.19.1
