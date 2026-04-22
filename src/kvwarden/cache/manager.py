@@ -88,7 +88,6 @@ class TierStats:
 
     @property
     def utilization(self) -> float:
-        """Fraction of tier capacity in use."""
         if self.capacity_gb <= 0:
             return 0.0
         return min(self.used_gb / self.capacity_gb, 1.0)
@@ -196,16 +195,8 @@ class CacheManager:
         return None
 
     def access_block(self, block_id: str) -> CacheBlock | None:
-        """Record an access to an existing block.
-
-        Updates access count and timestamp.
-
-        Args:
-            block_id: Block identifier.
-
-        Returns:
-            The updated block, or None if not found.
-        """
+                """Update access tracking for a block (access count, timestamp, and LRU state)."""
+      
         block = self._blocks.get(block_id)
         if block is None:
             self._misses += 1
@@ -217,7 +208,6 @@ class CacheManager:
         return block
 
     def free_block(self, block_id: str) -> bool:
-        """Free a cache block.
 
         Args:
             block_id: Block identifier.
@@ -232,7 +222,6 @@ class CacheManager:
         return True
 
     def free_blocks_for_request(self, request_id: str) -> int:
-        """Free all blocks belonging to a specific request.
 
         Args:
             request_id: Request identifier.
@@ -246,7 +235,6 @@ class CacheManager:
         return len(to_free)
 
     def free_blocks_for_model(self, model_id: str) -> int:
-        """Free all blocks belonging to a specific model.
 
         Args:
             model_id: Model identifier.
@@ -264,7 +252,6 @@ class CacheManager:
     # ------------------------------------------------------------------
 
     def promote_block(self, block_id: str, target_tier: str) -> bool:
-        """Move a block to a faster (higher) tier.
 
         Args:
             block_id: Block identifier.
