@@ -7,6 +7,8 @@
 
 Tenant-fair LLM inference on one GPU. Sits in front of vLLM/SGLang, rate-limits per tenant at admission, and keeps a quiet user fast while a noisy neighbor floods the same engine.
 
+![Quiet-tenant TTFT under noisy-neighbor contention — solo 53.9 ms vs FIFO 1,585 ms vs token-bucket 61.5 ms on A100 + Llama-3.1-8B + vLLM 0.19.1](https://raw.githubusercontent.com/coconut-labs/kvwarden/main/docs/launch/figures/launch_hero_chart.png)
+
 **Hero number.** A100-SXM4, Llama-3.1-8B, vLLM 0.19.1, two tenants sharing one engine, 300 s sustained:
 
 | | Quiet user TTFT p99 |
