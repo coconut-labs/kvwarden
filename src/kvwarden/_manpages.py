@@ -32,11 +32,13 @@ stays near solo TTFT even with a flooder hitting the same engine.
 
 ## Commands
 
-- `kvwarden serve`  -- start the API server
-- `kvwarden status` -- show loaded models, cache, tenant stats
-- `kvwarden models` -- list available/loaded models
-- `kvwarden doctor` -- environment + prerequisite check
-- `kvwarden man`    -- open a help page in the terminal
+- `kvwarden serve`     -- start the API server
+- `kvwarden status`    -- show loaded models, cache, tenant stats
+- `kvwarden models`    -- list available/loaded models
+- `kvwarden doctor`    -- environment + prerequisite check
+- `kvwarden bench`     -- benchmark helpers (see `kvwarden man bench`)
+- `kvwarden man`       -- open a help page in the terminal
+- `kvwarden telemetry` -- inspect / change opt-in usage stats
 - `kvwarden --version`
 
 Run `kvwarden man <command>` for a detailed page on a specific command.
@@ -277,6 +279,105 @@ curl localhost:8080/metrics | grep -E "tenant_rejected|admission_queue_depth"
 
 Run `kvwarden man tenants` for the fairness mental model, or open
 `docs/tuning_guide.md` in the repo for a deep treatment.
+"""
+
+
+PAGES["bench"] = """
+# kvwarden bench
+
+Benchmark helpers. The flagship subcommand replays the validated Gate 2
+fairness measurement — the source of the hero number on the LP.
+
+## reproduce-hero
+
+```bash
+kvwarden bench reproduce-hero --flavor 2tenant
+```
+
+Runs the same 2-tenant bench that produced the published result: one quiet
+tenant at 1 RPS, one flooder at 32 RPS, 300 seconds against an already-running
+engine. On A100 + Llama-3.1-8B-Instruct + vLLM 0.19.1 the quiet tenant lands
+at ~61.5 ms p99 TTFT against a 1585 ms FIFO baseline.
+
+Flavors:
+
+- `2tenant` -- 1 quiet + 1 flooder (the hero)
+- `n6`     -- 5 quiet + 1 flooder (tenant-count scaling)
+- `n8`     -- 7 quiet + 1 flooder (higher fan-in)
+
+## Prereq
+
+Start a kvwarden server in another terminal, pointed at a vLLM or SGLang
+engine loaded with Llama-3.1-8B-Instruct:
+
+```bash
+kvwarden serve --config configs/gate2_fairness_token_bucket.yaml
+```
+
+Then in a second terminal run the bench. See `configs/` for the full
+list of shipped configs and `results/` for the reference numbers each
+flavor targets.
+
+## Outputs
+
+Per-tenant CSVs plus a `summary.json` are written under a timestamped
+directory. A rich comparison table renders at the end, with the observed
+numbers placed next to the published reference and a PASS/FAIL verdict
+against the tolerance band.
+"""
+
+
+PAGES["telemetry"] = """
+# kvwarden telemetry
+
+Opt-in usage stats. **Off by default.** The command is here so you can read
+exactly what's transmitted before flipping it on, and flip it on or off at any
+time with no re-config.
+
+## Commands
+
+- `kvwarden telemetry show`    -- current setting + what fields are sent
+- `kvwarden telemetry enable`  -- opt in
+- `kvwarden telemetry disable` -- opt out
+
+## What is sent (only when enabled)
+
+An anonymous install-ping on first `kvwarden serve` of a given version, plus a
+minimal daily heartbeat: version, platform (os + python minor), engine name
+(vllm/sglang), and a random install UUID. **No model names, no tenant IDs,
+no request bodies, no IPs beyond what the HTTPS edge logs.**
+
+The data shapes help the author prioritise which engines / platforms to keep
+green. The opt-in ping and daily heartbeat are both skipped if
+`kvwarden telemetry disable` has ever been called on this install.
+
+## Privacy
+
+Full field list + transit details: `docs/privacy.md` in the repo. The
+collection endpoint is a Cloudflare Worker with a public schema and no
+write-back to any analytics vendor.
+"""
+
+
+PAGES["man"] = """
+# kvwarden man
+
+Open a help page in the terminal. This is that page.
+
+## Usage
+
+```bash
+kvwarden man              # overview
+kvwarden man <topic>      # specific page
+kvwarden man topics       # list all pages
+```
+
+Available topics: `overview`, `quickstart`, `serve`, `status`, `models`,
+`doctor`, `bench`, `telemetry`, `tenants`, `man`.
+
+Every CLI subcommand has a corresponding man topic. If a topic you expect
+is missing, that's a doc bug — please open an issue at
+https://github.com/coconut-labs/kvwarden/issues.
 """
 
 

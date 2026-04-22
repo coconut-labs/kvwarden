@@ -13,9 +13,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
+    "certifi",
     "numpy>=1.24,<2.3",
     "pandas~=2.0",
     "pyyaml>=6.0",

@@ -530,20 +530,53 @@ def _cmd_models(args: argparse.Namespace) -> None:
 # ─────────────────────────────── doctor ───────────────────────────────
 
 
-def _pypi_latest_version() -> str | None:
-    """Best-effort fetch of the latest kvwarden version from PyPI."""
+def _pypi_latest_version() -> tuple[str | None, str | None]:
+    """Best-effort fetch of the latest kvwarden version from PyPI.
+
+    Returns ``(version, error_reason)``. If the fetch succeeds,
+    ``(version, None)``. On SSL trust failure (common on stock macOS
+    Python venvs with no CA roots wired into urllib), returns
+    ``(None, "ssl")`` so the caller can distinguish it from real
+    network outage, ``(None, "net")``.
+    """
     try:
+        import ssl
         import urllib.request
 
+        try:
+            import certifi
+
+            ctx: ssl.SSLContext | None = ssl.create_default_context(cafile=certifi.where())
+        except ImportError:
+            ctx = None
         req = urllib.request.Request(
             "https://pypi.org/pypi/kvwarden/json",
             headers={"User-Agent": f"kvwarden-doctor/{__version__}"},
         )
-        with urllib.request.urlopen(req, timeout=3) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=3, context=ctx) as resp:  # noqa: S310
             payload = json.loads(resp.read().decode())
-            return payload["info"]["version"]
-    except Exception:
-        return None
+            return payload["info"]["version"], None
+    except Exception as exc:
+        reason = "ssl" if "SSL" in str(exc) or "CERTIFICATE" in str(exc) else "net"
+        return None, reason
+
+
+def _is_newer(a: str, b: str) -> bool:
+    """Return True if version ``a`` is strictly newer than version ``b``.
+
+    Uses a naive dotted-numeric compare — enough for semver-ish kvwarden
+    versions and not worth pulling in ``packaging`` for.
+    """
+    def parts(v: str) -> list[int]:
+        out: list[int] = []
+        for piece in v.split("."):
+            try:
+                out.append(int(piece.split("-")[0].split("+")[0]))
+            except ValueError:
+                return [0]
+        return out
+
+    return parts(a) > parts(b)
 
 
 def _port_free(port: int) -> bool:
@@ -603,12 +636,17 @@ def _cmd_doctor(_args: argparse.Namespace) -> None:
     )
 
     # KVWarden version vs PyPI
-    latest = _pypi_latest_version()
+    latest, pypi_err = _pypi_latest_version()
     if latest is None:
-        checks.append(("warn", "KVWarden", f"{__version__} (PyPI unreachable)"))
+        suffix = (
+            "SSL trust unavailable — install `certifi`"
+            if pypi_err == "ssl"
+            else "PyPI unreachable"
+        )
+        checks.append(("warn", "KVWarden", f"{__version__} ({suffix})"))
     elif latest == __version__:
         checks.append(("ok", "KVWarden", f"{__version__} (latest)"))
-    else:
+    elif _is_newer(latest, __version__):
         checks.append(
             (
                 "warn",
@@ -616,6 +654,10 @@ def _cmd_doctor(_args: argparse.Namespace) -> None:
                 f"{__version__} installed · {latest} available  "
                 "[dim]pip install --upgrade kvwarden[/dim]",
             )
+        )
+    else:
+        checks.append(
+            ("ok", "KVWarden", f"{__version__} installed · PyPI at {latest} (dev build)")
         )
 
     # Engines
