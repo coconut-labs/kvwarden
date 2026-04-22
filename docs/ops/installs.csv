@@ -1,0 +1,3 @@
+email,signed_up_at,first_contact_at,onboarded_at,engine,model,gpu,tenant_count,config_used,install_status,7day_check,30day_check,testimonial_ok,paid_interest,notes
+alex@example-ai.com,2026-04-18,2026-04-22,2026-04-28,vllm,Llama-3.1-8B-Instruct,1x A100 80GB,4,configs/quickstart_fairness.yaml,running,n-a,n-a,asked,warm,2026-04-28 onboarded in 28 min; tail latency dropped 4x on FIFO comparison; wants to re-check at 7d mark before quoting
+devops@synthco.io,2026-04-19,2026-04-23,2026-04-29,sglang,Qwen2.5-14B-Instruct,2x RTX 4090,6,configs/gate2_fairness_token_bucket.yaml,running,n-a,n-a,no,none,2026-04-29 install clean; 6 internal tenants for RAG app; not a paid prospect but useful design partner for sglang adapter coverage
