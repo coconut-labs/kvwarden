@@ -25,6 +25,7 @@ Migration from `infergrid` → `kvwarden` is done on both main and LP repos. Eve
 | **HuggingFace token** (`HF_TOKEN`) | Read access to gated Meta Llama models. Needed any time we spin a bench pod that downloads Llama-3.1-Instruct. Low blast radius (read-only). | Rotate when a bench agent stalls and may have leaked the token in a log, or on 90-day cadence regardless. |
 | **RunPod API key** (`RUNPOD_API_KEY`) | Used to provision GPU pods for gate benches. No pods currently running; balance ≈ $94. Blast radius bounded by remaining balance. | Rotate if chat transcripts are shared externally or if balance starts draining unexpectedly. |
 | **PyPI tokens** (project-scoped for `infergrid`, and new one needed for `kvwarden`) | Used to publish new package versions. Not actively in a running service. Supply-chain risk if leaked (malicious version could be pushed). | Generate a fresh **project-scoped** PyPI token the next time you ship a release. Old `infergrid` token should be revoked after the final `infergrid` 0.1.3 redirect-stub release. |
+| **Docker Hub PAT** (`DOCKER_HUB_TOKEN` for user `kvwarden`, reserved 2026-04-22) | Will be used when we push the first kvwarden container image. Namespace reservation only today — no images yet. Same supply-chain risk as PyPI if leaked (malicious image could be pushed to a reserved namespace). | Rotate after the first image push by narrowing the PAT to read/write on a single repo (e.g. `kvwarden/kvwarden`) instead of account-wide. Rotate also if the value is shared externally. |
 
 ## Deprecation order (recommended sequence, all doable in one sitting)
 
@@ -69,3 +70,4 @@ All values are stored at `~/.infergrid/creds.md` (mode 600, outside any git tree
 - `RUNPOD_API_KEY` (RunPod, bench use)
 - `RESEND_API_KEY` (Resend, LIVE — Worker depends on it)
 - `KVWARDEN_ADMIN_KEY` (generated locally, set on Worker, stored locally so admin endpoints can be called)
+- `DOCKER_HUB_TOKEN` (Docker Hub PAT for user `kvwarden`, reserved 2026-04-22; no images pushed yet)
