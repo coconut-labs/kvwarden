@@ -10,7 +10,7 @@ Multi-tenant LLM inference on a shared engine is a starvation problem. vLLM's co
 
 Three things engines cannot do internally:
 
-1. **Per-tenant token-bucket rate limiting at the budget gate** — load-bearing mechanism, validated empirically. Quiet-tenant p99 TTFT under contention: 1,585 ms (FIFO) → 61.5 ms (KVWarden token bucket), 1.14× of the solo baseline, A100 + vLLM 0.19.1, 300 s sustained, n=311. Generalized to N=6 tenants at 61.0 ms aggregate p99 (1.13× of solo).
+1. **Per-tenant token-bucket rate limiting at the budget gate** — load-bearing mechanism, validated empirically. Quiet-tenant p99 TTFT under contention: 1,585 ms (FIFO) → 61.5 ms (KVWarden's token bucket), 1.14× of the solo baseline, A100 + vLLM 0.19.1, 300 s sustained, n=311. Generalized to N=6 tenants at 61.0 ms aggregate p99 (1.13× of solo).
 2. **Multi-model lifecycle on a single GPU** — frequency+recency eviction, hot-swap routing, no K8s.
 3. **OpenAI-compatible HTTP API** in front of multiple engines, so app code doesn't change.
 
