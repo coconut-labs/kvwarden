@@ -1,6 +1,10 @@
 # Email to Samuel Bell (infergrid.net)
 
-**Status:** ready to send. The rename sweep has landed on `main`, `kvwarden.org` is live, and the public launch artifacts carry the new name. Send from `patelshrey77@gmail.com`.
+**Status:** ready to send *after* the PyPI 0.0.1 stub ships under `kvwarden` and the `infergrid` package has been pushed as a redirect stub (both claims appear in the body below). The rename sweep has landed on `main` and `kvwarden.org` is live. Send from `patelshrey77@gmail.com`.
+
+**Prereqs before sending:**
+- `pip install kvwarden` returns a valid package (run `./scripts/publish_kvwarden_stub.sh` — see `docs/launch/pypi_reservation.md`).
+- `pip install infergrid` still works but the package is a 0.1.3+ deprecation stub whose README points at kvwarden.org. If that's not done yet, drop the phrase "the old `infergrid` PyPI package is a deprecation stub pointing at kvwarden" from the body.
 
 **Contact discovery:** Samuel's site lists a Calendly handle (`samueljamesbell`) but no public email. Reasonable lookups, in order:
 - His GitHub profile (https://github.com/samueljamesbell) — check the public email there first.
