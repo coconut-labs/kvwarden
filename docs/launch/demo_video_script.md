@@ -122,6 +122,6 @@ Cross-checked against `src/kvwarden/cli.py` and `src/kvwarden/_bench/hero.py` on
 - `kvwarden bench reproduce-hero --flavor {2tenant|n6|n8}` — exists (`cli.py:183`, flavors defined at `_bench/hero.py:59`).
 - Progress bar format: Rich progress with "bench flavor=2-tenant" task and `{completed}/{total}s` text column (`_bench/hero.py:247`).
 - Final comparison table: rendered by `_bench/compare.py:create_hero_comparison_table`.
-- `kvwarden --help` top-level commands: `serve`, `status`, `models`, `man`, `bench`, `telemetry` (`cli.py` sub-parser list).
+- `kvwarden --help` top-level commands: `serve`, `status`, `models`, `doctor`, `bench`, `man`, `telemetry` (`cli.py` sub-parser list).
 
 Commands deliberately **not** used in this script because they don't exist: `kvwarden bench run`, `kvwarden config set`, `kvwarden reload`, per-tenant Prometheus metric `kvwarden_p99_ttft_ms`. Earlier drafts referenced these; the fix landed alongside this doc.
