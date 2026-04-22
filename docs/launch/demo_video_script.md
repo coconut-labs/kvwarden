@@ -1,141 +1,127 @@
 # 30-second terminal demo — Show HN
 
-Two variants below. **Pick one before filming.** The GPU-live variant is more honest (real numbers in real time) but requires a running A100 or equivalent. The dry-run variant uses `kvwarden bench reproduce-hero --flavor=2tenant` against a locally running vLLM and is filmable on a laptop talking to a remote engine — or on any box where the bench harness can stream pre-recorded results.
+Two variants below. **Pick one before filming.** Variant A needs an A100 (or equivalent) up with a vLLM engine reachable, because it shows a real `reproduce-hero` run edited down to 30s. Variant B is a CLI walkthrough that needs no GPU — it's honest about being documentation-level rather than live-bench-level.
+
+Both variants use only commands that exist today in `src/kvwarden/cli.py` and output formats that `kvwarden bench reproduce-hero` actually produces. No aspirational commands, no invented metrics.
 
 ---
 
 ## Recording guidance (both variants)
 
-- **Resolution:** 1920x1080. Higher looks like a flex and compresses worse on Twitter.
-- **Terminal:** dark theme (anything dark — iTerm2 "Solarized Dark", Alacritty default, Ghostty "Catppuccin Mocha"). Light theme washes out in social-media previews.
-- **Font:** JetBrains Mono or Berkeley Mono, 18pt. Big enough that someone reading on a phone can see it without pinching.
-- **Window size:** 100 columns x 30 rows. Captures the full bench output without wrapping.
-- **Capture tool:** `asciinema rec` for a terminal-native recording (embeddable on Show HN / the LP), plus a screen recorder (macOS: Cmd-Shift-5, "Record Selected Portion") for the 30-second MP4 that Twitter / YouTube will accept. Record both in one take.
-- **No personal info on screen:** hide the shell prompt's hostname and user. Set `PS1='$ '` before recording. Close any tabs/panes showing `patelshrey77`, email, Slack, personal dotfiles.
-- **What the frame contains:** the terminal rectangle and nothing else. No desktop, no menu bar, no dock. On macOS, full-screen the terminal (Ctrl-Cmd-F) or use the record-rectangle tool to crop to the terminal bounds.
-- **Voiceover:** record separately. Read at a normal pace. Re-record until the timing matches the on-screen action within ±1 second per block.
+- **Resolution:** 1920x1080. Bigger looks like a flex and compresses worse on Twitter.
+- **Terminal:** dark theme (iTerm2 "Solarized Dark", Alacritty default, Ghostty "Catppuccin Mocha"). Light themes wash out in social-media previews.
+- **Font:** JetBrains Mono or Berkeley Mono, 18pt. Big enough that someone reading on a phone can see without pinching.
+- **Window size:** 100 columns x 30 rows. Fits the reproduce-hero output without wrapping.
+- **Capture:** `asciinema rec` for the terminal-native recording (embeddable on Show HN / the LP), plus a screen recorder (macOS: Cmd-Shift-5, "Record Selected Portion") for the 30s MP4 that Twitter / YouTube will accept. Record both in the same take so they stay in sync.
+- **No personal info on screen:** hide hostname and user. `PS1='$ '` before recording. Close tabs/panes showing `patelshrey77`, email, Slack, dotfiles.
+- **Frame contains terminal only:** no desktop, no menu bar, no dock. Full-screen the terminal (macOS: Ctrl-Cmd-F) or crop to the terminal rectangle with Cmd-Shift-5.
+- **Voiceover:** record separately. Normal pace. Re-record until on-screen action and audio align within ±1s per block.
 
 ---
 
-# Variant A — GPU-live (pick this if you have an A100 up)
+# Variant A — GPU-live (time-lapse, pick if an A100 is up)
 
-Assumes kvwarden is already built and a vLLM engine is running on a reachable GPU at `$ENGINE_URL`. Preflight — not part of the recording:
+`kvwarden bench reproduce-hero --flavor=2tenant` takes ~5 minutes end-to-end (pre-flight + 300s bench + post-processing). The 30s demo is an **edited highlight reel** — time-lapse or speed-ramp the progress-bar phase, hold on the final comparison table. This matches the published Gate 2-FAIRNESS replication; no invented commands.
 
+Preflight (off-camera):
 ```bash
-# off-camera: start vLLM
-vllm serve meta-llama/Llama-3.1-8B-Instruct --host 0.0.0.0 --port 8000
-# off-camera: start kvwarden
+# terminal A: serve a token-bucket config
 kvwarden serve --config configs/gate2_fairness_token_bucket.yaml
+# wait for `curl -fs http://localhost:9000/health` to return 200
 ```
 
-## Voiceover + screen — 30s in 5-second blocks
-
-### 0:00-0:05
-**Voiceover:** "One A100. One Llama-3.1-8B engine. Two tenants sharing it."
-**Terminal command:**
+Filming (terminal B, recorded):
 ```bash
-$ watch -n 1 'curl -s localhost:9000/metrics | grep kvwarden_p99'
+$ kvwarden bench reproduce-hero --flavor=2tenant
 ```
-**Viewer sees:** a live-updating metrics panel showing `kvwarden_p99_ttft_ms{tenant="quiet"}` and `...{tenant="flooder"}` both near baseline.
 
-### 0:05-0:10
-**Voiceover:** "I start the flooder at 32 requests per second. Watch the quiet tenant."
-**Terminal command (new pane or tmux split):**
-```bash
-$ kvwarden bench run --flooder-rps=32 --quiet-rps=1 --duration=60s
-```
-**Viewer sees:** the bench kicks off; the metrics panel shows `kvwarden_p99_ttft_ms{tenant="quiet"}` climbing sharply past 1000ms within 10 seconds.
+## Voiceover + screen — 30s across 4 blocks (edit to fit)
 
-### 0:10-0:15
-**Voiceover:** "Under vanilla FIFO, the quiet tenant's p99 TTFT hits sixteen hundred milliseconds. Starved."
-**Terminal:** nothing new typed.
-**Viewer sees:** the quiet-tenant p99 line stabilizes around 1500-1600ms while the flooder line sits near 200ms. The contrast is the whole point — one line is red-colored by `grep --color` or by dashboard styling.
+### 0:00-0:05 — open
+**Voiceover:** "One A100. One Llama-3.1-8B engine on vLLM 0.19.1. Two tenants sharing it — one flooder at 32 RPS, one quiet user at 1 RPS."
+**Viewer sees:** the start of the reproduce-hero run — banner line showing flavor, RPS, duration, plus the Rich progress bar for "bench flavor=2-tenant" at `0/300s`.
 
-### 0:15-0:20
-**Voiceover:** "Now I flip on kvwarden's per-tenant rate limit at the admission gate. One YAML field."
-**Terminal command:**
-```bash
-$ kvwarden config set tenants.flooder.rate_limit_rps=4 && kvwarden reload
-```
-**Viewer sees:** a short log line `[kvwarden] reloaded config in 12ms, admission policy: token-bucket`. The metrics panel is still running.
+### 0:05-0:15 — the bench (time-lapsed)
+**Voiceover:** "Under vanilla FIFO the quiet tenant gets starved. With kvwarden's admission gate — one YAML knob — the same workload recovers."
+**Editing:** speed-ramp the 300s of progress bar advancing into about 8-10s of footage. Keep the ETA field visible so viewers see the bar is real, just compressed.
+**Viewer sees:** the progress bar sweeping `0/300s` to `300/300s` with the ETA counting down.
 
-### 0:20-0:25
-**Voiceover:** "Quiet tenant recovers in under two seconds. Sixty-one milliseconds p99. One-point-one-four times solo baseline."
-**Terminal:** nothing new typed.
-**Viewer sees:** the quiet-tenant p99 line drops sharply from ~1500ms to ~60ms within the visible frame. Flooder line stays flat.
+### 0:15-0:25 — the result
+**Voiceover:** "Quiet-tenant p99 TTFT lands at sixty-one-point-five milliseconds. One-point-one-four times solo baseline. The FIFO reference from the same config was sixteen-hundred milliseconds — twenty-six-times worse."
+**Viewer sees:** the final Rich comparison table rendered by `reproduce-hero` — observed column vs `REFERENCES["2tenant"]` column, the quiet-tenant row highlighted. The closing line `OVERALL: CONFIRMS reference within tolerance` is the hero frame — hold on it for 3 full seconds.
 
-### 0:25-0:30
+### 0:25-0:30 — CTA
 **Voiceover:** "Ten lines of YAML. No application code. `pip install kvwarden`."
 **Terminal command:**
 ```bash
 $ pip install kvwarden
 ```
-**Viewer sees:** pip output flashing briefly (use `--quiet` if it's too noisy), ending on `Successfully installed kvwarden-0.1.0`. Cut to black / kvwarden.org card.
+**Viewer sees:** pip flashes `Successfully installed kvwarden-0.1.0`, then cut to a static kvwarden.org end-card.
+
+> **Note:** the last line shows `kvwarden-0.1.0`, which only lands on PyPI when the real 0.1.0 release ships. If you're filming before the PyPI upload, substitute `Successfully installed kvwarden-0.0.1` (the stub), or re-record the last second after the real upload.
 
 ---
 
-# Variant B — dry-run (pick this if no GPU is up)
+# Variant B — CLI walkthrough (pick if no GPU is up)
 
-Uses `kvwarden bench reproduce-hero --flavor=2tenant` pointed at a locally running vLLM. The hero bench replays the validated Gate 2-FAIRNESS measurement and prints a side-by-side comparison against the published numbers. Ships with the CLI — no remote GPU needed if you have an engine reachable, and the harness degrades gracefully with a mock engine for demo purposes.
+No bench run, no engine. This is a 30-second CLI tour that validates the install and previews the bench command surface without actually hitting a GPU. Less persuasive than Variant A, but honest and filmable on a laptop in 10 minutes. Acceptable for a Show HN when time/GPU-availability blocks Variant A.
 
-Preflight (off-camera):
+Preflight:
 ```bash
-# off-camera: any reachable vLLM at $ENGINE_URL, or the shipped mock
 pip install kvwarden
 ```
 
-## Voiceover + screen — 30s in 5-second blocks
+## Voiceover + screen — 30s across 4 blocks
 
-### 0:00-0:05
-**Voiceover:** "This is the starvation fix kvwarden ships. I'll replay it live in thirty seconds."
-**Terminal command:**
+### 0:00-0:07 — install
+**Voiceover:** "kvwarden ships as a pip install. Eight-second setup on any Python 3.11+ machine."
+**Terminal commands:**
 ```bash
 $ pip install kvwarden
+$ kvwarden --help
 ```
-**Viewer sees:** pip install flashing past, ending on `Successfully installed kvwarden-0.1.0`. If already installed, `Requirement already satisfied` is fine.
+**Viewer sees:** `Successfully installed kvwarden-0.1.0`, then the top-level `kvwarden --help` output showing the subcommand list (`serve`, `bench`, `status`, `models`, `man`, `telemetry`).
 
-### 0:05-0:10
-**Voiceover:** "One command spins up the reproducible hero bench — 2 tenants on Llama-3.1-8B, vLLM 0.19.1."
+### 0:07-0:15 — bench command
+**Voiceover:** "The headline bench replays the published measurement — two tenants, Llama-3.1-8B, vLLM 0.19.1 — against any vLLM-compatible engine you point it at."
 **Terminal command:**
 ```bash
-$ kvwarden bench reproduce-hero --flavor=2tenant
+$ kvwarden bench reproduce-hero --help
 ```
-**Viewer sees:** startup banner — "KVWarden hero reproduction — 2tenant, 32 RPS flooder, 1 RPS quiet, 300s", plus a rich progress bar with ETA.
+**Viewer sees:** the reproduce-hero help output showing `--flavor` with choices `2tenant | n6 | n8`, plus the model and duration flags.
 
-### 0:10-0:15
-**Voiceover:** "Under vanilla FIFO, quiet-tenant p99 is sixteen hundred milliseconds. That's the baseline."
-**Terminal:** no new input. The progress bar advances.
-**Viewer sees:** a live-updating table with columns `tenant | condition | p99 TTFT | ref`. The `fifo / quiet` row shows `1585 ms` next to `ref: 1585 ms`.
+### 0:15-0:25 — the published numbers
+**Voiceover:** "Gate 2-FAIRNESS on A100: solo baseline fifty-four milliseconds. Vanilla FIFO under load — sixteen-hundred milliseconds, twenty-nine-times starvation. Same workload with kvwarden's admission gate — sixty-one-point-five milliseconds, one-point-one-four times solo."
+**Viewer sees:** cut to an overlay (static image, not terminal) showing the published Gate 2-FAIRNESS comparison chart from the LP. Hold for 10 seconds. This is the hero data the LP already leads with.
 
-### 0:15-0:20
-**Voiceover:** "Flip on per-tenant rate limits at admission. Same workload. Same engine."
-**Terminal:** still no new input — the bench runs the next phase automatically.
-**Viewer sees:** the table adds a `token-bucket / quiet` row showing the p99 dropping in real time: 1200ms, 600ms, 200ms, 61ms. The delta column lights up green.
+### 0:25-0:30 — CTA
+**Voiceover:** "kvwarden.org. Repo on github. `pip install kvwarden`."
+**Viewer sees:** a static end-card with the logo, `kvwarden.org`, and the pip command in large monospace.
 
-### 0:20-0:25
-**Voiceover:** "Sixty-one-point-five milliseconds. Within one-point-one-four times of solo baseline. Twenty-six-x recovery."
-**Terminal:** no new input.
-**Viewer sees:** final comparison panel — side-by-side reference vs. observed numbers, all green checks. `OVERALL: CONFIRMS reference within tolerance.`
-
-### 0:25-0:30
-**Voiceover:** "Ten lines of YAML. No application code. kvwarden.org."
-**Terminal command:**
-```bash
-$ open https://kvwarden.org
-```
-**Viewer sees:** a brief flash of the LP, then fade to black.
+> **Note:** Variant B's hero-chart overlay is the same image the LP renders — export `landing_page/public/figures/gate2_fairness.svg` (or PNG) and use that as the static overlay. Don't screenshot the LP live (URL bar leaks, font rendering varies).
 
 ---
 
-## Post-production
+## Post-production (both variants)
 
-- **Add captions.** Social autoplay is muted by default. Burn in the voiceover as captions or use a clean sans-serif overlay (Inter, 24pt, white with 40% black drop shadow). 30 seconds of captions is about 75 words — the voiceover above is within that budget.
-- **End card:** logo + kvwarden.org + "pip install kvwarden" in large text. 2 seconds. Static.
-- **Output formats:** export 1:1 square (1080x1080) for Twitter/LinkedIn autoplay, and 16:9 (1920x1080) for YouTube / Hacker News embeds. Same source take, two crops.
-- **File size:** keep under 10MB for the square cut so it plays natively in Twitter. H.264, 30fps, CRF 23 is the sweet spot.
+- **Captions.** Social autoplay is muted by default. Burn in the voiceover as captions or use a clean sans-serif overlay (Inter, 24pt, white with 40% black drop shadow). 30s of captions ≈ 75 words — both scripts fit.
+- **End card:** logo + kvwarden.org + `pip install kvwarden` in large text. 2 seconds static.
+- **Output formats:** 1:1 square (1080x1080) for Twitter/LinkedIn autoplay, 16:9 (1920x1080) for YouTube / Show HN embeds. Same source take, two crops.
+- **File size:** under 10 MB for the square cut so Twitter plays it natively. H.264, 30fps, CRF 23 is the sweet spot.
 
 ## Which variant to record
 
-- **Default: Variant A (GPU-live).** If an A100 is up and the engine is stable, this is more persuasive — the numbers move in real time and the viewer sees the fix land.
-- **Fallback: Variant B (dry-run).** If the GPU is down or unreliable, the reproduce-hero flow is already validated and the numbers are truthful replays of published measurements. Acceptable for a Show HN; note "reproduced from Gate 2-FAIRNESS, reference v3" in the caption.
-- **Don't mix.** Pick one. Mixing a mock and a live demo in the same take looks sloppy.
+- **Default: Variant A.** If an A100 is reachable and the engine stays up for 6 minutes, the real-run-edited-to-30s is more persuasive. Time-lapse is a standard editing move — not a gimmick.
+- **Fallback: Variant B.** When GPU availability is uncertain or the filming window is tight, the CLI walkthrough is honest and filmable on a laptop. Note "hero chart from Gate 2-FAIRNESS, reference v3" in the Show HN caption so viewers know the numbers come from a published measurement, not a live take.
+- **Don't mix.** Pick one take start-to-finish. Cutting between Variant A footage and Variant B overlay looks sloppy.
+
+## Known CLI surface the script depends on
+
+Cross-checked against `src/kvwarden/cli.py` and `src/kvwarden/_bench/hero.py` on 2026-04-22:
+- `kvwarden serve --config <yaml>` — exists (`cli.py:77`).
+- `kvwarden bench reproduce-hero --flavor {2tenant|n6|n8}` — exists (`cli.py:183`, flavors defined at `_bench/hero.py:59`).
+- Progress bar format: Rich progress with "bench flavor=2-tenant" task and `{completed}/{total}s` text column (`_bench/hero.py:247`).
+- Final comparison table: rendered by `_bench/compare.py:create_hero_comparison_table`.
+- `kvwarden --help` top-level commands: `serve`, `status`, `models`, `man`, `bench`, `telemetry` (`cli.py` sub-parser list).
+
+Commands deliberately **not** used in this script because they don't exist: `kvwarden bench run`, `kvwarden config set`, `kvwarden reload`, per-tenant Prometheus metric `kvwarden_p99_ttft_ms`. Earlier drafts referenced these; the fix landed alongside this doc.
