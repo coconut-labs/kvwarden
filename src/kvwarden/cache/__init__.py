@@ -1,5 +1,5 @@
 """KVWarden KV cache management with tiered eviction."""
 
-from kvwarden.cache.manager import CacheBlock, CacheManager, TierStats
+from kvwarden.cache.manager import CacheBlock, CacheManager, TenantPolicy, TierStats
 
-__all__ = ["CacheBlock", "CacheManager", "TierStats"]
+__all__ = ["CacheBlock", "CacheManager", "TenantPolicy", "TierStats"]

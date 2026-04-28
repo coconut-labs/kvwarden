@@ -24,6 +24,23 @@ TIER_ORDER: list[str] = ["gpu", "cpu", "ssd"]
 
 
 @dataclass
+class TenantPolicy:
+    """Tenant-weight policy for KV eviction (T2 — issue #103).
+
+    Currently a no-op surface — the API is reserved so test fixtures and the
+    Gate 3 bench config can be written before the W4-W6 implementation lands.
+    See `docs/rfcs/T2-tenant-aware-eviction.md` for the locked semantics.
+
+    `tenant_weights` will eventually scale a block's `reuse_score` by the
+    block's `tenant_id` weight (default 1.0 for unknown tenants), so a flooder
+    tenant's blocks score down under eviction pressure. Default empty dict =
+    LRU-equivalent behavior; passing `None` to `reuse_score` does the same.
+    """
+
+    tenant_weights: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
 class CacheBlock:
     """Metadata for a single KV cache block.
 
@@ -36,6 +53,7 @@ class CacheBlock:
         access_count: Total number of accesses.
         last_access_time: Monotonic timestamp of last access.
         created_time: Monotonic timestamp of creation.
+        tenant_id: Originating tenant (T2 — None until the hot path tags blocks).
     """
 
     block_id: str
@@ -46,6 +64,7 @@ class CacheBlock:
     access_count: int = 1
     last_access_time: float = field(default_factory=time.monotonic)
     created_time: float = field(default_factory=time.monotonic)
+    tenant_id: str | None = None
 
     def reuse_score(
         self,
@@ -53,20 +72,28 @@ class CacheBlock:
         freq_weight: float = 0.7,
         recency_weight: float = 0.3,
         decay_half_life_s: float = 300.0,
+        *,
+        policy: TenantPolicy | None = None,
     ) -> float:
         """Compute predicted reuse score (higher = more likely to be reused).
 
         Uses frequency * exponential-decay(recency) rather than naive LRU.
+
+        T2 (issue #103): `policy` is the surface for tenant-weighted eviction.
+        Currently ignored — the implementation lands W4-W6 after the RFC closes.
+        Callers passing `policy=None` get the legacy behavior.
 
         Args:
             now: Current monotonic time.
             freq_weight: Weight for the frequency component.
             recency_weight: Weight for the recency component.
             decay_half_life_s: Half-life in seconds for the recency decay.
+            policy: Tenant-weight policy (T2 — reserved, no-op until W4).
 
         Returns:
             Non-negative score; higher means keep longer.
         """
+        del policy  # T2 — ignored until W4-W6.
         age_s = max(now - self.last_access_time, 0.001)
         decay = math.exp(-math.log(2) * age_s / decay_half_life_s)
 
@@ -160,6 +187,8 @@ class CacheManager:
         request_id: str,
         num_tokens: int,
         tier: str = "gpu",
+        *,
+        tenant_id: str | None = None,
     ) -> CacheBlock | None:
         """Allocate a new cache block in the specified tier.
 
@@ -173,6 +202,8 @@ class CacheManager:
             request_id: Originating request ID.
             num_tokens: Tokens to store.
             tier: Preferred tier ("gpu", "cpu", "ssd").
+            tenant_id: Originating tenant (T2 — currently optional; the hot
+                path will start tagging blocks in W4-W6).
 
         Returns:
             The allocated CacheBlock, or None if no tier has space.
@@ -183,12 +214,16 @@ class CacheManager:
         tier_idx = TIER_ORDER.index(tier) if tier in TIER_ORDER else 0
         for t in TIER_ORDER[tier_idx:]:
             if self._tier_used_gb(t) + needed_gb <= self._capacities.get(t, 0):
-                return self._place_block(block_id, model_id, request_id, num_tokens, t)
+                return self._place_block(
+                    block_id, model_id, request_id, num_tokens, t, tenant_id=tenant_id
+                )
 
             # Try evicting from this tier
             evicted = self._evict_from_tier(t, needed_gb)
             if evicted:
-                return self._place_block(block_id, model_id, request_id, num_tokens, t)
+                return self._place_block(
+                    block_id, model_id, request_id, num_tokens, t, tenant_id=tenant_id
+                )
 
         logger.warning(
             "No tier has space for block %s (%d tokens)", block_id, num_tokens
@@ -326,7 +361,13 @@ class CacheManager:
     # Eviction
     # ------------------------------------------------------------------
 
-    def _evict_from_tier(self, tier: str, needed_gb: float) -> bool:
+    def _evict_from_tier(
+        self,
+        tier: str,
+        needed_gb: float,
+        *,
+        policy: TenantPolicy | None = None,
+    ) -> bool:
         """Evict lowest-scored blocks from a tier to free space.
 
         Evicted blocks are demoted to the next-lower tier if possible,
@@ -335,6 +376,8 @@ class CacheManager:
         Args:
             tier: Tier to evict from.
             needed_gb: Space needed in GB.
+            policy: Tenant-weight policy passed through to `reuse_score`
+                (T2 — currently a no-op; the W4-W6 implementation will use it).
 
         Returns:
             True if enough space was freed.
@@ -348,7 +391,10 @@ class CacheManager:
         scored = sorted(
             tier_block_ids,
             key=lambda bid: self._blocks[bid].reuse_score(
-                now, self._freq_weight, self._recency_weight
+                now,
+                self._freq_weight,
+                self._recency_weight,
+                policy=policy,
             ),
         )
 
@@ -470,6 +516,8 @@ class CacheManager:
         request_id: str,
         num_tokens: int,
         tier: str,
+        *,
+        tenant_id: str | None = None,
     ) -> CacheBlock:
         """Place a block in a tier (internal helper, no capacity check)."""
         now = time.monotonic()
@@ -482,6 +530,7 @@ class CacheManager:
             access_count=1,
             last_access_time=now,
             created_time=now,
+            tenant_id=tenant_id,
         )
         self._blocks[block_id] = block
         self._tier_blocks[tier].add(block_id)

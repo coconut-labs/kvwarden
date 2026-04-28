@@ -35,6 +35,9 @@ jobs:
       - name: pytest tests/unit/
         run: pytest tests/unit/ -v --tb=short
 
+      - name: pytest tests/integration/
+        run: pytest tests/integration/ -v --tb=short
+
   lint:
     name: lint (ruff)
     runs-on: ubuntu-latest
