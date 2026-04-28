@@ -118,7 +118,10 @@ class ModelState:
 
     @property
     def avg_latency_s(self) -> float:
-        """Average request latency in seconds."""
+        """Lifetime mean request latency in seconds. 0.0 before any request completes.
+
+        Cumulative — not a rolling window. Resets only when the model is unloaded.
+        """
         if self.request_count == 0:
             return 0.0
         return self.total_latency_s / self.request_count
@@ -962,14 +965,15 @@ class WorkloadRouter:
     # ------------------------------------------------------------------
 
     def loaded_models(self) -> list[str]:
-        """Return list of currently loaded model IDs."""
         return list(self._models.keys())
 
     def model_stats(self) -> dict[str, dict[str, Any]]:
-        """Return per-model statistics.
+        """Per-model snapshot used by `kvwarden status` and the /status endpoint.
 
-        Returns:
-            Dictionary mapping model_id to stats dict.
+        Each value carries: engine, port, request_count, avg_latency_s (rounded
+        to 4dp), eviction_score (frequency × recency-decay), healthy bit, and
+        uptime_s since the model was loaded. Snapshot is taken at call time,
+        not streamed — repeat calls are independent.
         """
         now = time.monotonic()
         stats: dict[str, dict[str, Any]] = {}
@@ -986,10 +990,13 @@ class WorkloadRouter:
         return stats
 
     def queue_depths(self) -> dict[str, int]:
-        """Return current queue depths per bucket.
+        """Pending-request count per scheduling bucket.
 
-        Returns:
-            Dictionary mapping bucket name to queue size.
+        Buckets are length-bucketed asyncio queues — short prompts and long
+        prompts are scheduled separately so a long-prompt backlog doesn't
+        block short-prompt latency. Bucket names are the keys configured in
+        `WorkloadRouter._queues`. Returns sizes from `Queue.qsize()`, which
+        is approximate under concurrent enqueue/dequeue.
         """
         return {name: q.qsize() for name, q in self._queues.items()}
 

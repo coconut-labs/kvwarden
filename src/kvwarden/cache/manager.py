@@ -88,7 +88,12 @@ class TierStats:
 
     @property
     def utilization(self) -> float:
-        """Fraction of tier capacity in use."""
+        """Fraction of tier capacity in use, in [0.0, 1.0].
+
+        Clamps to 1.0 if `used_gb > capacity_gb` (transient over-allocation
+        during eviction). Returns 0.0 when `capacity_gb <= 0` to avoid
+        ZeroDivisionError on disabled tiers.
+        """
         if self.capacity_gb <= 0:
             return 0.0
         return min(self.used_gb / self.capacity_gb, 1.0)
@@ -408,7 +413,6 @@ class CacheManager:
         return counts
 
     def total_blocks(self) -> int:
-        """Return total number of tracked cache blocks."""
         return len(self._blocks)
 
     def hit_rate(self) -> float:
@@ -455,7 +459,6 @@ class CacheManager:
         return (num_tokens * self._bytes_per_token) / (1024**3)
 
     def _tier_used_gb(self, tier: str) -> float:
-        """Compute current usage in GB for a tier."""
         total_tokens = sum(
             self._blocks[bid].num_tokens
             for bid in self._tier_blocks.get(tier, set())
