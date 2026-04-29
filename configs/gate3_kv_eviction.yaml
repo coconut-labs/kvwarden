@@ -1,45 +1,46 @@
-# Gate 3 — Tenant-aware KV eviction. Path C measurement probe (W3, $8).
+# Gate 3 — Cache-pressure-aware admission. Path C measurement probe (M4, $5-6).
 #
-# Three arms designed to disentangle eviction-policy gain from
-# admission-policy gain. Run on 1× A100 SXM4 80GB, vLLM 0.19.1,
+# Three arms designed to disentangle DRR-admission gain from cache-pressure-
+# admission gain. Run on 1× A100 SXM4 80GB, vLLM 0.19.1,
 # Llama-3.1-8B-Instruct, N=8 tenants (1 flooder + 7 quiet), 70% prompt
 # prefix overlap (RAG-style: long shared doc + short tenant-specific
 # query), flooder 32 RPS, quiet 1 RPS each, 300 s sustained, 3 seeds.
 #
-# Hypothesis: at the engine pressure created by 32:1 RPS skew + heavy
-# prefix overlap + tight gpu_memory_utilization=0.40, LRU eviction
-# starves the quiet tenants by recycling their cache blocks under
-# flooder pressure. Tenant-aware eviction keeps quiet blocks resident.
+# Workload knobs (gpu_memory_utilization=0.40, max_model_len=4096) are held
+# to push vLLM's `vllm:kv_cache_usage_perc` gauge into pressure under flooder
+# load. Without observed gauge p99 > ~0.7 the regime is broken and no arm
+# can reveal a cache-pressure signal. See runbook pre-flight gauge check.
 #
-# Pre-committed thresholds (Arm 2 oracle vs Arm 1 LRU baseline,
-# quiet-tenant p99 TTFT, median across 7 quiets):
-#   ≥ 1.5×  → green; W4 implementation worth pursuing
-#   1.2-1.5× → yellow; W4 ships flag-gated experimental
-#   < 1.2×  → red; publish disconfirm, T2 closes with null result
+# REFRAME 2026-04-28T+1: T2 pivots from tenant-aware eviction to
+# cache-pressure-aware admission. The shadow-ledger grep verified the
+# eviction lever is dead code (router never calls allocate_block /
+# access_block / _evict_from_tier from the hot path). The admission lever
+# is real: vLLM 0.19.1 exposes `vllm:kv_cache_usage_perc` (Gauge, instance-
+# level), kvwarden polls it, AdmissionController.acquire() composes
+# (cache_load × tenant_deficit) into priority. ~200 LOC, lands W4-W6 (M5a).
 #
-# Path C probe runs Arm 1 + Arm 2 ONLY in W3 ($8). Arm 3 lands in W6
-# after the W4 reuse_score wiring is in main. See
-# docs/runbooks/gate3_kv_eviction.md.
+# Pre-committed thresholds (Arm 2 vs Arm 1, quiet-tenant p99 TTFT,
+# median across 7 quiets):
+#   ≥ 1.5×   → green; (a) GA-track, default-on
+#   1.2-1.5× → yellow; (a) experimental flag-gated
+#   < 1.2×   → red; ship (c) disconfirm, queue (b) LMCache for v0.3
+#   Arm 2 worse than Arm 1 → abandon (a) mid-flight, ship (c)
 #
-# IMPORTANT: capacity pressure is the load-bearing knob. gpu_memory_utilization
-# is held to 0.40 (vs the 0.85 used in N=8 fairness baseline) so KV cache
-# pressure binds the eviction policy. With 0.85 on A100 80GB the engine has
-# enough headroom that eviction barely fires; the test becomes a no-op.
-# If OOM at runtime, drop to 0.35 per the runbook fix-list.
+# M4 probe runs Arm 1 + Arm 2 ONLY (6 cells, ~$5-6). Arm 3 lands M6 after
+# the W4-W6 /metrics-poller + admission-scaling implementation merges.
+# See docs/runbooks/gate3_kv_eviction.md.
 
 # ---------------------------------------------------------------------------
-# Arm 1 — LRU baseline (current code).
+# Arm 1 — DRR-only baseline (status quo, current code).
 #
-# DRR admission + token-bucket per-tenant rate limit, identical to the
-# Gate 2 N=8 hero. NO cache_manager policy override. The router's
-# CacheManager today only invokes free_blocks_for_model on model
-# unload (router.py:346) and snapshot() on /kvwarden/status
-# (router.py:1006); per-block reuse_score is dead code — engine LRU is
-# the de facto eviction policy. Arm 1 thus measures status quo.
+# Token-bucket per-tenant rate limit + DRR admission, identical to the
+# v3 hero (Gate 2 N=8). Tenant priority = `tenant_deficit_score` only;
+# cache pressure is invisible to admission. NO cache-pressure scaling.
 #
-# Establishes the fairness floor we need to beat. Path-C-runnable today.
+# This is the v0.1.x shipped behavior. Establishes the floor TTFT we
+# need to beat. Path-C-runnable today against current main.
 # ---------------------------------------------------------------------------
-arm1_lru_baseline: &arm1_lru_baseline
+arm1_drr_only_baseline: &arm1_drr_only_baseline
   host: 0.0.0.0
   port: 8000
   gpu_budget_fraction: 0.92
@@ -65,29 +66,39 @@ arm1_lru_baseline: &arm1_lru_baseline
       max_model_len: 4096
       tensor_parallel_size: 1
 
-  # Forward-looking key (W4+ semantics; the v0.1 loader silently ignores it).
-  # Pinned here so Arm 1's diff vs Arm 2 is one block, not two.
+  # Forward-looking key (v0.2.0+ semantics; the v0.1 loader silently
+  # ignores it). Pinned here so Arm 1's diff vs Arm 2/3 is one block,
+  # not two. Arm 1 keeps cache_pressure_scaling disabled — admission
+  # operates on tenant_deficit_score alone, no /metrics polling.
   cache_manager:
-    policy: lru
-    tenant_aware: false
+    cache_pressure_scaling: false
 
 # ---------------------------------------------------------------------------
-# Arm 2 — Oracle tenant-aware (synthetic upper bound).
+# Arm 2 — DRR + simulated saturation bias (oracle upper bound for M4).
 #
-# Pre-tagged blocks with perfect tenant attribution; flooder weight 0.1,
-# quiet weight 1.0 (10× preference for keeping quiet-tenant blocks
-# resident). Measures the achievable upper bound for the W4 reuse_score
-# implementation. **Path-C decision rule: if Arm 2 - Arm 1 quiet-p99
-# TTFT delta < 1.2×, the W4 implementation cannot exceed it; close T2
-# with disconfirm before A1 is built.**
+# Same DRR admission as Arm 1, BUT a synthetic priority bias is layered
+# on top to mimic what cache-pressure scaling WOULD do at saturation:
+# during any 30-second window in which the flooder has issued > 300
+# requests (i.e. the engine is provably under sustained pressure),
+# multiply the flooder tenant's admission cost by 4× — the Stage-2
+# scaling-function endpoint that the M5a real implementation will
+# converge on when `vllm:kv_cache_usage_perc` exceeds the hard
+# threshold (~0.9).
 #
-# OPERATOR NOTE: "oracle" requires a one-off bench-side mock — the
-# benchmark harness must pin one tenant's blocks (no eviction) and let
-# the rest contend under LRU. The W4-wired implementation cannot run
-# this arm yet (the hot-path wiring lands W4-W6). The runbook
-# documents the mock procedure. This arm IS the Path C probe.
+# Arm 2 is the achievable upper bound for cache-pressure admission,
+# measured BEFORE writing the /metrics poller. If Arm 2 - Arm 1 quiet
+# p99 TTFT delta < 1.2×, the M5a implementation cannot beat it; ship
+# (c) disconfirm and skip the W4-W6 build.
+#
+# OPERATOR NOTE: the bench harness today does NOT support an injected
+# priority-bias flag. Arm 2 requires a small bench-side extension —
+# either (i) a `--bias-flooder-priority MULTIPLIER --bias-after-N-reqs N`
+# pair on `benchmarks/scripts/benchmark_n_tenant_single_model.py`, or
+# (ii) a kvwarden-side admin endpoint that accepts a runtime
+# saturation-bias override. Tracked as a follow-up issue parallel to
+# #120; see runbook pre-flight item 2.
 # ---------------------------------------------------------------------------
-arm2_oracle_tenant_aware: &arm2_oracle_tenant_aware
+arm2_simulated_saturation_bias: &arm2_simulated_saturation_bias
   host: 0.0.0.0
   port: 8000
   gpu_budget_fraction: 0.92
@@ -113,40 +124,38 @@ arm2_oracle_tenant_aware: &arm2_oracle_tenant_aware
       max_model_len: 4096
       tensor_parallel_size: 1
 
-  # Future-schema (W4 reads this; v0.1 loader ignores). Mock implements
-  # weight semantics bench-side for Arm 2.
+  # Future-schema (v0.2.0+ reads this; v0.1 loader ignores). Mock
+  # implements the bias bench-side or via admin endpoint for Arm 2.
   cache_manager:
-    policy: tenant_aware_oracle
-    tenant_aware: true
-    tenant_weights:
-      flooder: 0.1
-      quiet_0: 1.0
-      quiet_1: 1.0
-      quiet_2: 1.0
-      quiet_3: 1.0
-      quiet_4: 1.0
-      quiet_5: 1.0
-      quiet_6: 1.0
-    # Oracle-only: synthesize logical block IDs from prompt prefix hash
-    # and pin blocks for tenants with weight ≥ 1.0 (never evict).
-    pin_blocks_above_weight: 0.5
+    cache_pressure_scaling: simulated
+    saturation_window_s: 30
+    flooder_request_threshold: 300
+    flooder_cost_multiplier: 4.0
+    bias_target: flooder
 
 # ---------------------------------------------------------------------------
-# Arm 3 — DRR + token-bucket only (no eviction policy override).
+# Arm 3 — DRR + real /metrics polling + cache-pressure admission.
 #
-# Identical to the v3 hero config — admission-side fairness alone, no
-# cache-side intervention. Lets the post-bench analysis tease apart
-# what's coming from admission policy (DRR + rate limit) alone vs
-# eviction policy alone vs both stacked.
+# requires v0.2.0+ — runs in M6, not M4 probe.
 #
-# In practice Arm 3 is operationally the same as Arm 1 today (because
-# Arm 1's cache_manager block is silently ignored by the v0.1 loader).
-# Kept as a separate arm for experimental cleanliness — once W4 ships,
-# Arm 1 becomes "LRU explicit", Arm 3 stays "no policy override". A
-# meaningful Arm 3 vs Arm 1 delta after W4 lands would flag a
-# regression in the LRU default path.
+# vLLM `/metrics` poller surfaces `vllm:kv_cache_usage_perc` (Gauge,
+# 0-1) into `cache_manager.snapshot()`. AdmissionController.acquire()
+# composes `cache_load × tenant_deficit` into priority. Below soft
+# threshold (~0.7) admission stays at Arm-1 behavior; between soft and
+# hard (~0.9) tenant deficit weight rises; above hard the flooder cost
+# multiplier saturates at 4× (matching Arm 2's endpoint).
+#
+# Depends on the W4-W6 implementation (~30 LOC poller + ~10 LOC
+# snapshot surface + ~30 LOC admission scaling + ~20 LOC priority
+# composition + ~80 LOC tests, ~200 LOC total). Cannot run in M4 —
+# the loader does not yet read these keys.
+#
+# Stage-2 threshold (Arm 3 vs Arm 1, M6): same 1.5× / 1.2-1.5× / <1.2×
+# rubric AS Stage 1. Arm 3 must track Arm 2 within ±15%; underperforming
+# the simulated upper bound by more than 15% means the implementation
+# needs a tuning pass before v0.2.0 ships.
 # ---------------------------------------------------------------------------
-arm3_admission_only: &arm3_admission_only
+arm3_real_cache_pressure_admission: &arm3_real_cache_pressure_admission
   host: 0.0.0.0
   port: 8000
   gpu_budget_fraction: 0.92
@@ -172,23 +181,28 @@ arm3_admission_only: &arm3_admission_only
       max_model_len: 4096
       tensor_parallel_size: 1
 
-  # No cache_manager block — Arm 3 leaves the eviction default
-  # untouched. Once W4 lands and the loader wires cache_manager.policy,
-  # Arm 3 == Arm 1 should hold.
+  # v0.2.0+ schema. Loader reads cache_manager.cache_pressure_scaling
+  # to wire the poller. Until M5a ships, this block is silently ignored.
+  cache_manager:
+    cache_pressure_scaling: real
+    metrics_url: "http://localhost:8000/metrics"
+    metric_name: "vllm:kv_cache_usage_perc"
+    poll_interval_s: 1.0
+    soft_threshold: 0.7
+    hard_threshold: 0.9
+    flooder_cost_multiplier_at_hard: 4.0
 
 # ---------------------------------------------------------------------------
 # Top-level config — Arm 1 values flow through the merge key so
 # `kvwarden serve --config configs/gate3_kv_eviction.yaml` boots
-# cleanly. The v0.1 loader (src/kvwarden/common/config.py) reads only
-# the top-level keys; the per-arm anchors above are visible to
-# bench-side tooling and to W4 wiring after it lands.
+# cleanly today against the v0.1 loader. The v0.1 loader
+# (src/kvwarden/common/config.py) reads only the top-level keys; the
+# per-arm anchors above are visible to bench-side tooling and to the
+# v0.2.0+ loader after M5a ships.
 #
-# Arm differentiation today happens BENCH-SIDE, not via a
-# server-config switch: Arm 2's oracle pinning is a one-off mock at
-# the bench harness layer (see runbook §Pre-flight item 1), and Arm 3
-# is operationally Arm 1 (no cache_manager block read). Once W4 wires
-# the cache_manager loader, this file gains a meaningful --arm
-# selection mechanism; until then, the runbook documents how each arm
-# is realized at run time.
+# Arm differentiation today happens BENCH-SIDE, not via a server-config
+# switch: Arm 2's bias requires a harness extension (or admin
+# endpoint), and Arm 3 cannot run until M5a wires the loader. The
+# runbook documents how each arm is realized at run time.
 # ---------------------------------------------------------------------------
-<<: *arm1_lru_baseline
+<<: *arm1_drr_only_baseline
