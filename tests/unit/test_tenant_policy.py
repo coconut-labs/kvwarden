@@ -1,6 +1,8 @@
 """Pin the TenantPolicy dataclass surface (live, passes against the W1 stub).
 
-# T2 — issue #103, RFC at docs/rfcs/T2-tenant-aware-eviction.md
+# T2 — issue #103, RFC at docs/rfcs/T2-cache-pressure-admission.md
+# (TenantPolicy semantics reframed 2026-04-28T+1: tenant_weights is the
+# admission-cost weight, not the eviction weight. Surface unchanged.)
 """
 
 from __future__ import annotations
