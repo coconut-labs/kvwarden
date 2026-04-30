@@ -52,6 +52,22 @@ First call returns `503` until vLLM finishes loading (30-90 s on A100 for an 8B)
 
 A Docker Compose bundle is not shipping yet — if you want one, [#109](https://github.com/coconut-labs/kvwarden/issues/109) is open as a good-first-issue.
 
+## When it breaks
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `kvwarden doctor` reports "SSL trust unavailable" | macOS stock Python venv missing CA roots | `pip install --upgrade certifi`, then re-run |
+| `/health` returns 503 right after `kvwarden serve` | vLLM JIT-compiling the model (30-90 s for an 8B on A100) | Wait, then `until curl -fs localhost:8000/health; do sleep 2; done` |
+| `/v1/completions` returns 401 | HuggingFace gated-model auth missing | `huggingface-cli login`, or `export HF_TOKEN=...` before `kvwarden serve` |
+| Quiet tenant still starved under flooder | `rate_limit_rpm` too high in config | Drop the per-tenant `rate_limit_rpm` in your config; the hero uses 600 with `rate_limit_burst: 10` |
+| All requests return 429 immediately | `rate_limit_burst` set tighter than your client's burst | Raise `rate_limit_burst` or unset it (default = `rate_limit_rpm`) |
+| vLLM subprocess crashes with CUDA OOM | `gpu_memory_utilization` too high for the loaded model + KV cache | Drop the model's `gpu_memory_utilization` to 0.40 (hero default) and retry |
+| `Address already in use` on port 8000 | Stale daemon or another local service | `kvwarden serve --port 8001`, or `lsof -i :8000` to find the holder |
+| `ModuleNotFoundError: kvwarden` after `pip install kvwarden` | venv mismatch — installed into the wrong interpreter | `python -c "import kvwarden; print(kvwarden.__version__)"` to confirm; reinstall in the venv that runs `kvwarden` |
+| Engine pre-load takes >5 min | First-time model download from HuggingFace | Pre-warm the cache: `huggingface-cli download <model_id>` before `kvwarden serve` |
+
+If your symptom is not in the table, file an issue with the output of `kvwarden doctor` and `kvwarden serve --log-level DEBUG`.
+
 ## Is this for me?
 
 | Tool | Orchestration | Tenant fairness | Engines | Target scale |
