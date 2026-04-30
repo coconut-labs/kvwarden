@@ -1,0 +1,208 @@
+# Gate 3 — Cache-pressure-aware admission. Path C measurement probe (M4, $5-6).
+#
+# Three arms designed to disentangle DRR-admission gain from cache-pressure-
+# admission gain. Run on 1× A100 SXM4 80GB, vLLM 0.19.1,
+# Llama-3.1-8B-Instruct, N=8 tenants (1 flooder + 7 quiet), 70% prompt
+# prefix overlap (RAG-style: long shared doc + short tenant-specific
+# query), flooder 32 RPS, quiet 1 RPS each, 300 s sustained, 3 seeds.
+#
+# Workload knobs (gpu_memory_utilization=0.40, max_model_len=4096) are held
+# to push vLLM's `vllm:kv_cache_usage_perc` gauge into pressure under flooder
+# load. Without observed gauge p99 > ~0.7 the regime is broken and no arm
+# can reveal a cache-pressure signal. See runbook pre-flight gauge check.
+#
+# REFRAME 2026-04-28T+1: T2 pivots from tenant-aware eviction to
+# cache-pressure-aware admission. The shadow-ledger grep verified the
+# eviction lever is dead code (router never calls allocate_block /
+# access_block / _evict_from_tier from the hot path). The admission lever
+# is real: vLLM 0.19.1 exposes `vllm:kv_cache_usage_perc` (Gauge, instance-
+# level), kvwarden polls it, AdmissionController.acquire() composes
+# (cache_load × tenant_deficit) into priority. ~200 LOC, lands W4-W6 (M5a).
+#
+# Pre-committed thresholds (Arm 2 vs Arm 1, quiet-tenant p99 TTFT,
+# median across 7 quiets):
+#   ≥ 1.5×   → green; (a) GA-track, default-on
+#   1.2-1.5× → yellow; (a) experimental flag-gated
+#   < 1.2×   → red; ship (c) disconfirm, queue (b) LMCache for v0.3
+#   Arm 2 worse than Arm 1 → abandon (a) mid-flight, ship (c)
+#
+# M4 probe runs Arm 1 + Arm 2 ONLY (6 cells, ~$5-6). Arm 3 lands M6 after
+# the W4-W6 /metrics-poller + admission-scaling implementation merges.
+# See docs/runbooks/gate3_kv_eviction.md.
+
+# ---------------------------------------------------------------------------
+# Arm 1 — DRR-only baseline (status quo, current code).
+#
+# Token-bucket per-tenant rate limit + DRR admission, identical to the
+# v3 hero (Gate 2 N=8). Tenant priority = `tenant_deficit_score` only;
+# cache pressure is invisible to admission. NO cache-pressure scaling.
+#
+# This is the v0.1.x shipped behavior. Establishes the floor TTFT we
+# need to beat. Path-C-runnable today against current main.
+# ---------------------------------------------------------------------------
+arm1_drr_only_baseline: &arm1_drr_only_baseline
+  host: 0.0.0.0
+  port: 8000
+  gpu_budget_fraction: 0.92
+
+  max_concurrent: 512
+  admission_queue_size: 4096
+  engine_start_timeout_s: 420
+  log_level: INFO
+
+  tenant_defaults:
+    max_concurrent_requests: 256
+    rate_limit_rpm: 600
+    rate_limit_burst: 10
+    priority: 1
+    scheduling: drr
+
+  models:
+    - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+      short_name: "llama31-8b"
+      engine: "vllm"
+      dtype: "bfloat16"
+      gpu_memory_utilization: 0.40
+      max_model_len: 4096
+      tensor_parallel_size: 1
+
+  # Forward-looking key (v0.2.0+ semantics; the v0.1 loader silently
+  # ignores it). Pinned here so Arm 1's diff vs Arm 2/3 is one block,
+  # not two. Arm 1 keeps cache_pressure_scaling disabled — admission
+  # operates on tenant_deficit_score alone, no /metrics polling.
+  cache_manager:
+    cache_pressure_scaling: false
+
+# ---------------------------------------------------------------------------
+# Arm 2 — DRR + simulated saturation bias (oracle upper bound for M4).
+#
+# Same DRR admission as Arm 1, BUT a synthetic priority bias is layered
+# on top to mimic what cache-pressure scaling WOULD do at saturation:
+# during any 30-second window in which the flooder has issued > 300
+# requests (i.e. the engine is provably under sustained pressure),
+# multiply the flooder tenant's admission cost by 4× — the Stage-2
+# scaling-function endpoint that the M5a real implementation will
+# converge on when `vllm:kv_cache_usage_perc` exceeds the hard
+# threshold (~0.9).
+#
+# Arm 2 is the achievable upper bound for cache-pressure admission,
+# measured BEFORE writing the /metrics poller. If Arm 2 - Arm 1 quiet
+# p99 TTFT delta < 1.2×, the M5a implementation cannot beat it; ship
+# (c) disconfirm and skip the W4-W6 build.
+#
+# OPERATOR NOTE: the bench harness today does NOT support an injected
+# priority-bias flag. Arm 2 requires a small bench-side extension —
+# either (i) a `--bias-flooder-priority MULTIPLIER --bias-after-N-reqs N`
+# pair on `benchmarks/scripts/benchmark_n_tenant_single_model.py`, or
+# (ii) a kvwarden-side admin endpoint that accepts a runtime
+# saturation-bias override. Tracked as a follow-up issue parallel to
+# #120; see runbook pre-flight item 2.
+# ---------------------------------------------------------------------------
+arm2_simulated_saturation_bias: &arm2_simulated_saturation_bias
+  host: 0.0.0.0
+  port: 8000
+  gpu_budget_fraction: 0.92
+
+  max_concurrent: 512
+  admission_queue_size: 4096
+  engine_start_timeout_s: 420
+  log_level: INFO
+
+  tenant_defaults:
+    max_concurrent_requests: 256
+    rate_limit_rpm: 600
+    rate_limit_burst: 10
+    priority: 1
+    scheduling: drr
+
+  models:
+    - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+      short_name: "llama31-8b"
+      engine: "vllm"
+      dtype: "bfloat16"
+      gpu_memory_utilization: 0.40
+      max_model_len: 4096
+      tensor_parallel_size: 1
+
+  # Future-schema (v0.2.0+ reads this; v0.1 loader ignores). Mock
+  # implements the bias bench-side or via admin endpoint for Arm 2.
+  cache_manager:
+    cache_pressure_scaling: simulated
+    saturation_window_s: 30
+    flooder_request_threshold: 300
+    flooder_cost_multiplier: 4.0
+    bias_target: flooder
+
+# ---------------------------------------------------------------------------
+# Arm 3 — DRR + real /metrics polling + cache-pressure admission.
+#
+# requires v0.2.0+ — runs in M6, not M4 probe.
+#
+# vLLM `/metrics` poller surfaces `vllm:kv_cache_usage_perc` (Gauge,
+# 0-1) into `cache_manager.snapshot()`. AdmissionController.acquire()
+# composes `cache_load × tenant_deficit` into priority. Below soft
+# threshold (~0.7) admission stays at Arm-1 behavior; between soft and
+# hard (~0.9) tenant deficit weight rises; above hard the flooder cost
+# multiplier saturates at 4× (matching Arm 2's endpoint).
+#
+# Depends on the W4-W6 implementation (~30 LOC poller + ~10 LOC
+# snapshot surface + ~30 LOC admission scaling + ~20 LOC priority
+# composition + ~80 LOC tests, ~200 LOC total). Cannot run in M4 —
+# the loader does not yet read these keys.
+#
+# Stage-2 threshold (Arm 3 vs Arm 1, M6): same 1.5× / 1.2-1.5× / <1.2×
+# rubric AS Stage 1. Arm 3 must track Arm 2 within ±15%; underperforming
+# the simulated upper bound by more than 15% means the implementation
+# needs a tuning pass before v0.2.0 ships.
+# ---------------------------------------------------------------------------
+arm3_real_cache_pressure_admission: &arm3_real_cache_pressure_admission
+  host: 0.0.0.0
+  port: 8000
+  gpu_budget_fraction: 0.92
+
+  max_concurrent: 512
+  admission_queue_size: 4096
+  engine_start_timeout_s: 420
+  log_level: INFO
+
+  tenant_defaults:
+    max_concurrent_requests: 256
+    rate_limit_rpm: 600
+    rate_limit_burst: 10
+    priority: 1
+    scheduling: drr
+
+  models:
+    - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+      short_name: "llama31-8b"
+      engine: "vllm"
+      dtype: "bfloat16"
+      gpu_memory_utilization: 0.40
+      max_model_len: 4096
+      tensor_parallel_size: 1
+
+  # v0.2.0+ schema. Loader reads cache_manager.cache_pressure_scaling
+  # to wire the poller. Until M5a ships, this block is silently ignored.
+  cache_manager:
+    cache_pressure_scaling: real
+    metrics_url: "http://localhost:8000/metrics"
+    metric_name: "vllm:kv_cache_usage_perc"
+    poll_interval_s: 1.0
+    soft_threshold: 0.7
+    hard_threshold: 0.9
+    flooder_cost_multiplier_at_hard: 4.0
+
+# ---------------------------------------------------------------------------
+# Top-level config — Arm 1 values flow through the merge key so
+# `kvwarden serve --config configs/gate3_kv_eviction.yaml` boots
+# cleanly today against the v0.1 loader. The v0.1 loader
+# (src/kvwarden/common/config.py) reads only the top-level keys; the
+# per-arm anchors above are visible to bench-side tooling and to the
+# v0.2.0+ loader after M5a ships.
+#
+# Arm differentiation today happens BENCH-SIDE, not via a server-config
+# switch: Arm 2's bias requires a harness extension (or admin
+# endpoint), and Arm 3 cannot run until M5a wires the loader. The
+# runbook documents how each arm is realized at run time.
+# ---------------------------------------------------------------------------
+<<: *arm1_drr_only_baseline
