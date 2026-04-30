@@ -25,8 +25,9 @@ import json
 import logging
 import os
 import time
-from aiohttp import web
+from typing import Any
 
+from aiohttp import web
 
 logger = logging.getLogger("mock_engine")
 
@@ -55,17 +56,19 @@ class MockEngineState:
 
 async def handle_models(request: web.Request) -> web.Response:
     state: MockEngineState = request.app["state"]
-    return web.json_response({
-        "object": "list",
-        "data": [
-            {
-                "id": state.model,
-                "object": "model",
-                "created": int(time.time()),
-                "owned_by": "mock",
-            }
-        ],
-    })
+    return web.json_response(
+        {
+            "object": "list",
+            "data": [
+                {
+                    "id": state.model,
+                    "object": "model",
+                    "created": int(time.time()),
+                    "owned_by": "mock",
+                }
+            ],
+        }
+    )
 
 
 async def handle_health(request: web.Request) -> web.Response:
@@ -85,7 +88,12 @@ async def handle_completions(request: web.Request) -> web.StreamResponse:
     # Enter stall mode after `hang_after` successful requests
     if state.hang_after > 0 and rid > state.hang_after:
         state.stalled_count += 1
-        logger.info("req=%d STALL for %.0fs (hang_after=%d)", rid, state.stall_s, state.hang_after)
+        logger.info(
+            "req=%d STALL for %.0fs (hang_after=%d)",
+            rid,
+            state.stall_s,
+            state.hang_after,
+        )
         try:
             await asyncio.sleep(state.stall_s)
         except asyncio.CancelledError:
@@ -94,29 +102,39 @@ async def handle_completions(request: web.Request) -> web.StreamResponse:
         # If we ever wake up, return something harmless
         return web.Response(status=504, text="mock stall exit")
 
-    logger.info("req=%d OK (prompt_len=%d, max_tokens=%d, stream=%s, ok_latency=%.2fs)",
-                rid, len(prompt), max_tokens, stream, state.ok_latency)
+    logger.info(
+        "req=%d OK (prompt_len=%d, max_tokens=%d, stream=%s, ok_latency=%.2fs)",
+        rid,
+        len(prompt),
+        max_tokens,
+        stream,
+        state.ok_latency,
+    )
 
     # Simulate engine work
     await asyncio.sleep(state.ok_latency)
 
     if not stream:
-        return web.json_response({
-            "id": f"mock-{rid}",
-            "object": "text_completion",
-            "created": int(time.time()),
-            "model": state.model,
-            "choices": [{
-                "index": 0,
-                "text": f"mock response to req {rid}",
-                "finish_reason": "stop",
-            }],
-            "usage": {
-                "prompt_tokens": len(prompt.split()),
-                "completion_tokens": 5,
-                "total_tokens": len(prompt.split()) + 5,
-            },
-        })
+        return web.json_response(
+            {
+                "id": f"mock-{rid}",
+                "object": "text_completion",
+                "created": int(time.time()),
+                "model": state.model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "text": f"mock response to req {rid}",
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": len(prompt.split()),
+                    "completion_tokens": 5,
+                    "total_tokens": len(prompt.split()) + 5,
+                },
+            }
+        )
 
     # SSE stream response
     resp = web.StreamResponse(
@@ -126,19 +144,27 @@ async def handle_completions(request: web.Request) -> web.StreamResponse:
     )
     await resp.prepare(request)
 
-    def _make_chunk(text_value: str | None, finish: str | None = None) -> dict[str, Any]:
+    def _make_chunk(
+        text_value: str | None, finish: str | None = None
+    ) -> dict[str, Any]:
         # Chat-completions shape uses `delta.content`; classic completions
         # uses `text`. Real engines pick based on endpoint; we let the test
         # override so the harness can be exercised against both shapes.
         if state.chat_completions_shape:
             choice: dict[str, Any] = {
                 "index": 0,
-                "delta": {"content": text_value} if text_value is not None else {"role": "assistant"},
+                "delta": {"content": text_value}
+                if text_value is not None
+                else {"role": "assistant"},
                 "finish_reason": finish,
             }
             obj = "chat.completion.chunk"
         else:
-            choice = {"index": 0, "text": text_value if text_value is not None else "", "finish_reason": finish}
+            choice = {
+                "index": 0,
+                "text": text_value if text_value is not None else "",
+                "finish_reason": finish,
+            }
             obj = "text_completion.chunk"
         return {
             "id": f"mock-{rid}",
@@ -242,7 +268,14 @@ def main() -> None:
     )
     logger.info(
         "mock engine starting: port=%d model=%s hang_after=%d ok_latency=%.2fs stall=%.0fs delay_first_content=%.2fs first_chunk_ws=%d chat_shape=%s",
-        args.port, args.model, args.hang_after, args.ok_latency_s, args.stall_s, args.delay_first_content_s, args.first_chunk_whitespace, args.chat_completions_shape,
+        args.port,
+        args.model,
+        args.hang_after,
+        args.ok_latency_s,
+        args.stall_s,
+        args.delay_first_content_s,
+        args.first_chunk_whitespace,
+        args.chat_completions_shape,
     )
     web.run_app(make_app(state), host="127.0.0.1", port=args.port, print=None)
 

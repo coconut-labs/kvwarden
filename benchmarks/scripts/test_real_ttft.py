@@ -57,15 +57,21 @@ async def wait_ready(url: str, timeout_s: float = 10.0) -> None:
     raise RuntimeError(f"mock not ready at {url} after {timeout_s}s")
 
 
-def spawn_mock(*, port: int, model: str, ok_latency_s: float, extra_args: list[str]) -> subprocess.Popen:
+def spawn_mock(
+    *, port: int, model: str, ok_latency_s: float, extra_args: list[str]
+) -> subprocess.Popen:
     return subprocess.Popen(
         [
             sys.executable,
             str(HERE / "mock_engine.py"),
-            "--port", str(port),
-            "--model", model,
-            "--ok-latency-s", str(ok_latency_s),
-            "--log-level", "WARNING",
+            "--port",
+            str(port),
+            "--model",
+            model,
+            "--ok-latency-s",
+            str(ok_latency_s),
+            "--log-level",
+            "WARNING",
             *extra_args,
         ],
         stdout=subprocess.PIPE,
@@ -74,18 +80,27 @@ def spawn_mock(*, port: int, model: str, ok_latency_s: float, extra_args: list[s
 
 
 async def run_case(
-    name: str, mock_args: list[str], ok_latency_s: float, max_tokens: int,
+    name: str,
+    mock_args: list[str],
+    ok_latency_s: float,
+    max_tokens: int,
 ) -> tuple[float, int]:
     """Returns (ttft_ms, tokens_out) from a single bench request to a mock."""
     port = free_port()
     proc = spawn_mock(
-        port=port, model=name, ok_latency_s=ok_latency_s, extra_args=mock_args,
+        port=port,
+        model=name,
+        ok_latency_s=ok_latency_s,
+        extra_args=mock_args,
     )
     try:
         base_url = f"http://127.0.0.1:{port}"
         await wait_ready(f"{base_url}/v1/models", timeout_s=10.0)
         client = MultiModelBenchmarkClient(
-            base_url=base_url, concurrency=1, timeout_s=30, max_tokens=max_tokens,
+            base_url=base_url,
+            concurrency=1,
+            timeout_s=30,
+            max_tokens=max_tokens,
         )
         sem = asyncio.Semaphore(1)
         async with aiohttp.ClientSession() as session:
@@ -123,10 +138,15 @@ async def main() -> int:
     # Case 1 + 2: TTFT discriminators (delay-then-content).
     timing_cases = [
         ("empty-preamble", ["--delay-first-content-s", str(DELAY_S)]),
-        ("whitespace-preamble", [
-            "--first-chunk-whitespace", "1",
-            "--delay-first-content-s", str(DELAY_S),
-        ]),
+        (
+            "whitespace-preamble",
+            [
+                "--first-chunk-whitespace",
+                "1",
+                "--delay-first-content-s",
+                str(DELAY_S),
+            ],
+        ),
     ]
     for name, args in timing_cases:
         try:
@@ -141,7 +161,8 @@ async def main() -> int:
         _, tokens_out = await run_case(
             "chat-shape",
             ["--chat-completions-shape"],
-            ok_latency_s=0.05, max_tokens=8,
+            ok_latency_s=0.05,
+            max_tokens=8,
         )
         passed = tokens_out == 8
         results.append(("chat-shape", f"tokens_out={tokens_out} (need == 8)", passed))

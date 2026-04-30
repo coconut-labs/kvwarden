@@ -37,16 +37,12 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _PROFILING_SCRIPTS = _SCRIPT_DIR.parent.parent / "profiling" / "scripts"
 sys.path.insert(0, str(_PROFILING_SCRIPTS))
 
-from profiling_utils import (
-    AsyncBenchmarkClient,
-    BenchmarkResults,
+from profiling_utils import (  # noqa: E402
     GPUMetricsCollector,
     RequestGenerator,
-    RequestMetrics,
     TimingContext,
     check_engine_health,
     log_environment,
-    prompts_to_requests,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,9 +53,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def build_alternating_schedule(
-    models: list[str], num_requests: int
-) -> list[str]:
+def build_alternating_schedule(models: list[str], num_requests: int) -> list[str]:
     """Produce model names in strict round-robin order.
 
     Args:
@@ -72,9 +66,7 @@ def build_alternating_schedule(
     return [models[i % len(models)] for i in range(num_requests)]
 
 
-def build_bursty_schedule(
-    models: list[str], pattern: list[int]
-) -> list[str]:
+def build_bursty_schedule(models: list[str], pattern: list[int]) -> list[str]:
     """Produce model names following a bursty pattern.
 
     Example pattern [100, 100, 50] with 2 models means:
@@ -183,10 +175,9 @@ class MultiModelBenchmarkResults:
         ttft_all = np.array([r.ttft_ms for r in successful])
         latency_all = np.array([r.total_latency_ms for r in successful])
         total_tokens_out = sum(r.tokens_out for r in successful)
-        total_duration_s = (
-            max(r.timestamp + r.total_latency_ms / 1000.0 for r in successful)
-            - min(r.timestamp for r in successful)
-        )
+        total_duration_s = max(
+            r.timestamp + r.total_latency_ms / 1000.0 for r in successful
+        ) - min(r.timestamp for r in successful)
 
         result: dict[str, Any] = {
             "scenario": self.scenario,
@@ -241,8 +232,6 @@ class MultiModelBenchmarkResults:
 
         # GPU memory tracking
         if self.gpu_metrics_df is not None and not self.gpu_metrics_df.empty:
-            import pandas as pd
-
             df = self.gpu_metrics_df
             # Use per-GPU data (not aggregate "all")
             if "gpu_index" in df.columns:
@@ -378,7 +367,7 @@ class MultiModelBenchmarkClient:
         phase_name = getattr(self, "phase_name", "unknown")
         consec_errors = 0
         aborted_after: int | None = None
-        ABORT_THRESHOLD = 5
+        ABORT_THRESHOLD = 5  # noqa: N806 — module-level-style constant scoped to this method
 
         # Default TCPConnector caps simultaneous connections per host at 100,
         # which silently clamps any bench run with concurrency > 100. For
@@ -398,11 +387,13 @@ class MultiModelBenchmarkClient:
                     if isinstance(req, dict)
                     else self.max_tokens
                 )
-                tasks.append(asyncio.create_task(
-                    self._send_request(
-                        session, i, model, prompt, max_tokens, semaphore
+                tasks.append(
+                    asyncio.create_task(
+                        self._send_request(
+                            session, i, model, prompt, max_tokens, semaphore
+                        )
                     )
-                ))
+                )
             raw_metrics: list[MultiModelRequestMetrics] = []
             for fut in asyncio.as_completed(tasks):
                 m = await fut
@@ -413,7 +404,9 @@ class MultiModelBenchmarkClient:
                         aborted_after = consec_errors
                         logger.warning(
                             "phase=%s c=%d ABORT %d consecutive errors",
-                            phase_name, self.concurrency, consec_errors,
+                            phase_name,
+                            self.concurrency,
+                            consec_errors,
                         )
                         for t in tasks:
                             if not t.done():
@@ -514,9 +507,7 @@ class MultiModelBenchmarkClient:
 
             try:
                 timeout = aiohttp.ClientTimeout(total=self.timeout_s)
-                async with session.post(
-                    url, json=payload, timeout=timeout
-                ) as resp:
+                async with session.post(url, json=payload, timeout=timeout) as resp:
                     if resp.status != 200:
                         error_body = await resp.text()
                         return MultiModelRequestMetrics(
@@ -570,8 +561,12 @@ class MultiModelBenchmarkClient:
                             continue
 
             except asyncio.TimeoutError:
-                logger.warning("req=%d MODEL=%s TIMEOUT after %.0fs",
-                               request_id, model, time.time() - start_time)
+                logger.warning(
+                    "req=%d MODEL=%s TIMEOUT after %.0fs",
+                    request_id,
+                    model,
+                    time.time() - start_time,
+                )
                 return MultiModelRequestMetrics(
                     model=model,
                     request_id=request_id,
@@ -613,7 +608,11 @@ class MultiModelBenchmarkClient:
 
             logger.info(
                 "req=%d MODEL=%s DONE tokens_out=%d latency_ms=%.0f ttft_ms=%.0f",
-                request_id, model, tokens_out, total_latency_ms, ttft_ms,
+                request_id,
+                model,
+                tokens_out,
+                total_latency_ms,
+                ttft_ms,
             )
 
             return MultiModelRequestMetrics(
@@ -656,8 +655,12 @@ async def benchmark_model_switch_latency(
         Dictionary with switch latency statistics.
     """
     gen = RequestGenerator(seed=seed)
-    warmup_requests = gen.generate_fixed_length(num_warmup, input_len=128, output_len=64)
-    switch_requests = gen.generate_fixed_length(num_switches * 2, input_len=256, output_len=128)
+    warmup_requests = gen.generate_fixed_length(
+        num_warmup, input_len=128, output_len=64
+    )
+    switch_requests = gen.generate_fixed_length(
+        num_switches * 2, input_len=256, output_len=128
+    )
 
     model_a, model_b = models[0], models[1]
     switch_latencies: list[float] = []
@@ -891,7 +894,8 @@ async def benchmark_eviction_policy(
         eviction_result["gpu_memory_mean_mb"] = float(df["memory_used_mb"].mean())
 
     logger.info(
-        "Eviction policy results: %s", json.dumps(eviction_result, indent=2, default=str)
+        "Eviction policy results: %s",
+        json.dumps(eviction_result, indent=2, default=str),
     )
     return eviction_result
 
@@ -929,7 +933,14 @@ def parse_args() -> argparse.Namespace:
         "--workload",
         type=str,
         default="all",
-        choices=["alternating", "bursty", "concurrent", "switch_latency", "eviction", "all"],
+        choices=[
+            "alternating",
+            "bursty",
+            "concurrent",
+            "switch_latency",
+            "eviction",
+            "all",
+        ],
         help="Which workload scenario to run",
     )
     parser.add_argument(
@@ -1020,15 +1031,24 @@ async def main() -> None:
     # works for any N >= 1 (single-model is the realistic Gate 1 setup).
     # `switch_latency`, `alternating`, `bursty`, `eviction` compare across
     # models and need at least two.
-    SINGLE_MODEL_OK_WORKLOADS = {"concurrent"}
-    requested = {args.workload} if args.workload != "all" else {
-        "switch_latency", "alternating", "bursty", "concurrent", "eviction",
-    }
+    SINGLE_MODEL_OK_WORKLOADS = {"concurrent"}  # noqa: N806 — config-style constant in main()
+    requested = (
+        {args.workload}
+        if args.workload != "all"
+        else {
+            "switch_latency",
+            "alternating",
+            "bursty",
+            "concurrent",
+            "eviction",
+        }
+    )
     if len(models) < 2 and not requested.issubset(SINGLE_MODEL_OK_WORKLOADS):
         logger.error(
             "Need at least 2 models for workloads %s. Got %d model(s); "
             "for single-model runs use --workload concurrent.",
-            sorted(requested - SINGLE_MODEL_OK_WORKLOADS), len(models),
+            sorted(requested - SINGLE_MODEL_OK_WORKLOADS),
+            len(models),
         )
         sys.exit(1)
 
@@ -1079,7 +1099,13 @@ async def main() -> None:
 
     # Determine which workloads to run
     if args.workload == "all":
-        workloads_to_run = ["switch_latency", "alternating", "bursty", "concurrent", "eviction"]
+        workloads_to_run = [
+            "switch_latency",
+            "alternating",
+            "bursty",
+            "concurrent",
+            "eviction",
+        ]
     else:
         workloads_to_run = [args.workload]
 
@@ -1119,8 +1145,7 @@ async def main() -> None:
 
     # ----- Benchmarks 2-4: Workload scenarios at each concurrency -----
     throughput_workloads = [
-        w for w in workloads_to_run
-        if w in ("alternating", "bursty", "concurrent")
+        w for w in workloads_to_run if w in ("alternating", "bursty", "concurrent")
     ]
 
     for workload_name in throughput_workloads:

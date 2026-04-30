@@ -92,7 +92,12 @@ async def send_one(
 ) -> RequestResult:
     """Send one streaming completion, measure TTFT + total latency."""
     url = f"{base_url}/v1/completions"
-    payload = {"model": model, "prompt": prompt, "max_tokens": max_tokens, "stream": True}
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "max_tokens": max_tokens,
+        "stream": True,
+    }
     headers = {"X-Tenant-ID": tenant_id}
 
     submit = time.time()
@@ -101,13 +106,19 @@ async def send_one(
 
     try:
         timeout = aiohttp.ClientTimeout(total=timeout_s)
-        async with session.post(url, json=payload, headers=headers, timeout=timeout) as resp:
+        async with session.post(
+            url, json=payload, headers=headers, timeout=timeout
+        ) as resp:
             if resp.status != 200:
                 body = await resp.text()
                 return RequestResult(
-                    tenant=tenant_id, request_id=request_id, submit_time=submit,
-                    ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-                    tokens_out=0, error=f"HTTP {resp.status}: {body[:180]}",
+                    tenant=tenant_id,
+                    request_id=request_id,
+                    submit_time=submit,
+                    ttft_ms=0.0,
+                    total_latency_ms=(time.time() - submit) * 1000,
+                    tokens_out=0,
+                    error=f"HTTP {resp.status}: {body[:180]}",
                 )
             async for line in resp.content:
                 decoded = line.decode("utf-8").strip()
@@ -135,23 +146,37 @@ async def send_one(
                     continue
     except asyncio.TimeoutError:
         return RequestResult(
-            tenant=tenant_id, request_id=request_id, submit_time=submit,
-            ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-            tokens_out=0, error="timeout",
+            tenant=tenant_id,
+            request_id=request_id,
+            submit_time=submit,
+            ttft_ms=0.0,
+            total_latency_ms=(time.time() - submit) * 1000,
+            tokens_out=0,
+            error="timeout",
         )
     except Exception as exc:
         return RequestResult(
-            tenant=tenant_id, request_id=request_id, submit_time=submit,
-            ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-            tokens_out=0, error=str(exc),
+            tenant=tenant_id,
+            request_id=request_id,
+            submit_time=submit,
+            ttft_ms=0.0,
+            total_latency_ms=(time.time() - submit) * 1000,
+            tokens_out=0,
+            error=str(exc),
         )
 
     end = time.time()
     total_ms = (end - submit) * 1000
-    ttft_ms = (first_token_time - submit) * 1000 if first_token_time is not None else total_ms
+    ttft_ms = (
+        (first_token_time - submit) * 1000 if first_token_time is not None else total_ms
+    )
     return RequestResult(
-        tenant=tenant_id, request_id=request_id, submit_time=submit,
-        ttft_ms=ttft_ms, total_latency_ms=total_ms, tokens_out=tokens_out,
+        tenant=tenant_id,
+        request_id=request_id,
+        submit_time=submit,
+        ttft_ms=ttft_ms,
+        total_latency_ms=total_ms,
+        tokens_out=tokens_out,
     )
 
 
@@ -177,10 +202,18 @@ async def tenant_poisson_loop(
 
     while time.time() < end_time:
         prompt = rng.choice(PROMPTS)
-        task = asyncio.create_task(send_one(
-            session, base_url, tenant_id, request_id, model, prompt,
-            max_tokens, timeout_s,
-        ))
+        task = asyncio.create_task(
+            send_one(
+                session,
+                base_url,
+                tenant_id,
+                request_id,
+                model,
+                prompt,
+                max_tokens,
+                timeout_s,
+            )
+        )
         in_flight.append(task)
         request_id += 1
         await asyncio.sleep(rng.expovariate(1.0 / mean_interarrival))
@@ -199,9 +232,15 @@ def summarize(results: list[RequestResult]) -> dict[str, Any]:
     errs = [r for r in results if r.error]
     if not ok:
         return {
-            "count_ok": 0, "count_err": len(errs),
-            "ttft_p50_ms": -1, "ttft_p95_ms": -1, "ttft_p99_ms": -1, "ttft_max_ms": -1,
-            "total_p50_ms": -1, "total_p99_ms": -1, "tokens_out_mean": 0,
+            "count_ok": 0,
+            "count_err": len(errs),
+            "ttft_p50_ms": -1,
+            "ttft_p95_ms": -1,
+            "ttft_p99_ms": -1,
+            "ttft_max_ms": -1,
+            "total_p50_ms": -1,
+            "total_p99_ms": -1,
+            "tokens_out_mean": 0,
         }
     ttfts = sorted(r.ttft_ms for r in ok)
     totals = sorted(r.total_latency_ms for r in ok)
@@ -231,14 +270,26 @@ async def main_async(args: argparse.Namespace) -> int:
     # Gate 1.5 lesson: raise TCPConnector limits per actual offered concurrency.
     # Flooder 32 RPS × ~5s per-request avg = ~160 in-flight at steady state.
     # Give 3× headroom so we never silently clamp.
-    concurrency_budget = max(256, int((args.flooder_rps + args.quiet_rps) * args.max_tokens * 0.05))
-    connector = aiohttp.TCPConnector(limit=concurrency_budget, limit_per_host=concurrency_budget)
+    concurrency_budget = max(
+        256, int((args.flooder_rps + args.quiet_rps) * args.max_tokens * 0.05)
+    )
+    connector = aiohttp.TCPConnector(
+        limit=concurrency_budget, limit_per_host=concurrency_budget
+    )
 
     logger.info(
         "Bench config: flooder=%.1f RPS, quiet=%.1f RPS, duration=%ds, model=%s, max_tokens=%d",
-        args.flooder_rps, args.quiet_rps, args.duration_s, args.model, args.max_tokens,
+        args.flooder_rps,
+        args.quiet_rps,
+        args.duration_s,
+        args.model,
+        args.max_tokens,
     )
-    logger.info("TCPConnector limit=%d, limit_per_host=%d", concurrency_budget, concurrency_budget)
+    logger.info(
+        "TCPConnector limit=%d, limit_per_host=%d",
+        concurrency_budget,
+        concurrency_budget,
+    )
 
     rng_flooder = random.Random(args.seed)
     rng_quiet = random.Random(args.seed + 1)
@@ -250,22 +301,41 @@ async def main_async(args: argparse.Namespace) -> int:
     async with aiohttp.ClientSession(connector=connector) as session:
         await asyncio.gather(
             tenant_poisson_loop(
-                "flooder", args.flooder_rps, args.duration_s,
-                session, args.url, args.model, args.max_tokens, args.timeout_s,
-                rng_flooder, flooder_results,
+                "flooder",
+                args.flooder_rps,
+                args.duration_s,
+                session,
+                args.url,
+                args.model,
+                args.max_tokens,
+                args.timeout_s,
+                rng_flooder,
+                flooder_results,
             ),
             tenant_poisson_loop(
-                "quiet_user", args.quiet_rps, args.duration_s,
-                session, args.url, args.model, args.max_tokens, args.timeout_s,
-                rng_quiet, quiet_results,
+                "quiet_user",
+                args.quiet_rps,
+                args.duration_s,
+                session,
+                args.url,
+                args.model,
+                args.max_tokens,
+                args.timeout_s,
+                rng_quiet,
+                quiet_results,
             ),
         )
     wall_s = time.time() - start_wall
 
-    for tenant, results in [("flooder", flooder_results), ("quiet_user", quiet_results)]:
+    for tenant, results in [
+        ("flooder", flooder_results),
+        ("quiet_user", quiet_results),
+    ]:
         csv_path = outdir / f"tenant_{tenant}.csv"
         with open(csv_path, "w", newline="") as fh:
-            writer = csv.DictWriter(fh, fieldnames=list(RequestResult.__dataclass_fields__.keys()))
+            writer = csv.DictWriter(
+                fh, fieldnames=list(RequestResult.__dataclass_fields__.keys())
+            )
             writer.writeheader()
             for r in results:
                 writer.writerow(asdict(r))
@@ -276,9 +346,12 @@ async def main_async(args: argparse.Namespace) -> int:
         "flooder": summarize(flooder_results),
         "quiet_user": summarize(quiet_results),
         "bench_args": {
-            "flooder_rps": args.flooder_rps, "quiet_rps": args.quiet_rps,
-            "duration_s": args.duration_s, "max_tokens": args.max_tokens,
-            "model": args.model, "seed": args.seed,
+            "flooder_rps": args.flooder_rps,
+            "quiet_rps": args.quiet_rps,
+            "duration_s": args.duration_s,
+            "max_tokens": args.max_tokens,
+            "model": args.model,
+            "seed": args.seed,
         },
     }
     summary_path = outdir / "summary.json"
@@ -292,11 +365,19 @@ async def main_async(args: argparse.Namespace) -> int:
     logger.info("=" * 60)
     logger.info(
         "QUIET TTFT  p50=%sms p99=%sms max=%sms (n=%s, err=%s)",
-        q["ttft_p50_ms"], q["ttft_p99_ms"], q["ttft_max_ms"], q["count_ok"], q["count_err"],
+        q["ttft_p50_ms"],
+        q["ttft_p99_ms"],
+        q["ttft_max_ms"],
+        q["count_ok"],
+        q["count_err"],
     )
     logger.info(
         "FLOOD TTFT  p50=%sms p99=%sms max=%sms (n=%s, err=%s)",
-        f["ttft_p50_ms"], f["ttft_p99_ms"], f["ttft_max_ms"], f["count_ok"], f["count_err"],
+        f["ttft_p50_ms"],
+        f["ttft_p99_ms"],
+        f["ttft_max_ms"],
+        f["count_ok"],
+        f["count_err"],
     )
     logger.info("=" * 60)
     return 0

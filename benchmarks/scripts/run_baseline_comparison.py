@@ -20,7 +20,6 @@ import asyncio
 import json
 import logging
 import sys
-import time
 from pathlib import Path
 from typing import Any
 
@@ -29,16 +28,15 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _PROFILING_SCRIPTS = _SCRIPT_DIR.parent.parent / "profiling" / "scripts"
 sys.path.insert(0, str(_PROFILING_SCRIPTS))
 
-from profiling_utils import (
+from profiling_utils import (  # noqa: E402
     AsyncBenchmarkClient,
-    BenchmarkResults,
     GPUMetricsCollector,
     RequestGenerator,
     TimingContext,
     check_engine_health,
+    compute_aggregate_stats,
     log_environment,
     prompts_to_requests,
-    compute_aggregate_stats,
 )
 
 logger = logging.getLogger(__name__)
@@ -147,9 +145,7 @@ def generate_workload(
         raise ValueError(f"Unknown workload type: {workload_type}")
 
 
-async def warmup_engine(
-    base_url: str, model: str, num_warmup: int
-) -> None:
+async def warmup_engine(base_url: str, model: str, num_warmup: int) -> None:
     """Send warmup requests to an engine to stabilize performance.
 
     Args:
@@ -211,7 +207,9 @@ async def benchmark_engine(
     run_results = []
     for run_idx in range(repeats):
         if repeats > 1:
-            logger.info("Run %d/%d at concurrency %d", run_idx + 1, repeats, concurrency)
+            logger.info(
+                "Run %d/%d at concurrency %d", run_idx + 1, repeats, concurrency
+            )
 
         # Benchmark
         gpu_collector = GPUMetricsCollector(interval_ms=100)
@@ -222,10 +220,12 @@ async def benchmark_engine(
             timeout_s=300,
         )
 
-        with TimingContext(f"{engine_name}_c{concurrency}_run{run_idx+1}") as timer:
+        with TimingContext(f"{engine_name}_c{concurrency}_run{run_idx + 1}") as timer:
             results = await client.run(requests, gpu_collector=gpu_collector)
 
-        file_suffix = f"c{concurrency}" if repeats == 1 else f"c{concurrency}_run{run_idx+1}"
+        file_suffix = (
+            f"c{concurrency}" if repeats == 1 else f"c{concurrency}_run{run_idx + 1}"
+        )
 
         # Save results
         csv_path = output_dir / f"{engine_name}_{file_suffix}.csv"
@@ -241,16 +241,16 @@ async def benchmark_engine(
         summary["wall_time_ms"] = timer.elapsed_ms
         summary["model_id"] = model
         summary["model_short_name"] = model.split("/")[-1]
-        
+
         if repeats > 1:
             summary_path = output_dir / f"{engine_name}_{file_suffix}_summary.json"
             with open(summary_path, "w") as f:
                 json.dump(summary, f, indent=2)
-                
+
         run_results.append(summary)
 
     agg_summary = compute_aggregate_stats(run_results)
-    
+
     if repeats > 1:
         agg_path = output_dir / f"{engine_name}_c{concurrency}_stats.json"
         with open(agg_path, "w") as f:
@@ -449,7 +449,7 @@ async def main() -> None:
     all_results: dict[str, dict[str, list[dict[str, Any]]]] = {}
 
     for workload_type in workload_types:
-        logger.info(f"\n{'='*60}")
+        logger.info(f"\n{'=' * 60}")
         logger.info("Workload: %s", workload_type)
         logger.info("=" * 60)
 

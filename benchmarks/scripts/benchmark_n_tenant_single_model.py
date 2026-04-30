@@ -36,9 +36,10 @@ import logging
 import random
 import sys
 import time
+from collections import deque
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Deque
 
 import aiohttp
 
@@ -110,9 +111,7 @@ def parse_prompt_length_dist(spec: str) -> list[tuple[int, float]]:
                 f"--prompt-length-dist: non-numeric probability {prob_str!r}"
             ) from exc
         if length <= 0:
-            raise ValueError(
-                f"--prompt-length-dist: non-positive length {length}"
-            )
+            raise ValueError(f"--prompt-length-dist: non-positive length {length}")
         if prob < 0:
             raise ValueError(
                 f"--prompt-length-dist: negative probability {prob} for length {length}"
@@ -171,6 +170,95 @@ def make_legacy_sampler() -> PromptSampler:
     return _sample
 
 
+# Issue #120: --prefix-overlap shared-prefix workload generator
+# ---------------------------------------------------------------------------
+# Wraps any PromptSampler with probabilistic prepending of a shared prefix.
+# The shared prefix is generated once at sampler-construction time using
+# RequestGenerator.generate_fixed_length so vLLM's tokenizer + prefix cache
+# can actually share the resulting tokens across requests. Per-call decisions
+# are seeded independently of length sampling so prefix decisions stay
+# reproducible even if the active sampler's rng usage shifts.
+
+
+def build_shared_prefix(shared_prefix_tokens: int, seed: int) -> str:
+    """Build a single shared prefix string for prefix-overlap workloads.
+
+    Reuses the same realistic-token-shaped path the mixed-length sampler
+    uses (`RequestGenerator.generate_fixed_length`), so vLLM's tokenizer
+    sees a coherent prefix that the engine's prefix cache can de-duplicate.
+    """
+    from profiling_utils import RequestGenerator
+
+    gen = RequestGenerator(seed=seed)
+    batch = gen.generate_fixed_length(1, shared_prefix_tokens, output_len=64)
+    return batch[0]["prompt"]
+
+
+def make_prefix_overlap_sampler(
+    inner: PromptSampler,
+    shared_prefix: str,
+    overlap_fraction: float,
+    seed: int,
+) -> PromptSampler:
+    """Wrap ``inner`` so each draw prepends ``shared_prefix`` w.p. ``overlap_fraction``.
+
+    The wrapper draws from a NEW Random seeded by ``seed`` so prefix
+    decisions are reproducible AND independent of the inner sampler's
+    length-sampling rng stream. The (prompt, length) length tracking is
+    preserved unchanged — the bench's CSV column already records sampled
+    length (not actual length), so we don't re-count the prefix tokens.
+    """
+    decision_rng = random.Random(seed)
+    suffix = " "  # space separator between shared prefix and per-request prompt
+
+    def _sample(arrival_rng: random.Random) -> tuple[str, int]:
+        prompt, length = inner(arrival_rng)
+        if decision_rng.random() < overlap_fraction:
+            return shared_prefix + suffix + prompt, length
+        return prompt, length
+
+    return _sample
+
+
+# Issue #122: --bias-flooder-cost simulated-saturation rate-throttle
+# ---------------------------------------------------------------------------
+# Bench-side simulation of what a cache-pressure-aware admission controller
+# would do at the server side: when the flooder has emitted more than N
+# requests in the last bias-window-s seconds, multiply the inter-arrival
+# sleep by MULTIPLIER to throttle the source. This is M4 Arm 2's lever:
+# measures the upper bound on quiet-tenant TTFT improvement that any
+# cache-pressure-aware admission policy could deliver, before writing the
+# real /metrics polling implementation (M5a / M6 Arm 3).
+#
+# FUTURE EXTENSION POINT: the YAML config flag `cache_manager.bias_target`
+# (Arm 2) supports `flooder` today; harness flag is hardcoded to flooder
+# regardless. To support `--bias-target=quiet` (e.g. for inverted-fairness
+# probes), thread `bias_multiplier` / `bias_threshold` / `bias_window_s`
+# through `tenant_poisson_loop` for any tenant — the current call sites
+# already accept the kwargs.
+
+
+def should_apply_bias(
+    timestamps: Deque[float],
+    now: float,
+    threshold: int,
+    window_s: float,
+) -> bool:
+    """Return True iff ``timestamps`` has > ``threshold`` entries within window.
+
+    Mutates ``timestamps`` in place: drops entries older than
+    ``now - window_s`` from the left. O(1) amortized per call when stale
+    entries are dropped incrementally each invocation. Empty deque returns
+    False.
+
+    Extracted from the flooder loop so it's testable without a live server.
+    """
+    cutoff = now - window_s
+    while timestamps and timestamps[0] < cutoff:
+        timestamps.popleft()
+    return len(timestamps) > threshold
+
+
 @dataclass
 class RequestResult:
     tenant: str
@@ -187,25 +275,42 @@ class RequestResult:
 
 
 async def send_one(
-    session: aiohttp.ClientSession, base_url: str, tenant_id: str,
-    request_id: int, model: str, prompt: str, max_tokens: int, timeout_s: float,
+    session: aiohttp.ClientSession,
+    base_url: str,
+    tenant_id: str,
+    request_id: int,
+    model: str,
+    prompt: str,
+    max_tokens: int,
+    timeout_s: float,
     prompt_tokens: int = 0,
 ) -> RequestResult:
     url = f"{base_url}/v1/completions"
-    payload = {"model": model, "prompt": prompt, "max_tokens": max_tokens, "stream": True}
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "max_tokens": max_tokens,
+        "stream": True,
+    }
     headers = {"X-Tenant-ID": tenant_id}
     submit = time.time()
     first_token_time: float | None = None
     tokens_out = 0
     try:
         timeout = aiohttp.ClientTimeout(total=timeout_s)
-        async with session.post(url, json=payload, headers=headers, timeout=timeout) as resp:
+        async with session.post(
+            url, json=payload, headers=headers, timeout=timeout
+        ) as resp:
             if resp.status != 200:
                 body = await resp.text()
                 return RequestResult(
-                    tenant=tenant_id, request_id=request_id, submit_time=submit,
-                    ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-                    tokens_out=0, prompt_tokens=prompt_tokens,
+                    tenant=tenant_id,
+                    request_id=request_id,
+                    submit_time=submit,
+                    ttft_ms=0.0,
+                    total_latency_ms=(time.time() - submit) * 1000,
+                    tokens_out=0,
+                    prompt_tokens=prompt_tokens,
                     error=f"HTTP {resp.status}: {body[:180]}",
                 )
             async for line in resp.content:
@@ -233,33 +338,68 @@ async def send_one(
                     continue
     except asyncio.TimeoutError:
         return RequestResult(
-            tenant=tenant_id, request_id=request_id, submit_time=submit,
-            ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-            tokens_out=0, prompt_tokens=prompt_tokens, error="timeout",
+            tenant=tenant_id,
+            request_id=request_id,
+            submit_time=submit,
+            ttft_ms=0.0,
+            total_latency_ms=(time.time() - submit) * 1000,
+            tokens_out=0,
+            prompt_tokens=prompt_tokens,
+            error="timeout",
         )
     except Exception as exc:
         return RequestResult(
-            tenant=tenant_id, request_id=request_id, submit_time=submit,
-            ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-            tokens_out=0, prompt_tokens=prompt_tokens, error=str(exc),
+            tenant=tenant_id,
+            request_id=request_id,
+            submit_time=submit,
+            ttft_ms=0.0,
+            total_latency_ms=(time.time() - submit) * 1000,
+            tokens_out=0,
+            prompt_tokens=prompt_tokens,
+            error=str(exc),
         )
     end = time.time()
     total_ms = (end - submit) * 1000
-    ttft_ms = (first_token_time - submit) * 1000 if first_token_time is not None else total_ms
+    ttft_ms = (
+        (first_token_time - submit) * 1000 if first_token_time is not None else total_ms
+    )
     return RequestResult(
-        tenant=tenant_id, request_id=request_id, submit_time=submit,
-        ttft_ms=ttft_ms, total_latency_ms=total_ms, tokens_out=tokens_out,
+        tenant=tenant_id,
+        request_id=request_id,
+        submit_time=submit,
+        ttft_ms=ttft_ms,
+        total_latency_ms=total_ms,
+        tokens_out=tokens_out,
         prompt_tokens=prompt_tokens,
     )
 
 
 async def tenant_poisson_loop(
-    tenant_id: str, rps: float, duration_s: float,
-    session: aiohttp.ClientSession, base_url: str, model: str,
-    max_tokens: int, timeout_s: float, rng: random.Random,
+    tenant_id: str,
+    rps: float,
+    duration_s: float,
+    session: aiohttp.ClientSession,
+    base_url: str,
+    model: str,
+    max_tokens: int,
+    timeout_s: float,
+    rng: random.Random,
     results: list[RequestResult],
     prompt_sampler: PromptSampler | None = None,
+    *,
+    bias_multiplier: float = 1.0,
+    bias_threshold: int = 0,
+    bias_window_s: float = 30.0,
 ) -> None:
+    """Per-tenant Poisson arrival loop.
+
+    Issue #122: when ``bias_multiplier > 1.0`` AND ``bias_threshold > 0``,
+    the inter-arrival sleep is multiplied by ``bias_multiplier`` while
+    this tenant has emitted more than ``bias_threshold`` requests in the
+    last ``bias_window_s`` seconds (sliding window). State transitions
+    are logged once via ``logger.info``. Quiet tenants are unaffected by
+    leaving the threshold at 0.
+    """
     if rps <= 0:
         return
     sampler = prompt_sampler if prompt_sampler is not None else make_legacy_sampler()
@@ -267,15 +407,59 @@ async def tenant_poisson_loop(
     request_id = 0
     in_flight: list[asyncio.Task[RequestResult]] = []
     mean_interarrival = 1.0 / rps
+
+    # Issue #122: rolling-window emit timestamps for cache-pressure bias sim.
+    bias_enabled = bias_multiplier > 1.0 and bias_threshold > 0
+    emit_times: Deque[float] = deque()
+    in_bias_state = False
+
     while time.time() < end_time:
         prompt, sampled_tokens = sampler(rng)
-        task = asyncio.create_task(send_one(
-            session, base_url, tenant_id, request_id, model, prompt,
-            max_tokens, timeout_s, prompt_tokens=sampled_tokens,
-        ))
+        task = asyncio.create_task(
+            send_one(
+                session,
+                base_url,
+                tenant_id,
+                request_id,
+                model,
+                prompt,
+                max_tokens,
+                timeout_s,
+                prompt_tokens=sampled_tokens,
+            )
+        )
         in_flight.append(task)
         request_id += 1
-        await asyncio.sleep(rng.expovariate(1.0 / mean_interarrival))
+
+        sleep_s = rng.expovariate(1.0 / mean_interarrival)
+        if bias_enabled:
+            now = time.time()
+            emit_times.append(now)
+            apply_bias = should_apply_bias(
+                emit_times, now, bias_threshold, bias_window_s
+            )
+            if apply_bias and not in_bias_state:
+                logger.info(
+                    "tenant=%s entering bias state (>%d reqs in %.1fs window, "
+                    "multiplier=%.2fx)",
+                    tenant_id,
+                    bias_threshold,
+                    bias_window_s,
+                    bias_multiplier,
+                )
+                in_bias_state = True
+            elif not apply_bias and in_bias_state:
+                logger.info(
+                    "tenant=%s exiting bias state (<=%d reqs in %.1fs window)",
+                    tenant_id,
+                    bias_threshold,
+                    bias_window_s,
+                )
+                in_bias_state = False
+            if apply_bias:
+                sleep_s *= bias_multiplier
+
+        await asyncio.sleep(sleep_s)
     for t in asyncio.as_completed(in_flight, timeout=timeout_s + 10):
         try:
             results.append(await t)
@@ -288,9 +472,15 @@ def summarize(results: list[RequestResult]) -> dict[str, Any]:
     errs = [r for r in results if r.error]
     if not ok:
         return {
-            "count_ok": 0, "count_err": len(errs),
-            "ttft_p50_ms": -1, "ttft_p95_ms": -1, "ttft_p99_ms": -1, "ttft_max_ms": -1,
-            "total_p50_ms": -1, "total_p99_ms": -1, "tokens_out_mean": 0,
+            "count_ok": 0,
+            "count_err": len(errs),
+            "ttft_p50_ms": -1,
+            "ttft_p95_ms": -1,
+            "ttft_p99_ms": -1,
+            "ttft_max_ms": -1,
+            "total_p50_ms": -1,
+            "total_p99_ms": -1,
+            "tokens_out_mean": 0,
         }
     ttfts = sorted(r.ttft_ms for r in ok)
     totals = sorted(r.total_latency_ms for r in ok)
@@ -301,7 +491,8 @@ def summarize(results: list[RequestResult]) -> dict[str, Any]:
         return xs[idx]
 
     return {
-        "count_ok": n, "count_err": len(errs),
+        "count_ok": n,
+        "count_err": len(errs),
         "ttft_p50_ms": round(p(ttfts, 0.50), 1),
         "ttft_p95_ms": round(p(ttfts, 0.95), 1),
         "ttft_p99_ms": round(p(ttfts, 0.99), 1),
@@ -327,42 +518,100 @@ async def main_async(args: argparse.Namespace) -> int:
     # Each quiet at quiet_rps × 5s avg + flooder at flooder_rps × 5s avg.
     expected_inflight = (args.flooder_rps + args.num_quiet * args.quiet_rps) * 5
     concurrency_budget = max(256, int(expected_inflight * 3))
-    connector = aiohttp.TCPConnector(limit=concurrency_budget, limit_per_host=concurrency_budget)
+    connector = aiohttp.TCPConnector(
+        limit=concurrency_budget, limit_per_host=concurrency_budget
+    )
 
     logger.info(
         "Bench: 1 flooder @ %.1f RPS + %d quiet @ %.1f RPS each, duration=%ds, model=%s",
-        args.flooder_rps, args.num_quiet, args.quiet_rps, args.duration_s, args.model,
+        args.flooder_rps,
+        args.num_quiet,
+        args.quiet_rps,
+        args.duration_s,
+        args.model,
     )
     logger.info("TCPConnector limit=%d", concurrency_budget)
 
     flooder_results: list[RequestResult] = []
     quiet_results: list[list[RequestResult]] = [[] for _ in range(args.num_quiet)]
 
+    # Issue #120: pre-build the shared prefix once (if --prefix-overlap > 0),
+    # then wrap each per-tenant sampler so all tenants share the same prefix
+    # bytes — that's what lets vLLM's tokenizer + prefix cache de-duplicate
+    # across requests.
+    shared_prefix: str | None = None
+    if args.prefix_overlap > 0.0:
+        shared_prefix = build_shared_prefix(
+            shared_prefix_tokens=args.shared_prefix_tokens,
+            seed=args.seed,
+        )
+        logger.info(
+            "Prefix-overlap enabled: fraction=%.2f, shared_prefix_tokens=%d",
+            args.prefix_overlap,
+            args.shared_prefix_tokens,
+        )
+
     # Per-tenant prompt samplers. Disjoint seed offset (+100) keeps the prompt
     # rng stream independent of the arrival rng, so "same --seed → same
     # prompts" stays stable even if arrival-loop rng usage changes later.
     def sampler_for(tenant_offset: int) -> PromptSampler | None:
+        # Step 1: build the base sampler (legacy or mixed-length).
         if length_pairs is None:
-            return None  # legacy path; tenant_poisson_loop uses make_legacy_sampler
-        return make_mixed_length_sampler(length_pairs, seed=args.seed + 100 + tenant_offset)
+            base: PromptSampler | None = (
+                make_legacy_sampler() if shared_prefix is not None else None
+            )
+        else:
+            base = make_mixed_length_sampler(
+                length_pairs, seed=args.seed + 100 + tenant_offset
+            )
+        # Step 2: wrap with prefix-overlap if requested. Uses a separate seed
+        # offset (+1 from the overlap-decision base) so prefix decisions are
+        # reproducible AND independent of length sampling per the issue spec.
+        if shared_prefix is not None and base is not None:
+            base = make_prefix_overlap_sampler(
+                inner=base,
+                shared_prefix=shared_prefix,
+                overlap_fraction=args.prefix_overlap,
+                seed=args.seed + 1 + tenant_offset,
+            )
+        return base
 
     start_wall = time.time()
     async with aiohttp.ClientSession(connector=connector) as session:
         coros = [
             tenant_poisson_loop(
-                "flooder", args.flooder_rps, args.duration_s,
-                session, args.url, args.model, args.max_tokens, args.timeout_s,
-                random.Random(args.seed), flooder_results,
+                "flooder",
+                args.flooder_rps,
+                args.duration_s,
+                session,
+                args.url,
+                args.model,
+                args.max_tokens,
+                args.timeout_s,
+                random.Random(args.seed),
+                flooder_results,
                 prompt_sampler=sampler_for(0),
+                bias_multiplier=args.bias_flooder_cost,
+                bias_threshold=args.bias_after_n_reqs,
+                bias_window_s=args.bias_window_s,
             ),
         ]
         for i in range(args.num_quiet):
             coros.append(
                 tenant_poisson_loop(
-                    f"quiet_{i}", args.quiet_rps, args.duration_s,
-                    session, args.url, args.model, args.max_tokens, args.timeout_s,
-                    random.Random(args.seed + 1 + i), quiet_results[i],
+                    f"quiet_{i}",
+                    args.quiet_rps,
+                    args.duration_s,
+                    session,
+                    args.url,
+                    args.model,
+                    args.max_tokens,
+                    args.timeout_s,
+                    random.Random(args.seed + 1 + i),
+                    quiet_results[i],
                     prompt_sampler=sampler_for(1 + i),
+                    # Bias is flooder-only by spec; quiet tenants stay at the
+                    # default multiplier=1.0 / threshold=0 (off).
                 )
             )
         await asyncio.gather(*coros)
@@ -374,13 +623,17 @@ async def main_async(args: argparse.Namespace) -> int:
     ]:
         csv_path = outdir / f"tenant_{tenant}.csv"
         with open(csv_path, "w", newline="") as fh:
-            writer = csv.DictWriter(fh, fieldnames=list(RequestResult.__dataclass_fields__.keys()))
+            writer = csv.DictWriter(
+                fh, fieldnames=list(RequestResult.__dataclass_fields__.keys())
+            )
             writer.writeheader()
             for r in results:
                 writer.writerow(asdict(r))
         logger.info("Wrote %s (%d rows)", csv_path, len(results))
 
-    quiet_summaries = {f"quiet_{i}": summarize(quiet_results[i]) for i in range(args.num_quiet)}
+    quiet_summaries = {
+        f"quiet_{i}": summarize(quiet_results[i]) for i in range(args.num_quiet)
+    }
     # Aggregate quiet percentiles across all quiet samples (the launch claim).
     all_quiet = [r for sub in quiet_results for r in sub]
 
@@ -415,10 +668,19 @@ async def main_async(args: argparse.Namespace) -> int:
         "quiet_aggregate": summarize(all_quiet),
         "quiet_per_tenant": quiet_summaries,
         "bench_args": {
-            "flooder_rps": args.flooder_rps, "quiet_rps": args.quiet_rps,
-            "num_quiet": args.num_quiet, "duration_s": args.duration_s,
-            "max_tokens": args.max_tokens, "model": args.model, "seed": args.seed,
+            "flooder_rps": args.flooder_rps,
+            "quiet_rps": args.quiet_rps,
+            "num_quiet": args.num_quiet,
+            "duration_s": args.duration_s,
+            "max_tokens": args.max_tokens,
+            "model": args.model,
+            "seed": args.seed,
             "prompt_length_dist": args.prompt_length_dist or "",
+            "prefix_overlap": args.prefix_overlap,
+            "shared_prefix_tokens": args.shared_prefix_tokens,
+            "bias_flooder_cost": args.bias_flooder_cost,
+            "bias_after_n_reqs": args.bias_after_n_reqs,
+            "bias_window_s": args.bias_window_s,
         },
     }
     if prompt_length_block is not None:
@@ -434,22 +696,100 @@ async def main_async(args: argparse.Namespace) -> int:
     logger.info("=" * 60)
     logger.info(
         "QUIET AGG (n=%d) p50=%sms p99=%sms max=%sms",
-        qa["count_ok"], qa["ttft_p50_ms"], qa["ttft_p99_ms"], qa["ttft_max_ms"],
+        qa["count_ok"],
+        qa["ttft_p50_ms"],
+        qa["ttft_p99_ms"],
+        qa["ttft_max_ms"],
     )
     logger.info(
         "FLOOD     (n=%d) p50=%sms p99=%sms max=%sms",
-        f["count_ok"], f["ttft_p50_ms"], f["ttft_p99_ms"], f["ttft_max_ms"],
+        f["count_ok"],
+        f["ttft_p50_ms"],
+        f["ttft_p99_ms"],
+        f["ttft_max_ms"],
     )
     # Per-tenant fairness — what's the spread across quiet tenants?
-    quiet_p99s = [s["ttft_p99_ms"] for s in quiet_summaries.values() if s["ttft_p99_ms"] > 0]
+    quiet_p99s = [
+        s["ttft_p99_ms"] for s in quiet_summaries.values() if s["ttft_p99_ms"] > 0
+    ]
     if quiet_p99s:
         logger.info(
             "Per-quiet p99 spread: min=%.1f max=%.1f ratio=%.2fx",
-            min(quiet_p99s), max(quiet_p99s),
+            min(quiet_p99s),
+            max(quiet_p99s),
             max(quiet_p99s) / max(min(quiet_p99s), 0.001),
         )
     logger.info("=" * 60)
     return 0
+
+
+def _fraction_in_unit_interval(raw: str) -> float:
+    """argparse type for --prefix-overlap: float in [0.0, 1.0]."""
+    try:
+        v = float(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--prefix-overlap: not a float: {raw!r}"
+        ) from exc
+    if not (0.0 <= v <= 1.0):
+        raise argparse.ArgumentTypeError(f"--prefix-overlap: {v} outside [0.0, 1.0]")
+    return v
+
+
+def _positive_int(raw: str) -> int:
+    """argparse type for --shared-prefix-tokens: int >= 1."""
+    try:
+        v = int(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--shared-prefix-tokens: not an int: {raw!r}"
+        ) from exc
+    if v < 1:
+        raise argparse.ArgumentTypeError(f"--shared-prefix-tokens: {v} must be >= 1")
+    return v
+
+
+def _multiplier_at_least_one(raw: str) -> float:
+    """argparse type for --bias-flooder-cost: float >= 1.0 (1.0 = no bias)."""
+    try:
+        v = float(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--bias-flooder-cost: not a float: {raw!r}"
+        ) from exc
+    if v < 1.0:
+        raise argparse.ArgumentTypeError(
+            f"--bias-flooder-cost: {v} must be >= 1.0 (1.0 = no bias)"
+        )
+    return v
+
+
+def _non_negative_int(raw: str) -> int:
+    """argparse type for --bias-after-N-reqs: int >= 0 (0 = bias off)."""
+    try:
+        v = int(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--bias-after-N-reqs: not an int: {raw!r}"
+        ) from exc
+    if v < 0:
+        raise argparse.ArgumentTypeError(
+            f"--bias-after-N-reqs: {v} must be >= 0 (0 = bias never engages)"
+        )
+    return v
+
+
+def _positive_float(raw: str) -> float:
+    """argparse type for --bias-window-s: float > 0."""
+    try:
+        v = float(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"--bias-window-s: not a float: {raw!r}"
+        ) from exc
+    if v <= 0.0:
+        raise argparse.ArgumentTypeError(f"--bias-window-s: {v} must be > 0")
+    return v
 
 
 def main() -> int:
@@ -472,6 +812,59 @@ def main() -> int:
             "'64:0.4,512:0.3,2048:0.2,8192:0.1'. Probabilities must sum to "
             "~1.0 (tolerance 0.001). When unset, the hardcoded short-prompt "
             "list (Gate 2.1 behavior) is used."
+        ),
+    )
+    # Issue #120: shared-prefix workload generator (Gate 3 M4 pre-flight).
+    p.add_argument(
+        "--prefix-overlap",
+        type=_fraction_in_unit_interval,
+        default=0.0,
+        help=(
+            "Fraction of prompts that prepend a shared prefix (issue #120). "
+            "Float in [0.0, 1.0]. 0.0 (default) = behavior unchanged. "
+            "Pre-flight check at docs/runbooks/gate3_kv_eviction.md."
+        ),
+    )
+    p.add_argument(
+        "--shared-prefix-tokens",
+        type=_positive_int,
+        default=1024,
+        help=(
+            "Token length of the shared prefix when --prefix-overlap > 0 "
+            "(issue #120). Default 1024."
+        ),
+    )
+    # Issue #122: simulated saturation bias for Arm 2 upper-bound probe.
+    p.add_argument(
+        "--bias-flooder-cost",
+        type=_multiplier_at_least_one,
+        default=1.0,
+        help=(
+            "Bench-side rate-throttle multiplier applied to the flooder "
+            "tenant's inter-arrival sleep when its rolling-window emit count "
+            "exceeds --bias-after-N-reqs (issue #122). Float >= 1.0; 1.0 "
+            "(default) = no bias. Simulates what a cache-pressure-aware "
+            "admission controller would do at the server side. "
+            "Pre-flight check at docs/runbooks/gate3_kv_eviction.md."
+        ),
+    )
+    p.add_argument(
+        "--bias-after-N-reqs",
+        dest="bias_after_n_reqs",
+        type=_non_negative_int,
+        default=0,
+        help=(
+            "Threshold of flooder requests in the rolling window before bias "
+            "engages (issue #122). Int >= 0; 0 (default) = bias never engages."
+        ),
+    )
+    p.add_argument(
+        "--bias-window-s",
+        type=_positive_float,
+        default=30.0,
+        help=(
+            "Sliding-window length in seconds for counting flooder emits "
+            "(issue #122). Float > 0; default 30.0."
         ),
     )
     args = p.parse_args()

@@ -105,25 +105,43 @@ _OOM_PAT = re.compile(r"out of memory|cuda oom|cudaerror|allocation", re.IGNOREC
 
 
 async def send_one(
-    session: aiohttp.ClientSession, base_url: str, tenant_id: str,
-    request_id: int, model: str, prompt: str, max_tokens: int, timeout_s: float,
+    session: aiohttp.ClientSession,
+    base_url: str,
+    tenant_id: str,
+    request_id: int,
+    model: str,
+    prompt: str,
+    max_tokens: int,
+    timeout_s: float,
 ) -> RequestResult:
     url = f"{base_url}/v1/completions"
-    payload = {"model": model, "prompt": prompt, "max_tokens": max_tokens, "stream": True}
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "max_tokens": max_tokens,
+        "stream": True,
+    }
     headers = {"X-Tenant-ID": tenant_id}
     submit = time.time()
     first_token_time: float | None = None
     tokens_out = 0
     try:
         timeout = aiohttp.ClientTimeout(total=timeout_s)
-        async with session.post(url, json=payload, headers=headers, timeout=timeout) as resp:
+        async with session.post(
+            url, json=payload, headers=headers, timeout=timeout
+        ) as resp:
             if resp.status != 200:
                 body = await resp.text()
                 is_oom = bool(_OOM_PAT.search(body))
                 return RequestResult(
-                    tenant=tenant_id, request_id=request_id, submit_time=submit,
-                    ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-                    tokens_out=0, http_status=resp.status, is_oom=is_oom,
+                    tenant=tenant_id,
+                    request_id=request_id,
+                    submit_time=submit,
+                    ttft_ms=0.0,
+                    total_latency_ms=(time.time() - submit) * 1000,
+                    tokens_out=0,
+                    http_status=resp.status,
+                    is_oom=is_oom,
                     error=f"HTTP {resp.status}: {body[:120]}",
                 )
             async for line in resp.content:
@@ -151,29 +169,50 @@ async def send_one(
                     continue
     except asyncio.TimeoutError:
         return RequestResult(
-            tenant=tenant_id, request_id=request_id, submit_time=submit,
-            ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-            tokens_out=0, error="timeout",
+            tenant=tenant_id,
+            request_id=request_id,
+            submit_time=submit,
+            ttft_ms=0.0,
+            total_latency_ms=(time.time() - submit) * 1000,
+            tokens_out=0,
+            error="timeout",
         )
     except Exception as exc:
         msg = str(exc)
         return RequestResult(
-            tenant=tenant_id, request_id=request_id, submit_time=submit,
-            ttft_ms=0.0, total_latency_ms=(time.time() - submit) * 1000,
-            tokens_out=0, is_oom=bool(_OOM_PAT.search(msg)), error=msg,
+            tenant=tenant_id,
+            request_id=request_id,
+            submit_time=submit,
+            ttft_ms=0.0,
+            total_latency_ms=(time.time() - submit) * 1000,
+            tokens_out=0,
+            is_oom=bool(_OOM_PAT.search(msg)),
+            error=msg,
         )
     end = time.time()
     total_ms = (end - submit) * 1000
-    ttft_ms = (first_token_time - submit) * 1000 if first_token_time is not None else total_ms
+    ttft_ms = (
+        (first_token_time - submit) * 1000 if first_token_time is not None else total_ms
+    )
     return RequestResult(
-        tenant=tenant_id, request_id=request_id, submit_time=submit,
-        ttft_ms=ttft_ms, total_latency_ms=total_ms, tokens_out=tokens_out,
+        tenant=tenant_id,
+        request_id=request_id,
+        submit_time=submit,
+        ttft_ms=ttft_ms,
+        total_latency_ms=total_ms,
+        tokens_out=tokens_out,
     )
 
 
 async def chat_steady_loop(
-    base_url: str, model: str, rps: float, duration_s: float, max_tokens: int,
-    timeout_s: float, session: aiohttp.ClientSession, results: list[RequestResult],
+    base_url: str,
+    model: str,
+    rps: float,
+    duration_s: float,
+    max_tokens: int,
+    timeout_s: float,
+    session: aiohttp.ClientSession,
+    results: list[RequestResult],
 ) -> None:
     rng = random.Random(42)
     end = time.time() + duration_s
@@ -182,21 +221,42 @@ async def chat_steady_loop(
     interarrival = 1.0 / rps
     while time.time() < end:
         prompt = rng.choice(CHAT_PROMPTS)
-        in_flight.append(asyncio.create_task(send_one(
-            session, base_url, "chat", rid, model, prompt, max_tokens, timeout_s,
-        )))
+        in_flight.append(
+            asyncio.create_task(
+                send_one(
+                    session,
+                    base_url,
+                    "chat",
+                    rid,
+                    model,
+                    prompt,
+                    max_tokens,
+                    timeout_s,
+                )
+            )
+        )
         rid += 1
         await asyncio.sleep(rng.expovariate(1.0 / interarrival))
     for t in asyncio.as_completed(in_flight, timeout=timeout_s + 10):
-        try: results.append(await t)
-        except Exception as e: logger.warning("chat drain: %s", e)
+        try:
+            results.append(await t)
+        except Exception as e:
+            logger.warning("chat drain: %s", e)
 
 
 async def rag_burst_loop(
-    base_url: str, model: str, burst_rps: float, burst_dur_s: float,
-    idle_s: float, n_bursts: int, max_tokens: int, prompt_tokens: int,
-    timeout_s: float, session: aiohttp.ClientSession,
-    results: list[RequestResult], start_offset_s: float = 0.0,
+    base_url: str,
+    model: str,
+    burst_rps: float,
+    burst_dur_s: float,
+    idle_s: float,
+    n_bursts: int,
+    max_tokens: int,
+    prompt_tokens: int,
+    timeout_s: float,
+    session: aiohttp.ClientSession,
+    results: list[RequestResult],
+    start_offset_s: float = 0.0,
 ) -> None:
     rng = random.Random(123)
     rid = 0
@@ -206,21 +266,39 @@ async def rag_burst_loop(
     interarrival = 1.0 / burst_rps
     for burst_idx in range(n_bursts):
         burst_end = time.time() + burst_dur_s
-        logger.info("RAG burst %d/%d starts (%.0fs of %.0f RPS)",
-                    burst_idx + 1, n_bursts, burst_dur_s, burst_rps)
+        logger.info(
+            "RAG burst %d/%d starts (%.0fs of %.0f RPS)",
+            burst_idx + 1,
+            n_bursts,
+            burst_dur_s,
+            burst_rps,
+        )
         while time.time() < burst_end:
             prompt = _make_long_prompt(rng, prompt_tokens)
-            in_flight.append(asyncio.create_task(send_one(
-                session, base_url, "rag", rid, model, prompt, max_tokens, timeout_s,
-            )))
+            in_flight.append(
+                asyncio.create_task(
+                    send_one(
+                        session,
+                        base_url,
+                        "rag",
+                        rid,
+                        model,
+                        prompt,
+                        max_tokens,
+                        timeout_s,
+                    )
+                )
+            )
             rid += 1
             await asyncio.sleep(rng.expovariate(1.0 / interarrival))
         if burst_idx < n_bursts - 1:
             logger.info("RAG idle %.0fs", idle_s)
             await asyncio.sleep(idle_s)
     for t in asyncio.as_completed(in_flight, timeout=timeout_s + 10):
-        try: results.append(await t)
-        except Exception as e: logger.warning("rag drain: %s", e)
+        try:
+            results.append(await t)
+        except Exception as e:
+            logger.warning("rag drain: %s", e)
 
 
 def summarize(results: list[RequestResult]) -> dict[str, Any]:
@@ -229,9 +307,15 @@ def summarize(results: list[RequestResult]) -> dict[str, Any]:
     oom = [r for r in results if r.is_oom]
     if not ok:
         return {
-            "count_ok": 0, "count_err": len(err), "count_oom": len(oom),
-            "ttft_p50_ms": -1, "ttft_p95_ms": -1, "ttft_p99_ms": -1, "ttft_max_ms": -1,
-            "total_p99_ms": -1, "tokens_out_mean": 0,
+            "count_ok": 0,
+            "count_err": len(err),
+            "count_oom": len(oom),
+            "ttft_p50_ms": -1,
+            "ttft_p95_ms": -1,
+            "ttft_p99_ms": -1,
+            "ttft_max_ms": -1,
+            "total_p99_ms": -1,
+            "tokens_out_mean": 0,
         }
     ttfts = sorted(r.ttft_ms for r in ok)
     totals = sorted(r.total_latency_ms for r in ok)
@@ -241,7 +325,9 @@ def summarize(results: list[RequestResult]) -> dict[str, Any]:
         return xs[min(n - 1, max(0, int(q * n)))]
 
     return {
-        "count_ok": n, "count_err": len(err), "count_oom": len(oom),
+        "count_ok": n,
+        "count_err": len(err),
+        "count_oom": len(oom),
         "ttft_p50_ms": round(p(ttfts, 0.50), 1),
         "ttft_p95_ms": round(p(ttfts, 0.95), 1),
         "ttft_p99_ms": round(p(ttfts, 0.99), 1),
@@ -264,21 +350,42 @@ async def main_async(args: argparse.Namespace) -> int:
 
     logger.info(
         "Bench: chat=%s @ %.1f RPS steady, rag=%s burst %dx (%.0fs at %.1f RPS, %.0fs idle), prompt=%d tok",
-        args.chat_model, args.chat_rps, args.rag_model,
-        args.n_bursts, args.burst_dur_s, args.burst_rps, args.idle_s, args.rag_prompt_tokens,
+        args.chat_model,
+        args.chat_rps,
+        args.rag_model,
+        args.n_bursts,
+        args.burst_dur_s,
+        args.burst_rps,
+        args.idle_s,
+        args.rag_prompt_tokens,
     )
 
     start_wall = time.time()
     async with aiohttp.ClientSession(connector=connector) as session:
         await asyncio.gather(
             chat_steady_loop(
-                args.url, args.chat_model, args.chat_rps, args.duration_s,
-                args.chat_max_tokens, args.timeout_s, session, chat_results,
+                args.url,
+                args.chat_model,
+                args.chat_rps,
+                args.duration_s,
+                args.chat_max_tokens,
+                args.timeout_s,
+                session,
+                chat_results,
             ),
             rag_burst_loop(
-                args.url, args.rag_model, args.burst_rps, args.burst_dur_s,
-                args.idle_s, args.n_bursts, args.rag_max_tokens, args.rag_prompt_tokens,
-                args.timeout_s, session, rag_results, args.rag_start_offset_s,
+                args.url,
+                args.rag_model,
+                args.burst_rps,
+                args.burst_dur_s,
+                args.idle_s,
+                args.n_bursts,
+                args.rag_max_tokens,
+                args.rag_prompt_tokens,
+                args.timeout_s,
+                session,
+                rag_results,
+                args.rag_start_offset_s,
             ),
         )
     wall_s = time.time() - start_wall
@@ -286,7 +393,9 @@ async def main_async(args: argparse.Namespace) -> int:
     for tenant, results in [("chat", chat_results), ("rag", rag_results)]:
         path = outdir / f"tenant_{tenant}.csv"
         with open(path, "w", newline="") as fh:
-            writer = csv.DictWriter(fh, fieldnames=list(RequestResult.__dataclass_fields__.keys()))
+            writer = csv.DictWriter(
+                fh, fieldnames=list(RequestResult.__dataclass_fields__.keys())
+            )
             writer.writeheader()
             for r in results:
                 writer.writerow(asdict(r))
@@ -297,10 +406,14 @@ async def main_async(args: argparse.Namespace) -> int:
         "chat": summarize(chat_results),
         "rag": summarize(rag_results),
         "bench_args": {
-            "chat_model": args.chat_model, "rag_model": args.rag_model,
-            "chat_rps": args.chat_rps, "burst_rps": args.burst_rps,
-            "burst_dur_s": args.burst_dur_s, "idle_s": args.idle_s,
-            "n_bursts": args.n_bursts, "duration_s": args.duration_s,
+            "chat_model": args.chat_model,
+            "rag_model": args.rag_model,
+            "chat_rps": args.chat_rps,
+            "burst_rps": args.burst_rps,
+            "burst_dur_s": args.burst_dur_s,
+            "idle_s": args.idle_s,
+            "n_bursts": args.n_bursts,
+            "duration_s": args.duration_s,
             "rag_prompt_tokens": args.rag_prompt_tokens,
         },
     }
@@ -311,11 +424,17 @@ async def main_async(args: argparse.Namespace) -> int:
     logger.info("=" * 60)
     logger.info(
         "CHAT n=%d err=%d oom=%d  ttft_p99=%sms",
-        c["count_ok"], c["count_err"], c["count_oom"], c["ttft_p99_ms"],
+        c["count_ok"],
+        c["count_err"],
+        c["count_oom"],
+        c["ttft_p99_ms"],
     )
     logger.info(
         "RAG  n=%d err=%d oom=%d  ttft_p99=%sms",
-        r["count_ok"], r["count_err"], r["count_oom"], r["ttft_p99_ms"],
+        r["count_ok"],
+        r["count_err"],
+        r["count_oom"],
+        r["ttft_p99_ms"],
     )
     logger.info("=" * 60)
     return 0

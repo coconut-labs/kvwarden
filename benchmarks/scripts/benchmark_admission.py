@@ -37,7 +37,7 @@ _project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_project_root))
 sys.path.insert(0, str(_project_root / "profiling" / "scripts"))
 
-from profiling_utils import (
+from profiling_utils import (  # noqa: E402
     AsyncBenchmarkClient,
     BenchmarkResults,
     GPUMetricsCollector,
@@ -163,7 +163,9 @@ async def run_benchmark(
 
     summary = results.summary()
     logger.info("%s complete in %.1fs:", label, elapsed)
-    logger.info("  Successful: %d / %d", summary.get("num_successful", 0), len(requests))
+    logger.info(
+        "  Successful: %d / %d", summary.get("num_successful", 0), len(requests)
+    )
     logger.info("  TTFT p50: %.1fms", summary.get("ttft_p50_ms", 0))
     logger.info("  TTFT p99: %.1fms", summary.get("ttft_p99_ms", 0))
     logger.info(
@@ -243,7 +245,11 @@ def print_comparison(comparison: dict[str, Any]) -> None:
     print("-" * 70)
 
     for metric, data in improvements.items():
-        label = metric.replace("_", " ").replace("ms", " (ms)").replace("tok per sec", "(tok/s)")
+        label = (
+            metric.replace("_", " ")
+            .replace("ms", " (ms)")
+            .replace("tok per sec", "(tok/s)")
+        )
         direct_val = data.get("direct", 0)
         admission_val = data.get("admission", 0)
         change_pct = data.get("change_pct", 0)
