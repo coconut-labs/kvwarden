@@ -1,11 +1,33 @@
-# KVWarden benchmark environment
-# Usage: docker compose -f docker/docker-compose.yml up vllm-server
-
-version: "3.8"
+# kvwarden compose bundle — one-command local eval (closes #109).
+#
+# Usage:
+#   export HF_TOKEN=hf_...                    # gated Llama-3.1-8B model
+#   docker compose -f docker/docker-compose.yml up
+#   # in another shell, once both services are healthy (~3 min cold):
+#   curl localhost:8000/v1/completions -H 'X-Tenant-ID: quiet' \
+#     -d '{"model":"llama31-8b","prompt":"Hello","max_tokens":32}'
+#
+# Architecture note: the kvwarden engine adapter currently spawns vLLM as
+# a subprocess and reaches it on localhost:{port}. A two-process compose
+# split with service-name DNS would need an `engine_endpoint` config knob
+# kvwarden does not have today. As a workaround, the kvwarden service
+# joins the vllm service's network namespace (`network_mode: service:vllm`)
+# and runs with KVWARDEN_DEV_SKIP_ENGINE_LAUNCH=1 so the adapter attaches
+# to the existing vllm process on localhost:8001. Both ports (8000 for
+# kvwarden, 8001 for vllm) are exposed on the vllm service since it owns
+# the netns. Followup to ship a real `engine_endpoint` field is out of
+# scope for #109.
+#
+# Requires a Linux GPU host with the NVIDIA Container Toolkit installed.
+# Apple Silicon and CPU-only hosts cannot run this — vLLM needs CUDA.
 
 services:
-  vllm-server:
-    image: vllm/vllm-openai:latest
+  vllm:
+    image: vllm/vllm-openai:v0.19.1
+    # GPU reservation. Modern Compose (v2+) reads `deploy.resources`;
+    # older Compose v1 uses `runtime: nvidia`. Pick whichever your daemon
+    # accepts — uncomment the runtime line if the deploy form is ignored.
+    # runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -13,33 +35,57 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    environment:
+      HF_TOKEN: ${HF_TOKEN:?HF_TOKEN must be set in your shell — gated model auth}
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN}
+    # Only kvwarden's port 8000 is published to the host. Port 8001
+    # (vLLM) is reachable from kvwarden via the shared netns at
+    # localhost:8001 but stays unpublished — exposing it would bypass
+    # kvwarden's tenant-fairness admission gate entirely.
     ports:
       - "8000:8000"
-    command: >
-      --model meta-llama/Llama-3.1-8B-Instruct
-      --dtype bfloat16
-      --gpu-memory-utilization 0.8
     volumes:
-      - huggingface-cache:/root/.cache/huggingface
+      - hf-cache:/root/.cache/huggingface
+    command:
+      - --model
+      - meta-llama/Llama-3.1-8B-Instruct
+      - --gpu-memory-utilization
+      - "0.40"
+      - --max-model-len
+      - "4096"
+      - --port
+      - "8001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
 
-  sglang-server:
-    image: lmsysorg/sglang:latest
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    ports:
-      - "8001:30000"
-    command: >
-      python -m sglang.launch_server
-      --model meta-llama/Llama-3.1-8B-Instruct
-      --dtype bfloat16
-      --mem-fraction-static 0.8
+  kvwarden:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    # Share the vllm container's netns so the kvwarden adapter can reach
+    # vllm on localhost:8001 without an `engine_endpoint` config knob.
+    # Side-effect: this service has no `ports:` of its own — port 8000
+    # is exposed by the vllm service above.
+    network_mode: "service:vllm"
+    depends_on:
+      vllm:
+        condition: service_healthy
+    environment:
+      # Tells the engine adapter to attach to an already-running vllm on
+      # localhost:{model.port} instead of spawning its own subprocess.
+      KVWARDEN_DEV_SKIP_ENGINE_LAUNCH: "1"
     volumes:
-      - huggingface-cache:/root/.cache/huggingface
+      - ../configs:/configs:ro
+      - ../docker/quickstart-compose.yaml:/etc/kvwarden/config.yaml:ro
+    command:
+      - serve
+      - --config
+      - /etc/kvwarden/config.yaml
+    # Healthcheck inherited from the Dockerfile (curl /health on 8000).
 
 volumes:
-  huggingface-cache:
+  hf-cache:

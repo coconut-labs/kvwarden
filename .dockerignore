@@ -1,0 +1,59 @@
+# Keep the Docker build context small. Anything not needed for
+# `pip install -e .` (pyproject.toml + README.md + src/) should be
+# excluded so docker build doesn't ship the whole repo to the daemon.
+
+.git
+.github
+.gitignore
+.gitattributes
+
+# Tests + bench artifacts — installed package doesn't ship these.
+tests
+benchmarks
+results
+profiling
+dashboards
+telemetry-worker
+docs
+
+# Docs + dot-files
+*.md
+!README.md
+LICENSE
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+SECURITY.md
+PROGRESS.md
+research_roadmap.md
+
+# Compose-bundle artifacts and tarballs
+*.tar.gz
+infergrid_*.tar.gz
+kvwarden_*.tar.gz
+
+# Python / venv
+__pycache__
+*.py[cod]
+*.egg-info
+dist
+build
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+
+# Editor + OS
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# Worktrees + agent state
+.claude
+worktree-agent-*
+
+# Misc
+.checkpoints
+.ipynb_checkpoints

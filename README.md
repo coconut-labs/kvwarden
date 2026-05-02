@@ -50,7 +50,19 @@ curl localhost:8000/metrics | grep -E "tenant_rejected|admission_queue_depth"
 
 First call returns `503` until vLLM finishes loading (30-90 s on A100 for an 8B). The config at [`configs/quickstart_fairness.yaml`](configs/quickstart_fairness.yaml) is heavily commented; every knob traces back to a specific experiment.
 
-A Docker Compose bundle is not shipping yet — if you want one, [#109](https://github.com/coconut-labs/kvwarden/issues/109) is open as a good-first-issue.
+## Docker Compose
+
+A two-service compose bundle brings up vLLM + kvwarden with one command. Requires a Linux GPU host with the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html); CPU-only and Apple Silicon hosts cannot run this end-to-end (vLLM needs CUDA).
+
+```bash
+export HF_TOKEN=hf_...                      # gated Llama-3.1-8B model
+docker compose -f docker/docker-compose.yml up
+# in another shell, once both services report healthy (~3 min cold):
+curl localhost:8000/v1/completions -H 'X-Tenant-ID: quiet' \
+  -d '{"model":"llama31-8b","prompt":"Hello","max_tokens":32}'
+```
+
+Compose pins `vllm/vllm-openai:v0.19.1` (the image the hero number was measured against) and serves the bundled [`docker/quickstart-compose.yaml`](docker/quickstart-compose.yaml) — same two-tenant token-bucket shape as `configs/quickstart_fairness.yaml`, port-pinned for the bundle.
 
 ## When it breaks
 

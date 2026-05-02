@@ -1,0 +1,41 @@
+# kvwarden compose-bundle config — mirrors configs/quickstart_fairness.yaml
+# but pinned to the layout the docker-compose bundle ships:
+#
+#   - vLLM runs in the `vllm` service on port 8001 (set in compose).
+#   - kvwarden joins that netns, attaches via KVWARDEN_DEV_SKIP_ENGINE_LAUNCH,
+#     and reaches vllm on localhost:8001.
+#   - kvwarden's own API binds 0.0.0.0:8000 inside the netns; the host
+#     reaches it via the vllm service's `ports:` mapping.
+#
+# Two tenants (`noisy`, `quiet`) with token-bucket rate-limiting on a
+# DRR-scheduled admission gate — same shape as the README hero number.
+# Tunable via the same knobs documented in configs/quickstart_fairness.yaml.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.40    # matches the vllm service's --gpu-memory-utilization
+
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 600          # 10 RPS sustained per tenant
+  rate_limit_burst: 10         # 1 second of burst capacity
+  priority: 1
+  scheduling: drr
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.40
+    max_model_len: 4096
+    tensor_parallel_size: 1
+    # Pinned: must match `--port 8001` in docker-compose.yml's vllm
+    # command. The KVWARDEN_DEV_SKIP_ENGINE_LAUNCH path attaches to
+    # localhost:{port} of the running engine.
+    port: 8001
