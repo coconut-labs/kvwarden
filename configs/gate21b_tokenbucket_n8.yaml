@@ -1,0 +1,35 @@
+# Gate 2.1b — H100 saturation rerun, Cell B (DRR + token-bucket).
+# N=8 (1 flooder + 7 quiet) on 1×H100 SXM SECURE, Llama-3.1-8B-Instruct.
+#
+# Diff from configs/gate21_fairness_n8.yaml:
+#   gpu_memory_utilization 0.85 -> 0.40 (task spec)
+#   rate_limit_rpm 600 -> 60 (task spec: 1 RPS sustained per tenant; flooder
+#                            sending 128 RPS gets ~99% rejected, so the
+#                            engine sees ~1 RPS from each of 8 tenants)
+#   rate_limit_burst 10 -> unset (defaults to rpm=60 -> 1 token bucket cap)
+#
+# Cell B measures token-bucket p99 under saturation regime set by Cell A.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 512
+admission_queue_size: 4096
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 256
+  rate_limit_rpm: 60
+  priority: 1
+  scheduling: drr
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.40
+    max_model_len: 4096
+    tensor_parallel_size: 1
