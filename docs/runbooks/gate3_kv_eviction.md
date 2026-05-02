@@ -74,13 +74,15 @@ Stage 2 (M6, Arm 3 vs Arm 1, same threshold table). Arm 3 must track Arm 2 withi
 runpodctl create pod \
   --name "kvwarden-gate3-cache-pressure-admission" \
   --gpu-type "A100 SXM4 80GB" \
-  --image vllm/vllm-openai:0.19.1 \
+  --image runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 \
   --cloud-type SECURE \
   --container-disk-gb 80 \
   --ports "22/tcp,8000/http" \
   --env "HF_TOKEN=$HF_TOKEN" \
   --env "MAX_POD_SECS=21600"
 ```
+
+**Why `runpod/pytorch` not `vllm/vllm-openai` (P1 finding 2026-05-02):** the `vllm/vllm-openai` image runs vLLM as PID 1 with no sshd. Bench orchestration here SSHes in, runs `gate_pod_bootstrap.sh` to pip-install vLLM, then launches engines as subprocesses. The pytorch base gives sshd + room for `pip install vllm==0.19.1` during bootstrap. The Compose bundle (#126) uses `vllm/vllm-openai` because it talks to the engine over HTTP only, no SSH needed.
 
 (MAX_POD_SECS=21600 = 6h, above 4.5h compute budget. In-pod self-destruct is best-effort; the operator's calendar alarm is the actual ceiling.)
 

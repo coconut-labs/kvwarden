@@ -49,14 +49,14 @@ vLLM exposes `vllm:kv_cache_usage_perc` as a Prometheus `Gauge` on the engine's 
 
 Two properties of the gauge are load-bearing:
 
-1. **Instance-level.** The only label is `model_name`. There is no per-tenant, per-request, or per-block label. Cache pressure as kvwarden sees it is global to the engine instance.
+1. **Instance-level.** Labels are `engine` (instance index — `engine="0"` on a single-engine pod, increments for multi-engine deployments) and `model_name`. There is no per-tenant, per-request, or per-block label. Cache pressure as kvwarden sees it is global per engine instance.
 2. **Range [0.0, 1.0].** Composes cleanly with a unitless scaling function. No magnitude calibration across hardware.
 
 The first property means tenant fairness in v0.2 comes from kvwarden's existing per-tenant signal (DRR deficit, tenant_manager state) composed with the engine's global pressure. We do not claim per-tenant cache visibility. The composition is honest: cache pressure is engine state, tenant attribution is orchestration state, and admission combines them.
 
 Adjacent histograms exist (`vllm:kv_block_lifetime_seconds`, `vllm:kv_block_idle_before_evict_seconds`, `vllm:kv_block_reuse_gap_seconds`) for v0.3+ adaptive thresholding. Out of scope for v0.2.
 
-Refresh tempo is a verifiable property of the gauge, not a documented one. M1 pre-flight scrapes `/metrics` against the existing test vLLM container to measure the update cadence and confirm the gauge is reachable without auth. Per R5 in the persisted plan, if vLLM updates the gauge slower than ~1 Hz, the poller caches the last value with a TTL bounded by the observed update rate; admission still composes against a stale-but-bounded reading rather than blocking on a fresh poll.
+**Refresh tempo verified (P1 pre-flight, 2026-05-02):** vLLM 0.19.1 on A100, 4 RPS small-completion load — `vllm:kv_cache_usage_perc` distinct-value updates at p50 0.25 s, well above the 1 Hz threshold. The 250 ms poller cadence locked in §Architecture is sufficient; the staleness-bounded fallback path documented in R5 of the persisted plan is not load-bearing for v0.2. Findings: `results/p1_gauge_preflight_20260502/GAUGE_FINDINGS.md`.
 
 ### Architecture
 
