@@ -1,0 +1,107 @@
+{
+  "cells": [
+    {
+      "arm": "arm1",
+      "seed": 0,
+      "cell_dir": "results/m4_path_c_probe_20260502/m4_arm1_seed0",
+      "summary_json_path": null,
+      "gauge_trace_path": null,
+      "gauge": {},
+      "bench": {
+        "present": false
+      }
+    },
+    {
+      "arm": "arm1",
+      "seed": 1,
+      "cell_dir": "results/m4_path_c_probe_20260502/m4_arm1_seed1",
+      "summary_json_path": null,
+      "gauge_trace_path": null,
+      "gauge": {},
+      "bench": {
+        "present": false
+      }
+    },
+    {
+      "arm": "arm1",
+      "seed": 2,
+      "cell_dir": "results/m4_path_c_probe_20260502/m4_arm1_seed2",
+      "summary_json_path": null,
+      "gauge_trace_path": null,
+      "gauge": {},
+      "bench": {
+        "present": false
+      }
+    },
+    {
+      "arm": "arm2",
+      "seed": 0,
+      "cell_dir": "results/m4_path_c_probe_20260502/m4_arm2_seed0",
+      "summary_json_path": null,
+      "gauge_trace_path": null,
+      "gauge": {},
+      "bench": {
+        "present": false
+      }
+    },
+    {
+      "arm": "arm2",
+      "seed": 1,
+      "cell_dir": "results/m4_path_c_probe_20260502/m4_arm2_seed1",
+      "summary_json_path": null,
+      "gauge_trace_path": null,
+      "gauge": {},
+      "bench": {
+        "present": false
+      }
+    },
+    {
+      "arm": "arm2",
+      "seed": 2,
+      "cell_dir": "results/m4_path_c_probe_20260502/m4_arm2_seed2",
+      "summary_json_path": null,
+      "gauge_trace_path": null,
+      "gauge": {},
+      "bench": {
+        "present": false
+      }
+    }
+  ],
+  "per_arm": {
+    "arm1": {
+      "n_cells": 3,
+      "quiet_p99_med_across_seeds": null,
+      "quiet_p50_med_across_seeds": null,
+      "quiet_p99_per_seed": [],
+      "quiet_p50_per_seed": [],
+      "gauge_p50_med": null,
+      "gauge_p95_med": null,
+      "gauge_p99_med": null,
+      "gauge_p99_max_across_seeds": null,
+      "flooder_count_err_total": 0,
+      "quiet_count_err_total": 0
+    },
+    "arm2": {
+      "n_cells": 3,
+      "quiet_p99_med_across_seeds": null,
+      "quiet_p50_med_across_seeds": null,
+      "quiet_p99_per_seed": [],
+      "quiet_p50_per_seed": [],
+      "gauge_p50_med": null,
+      "gauge_p95_med": null,
+      "gauge_p99_med": null,
+      "gauge_p99_max_across_seeds": null,
+      "flooder_count_err_total": 0,
+      "quiet_count_err_total": 0
+    }
+  },
+  "headline": {
+    "arm1_quiet_p99_med_ms": null,
+    "arm2_quiet_p99_med_ms": null,
+    "ratio_arm1_over_arm2": null,
+    "regime_pressured": false,
+    "pressured_arms": [],
+    "verdict": "incomplete",
+    "rationale": "No bench data and no gauge trace recovered. Cells did not complete; see cell_results.json for status per cell."
+  }
+}

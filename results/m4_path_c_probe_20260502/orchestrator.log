@@ -1,0 +1,69 @@
+[t=    0.0s 22:28:11Z] pubkey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO7fjKDecmm5dt... arms=['arm1', 'arm2'] seeds=[0, 1, 2]
+[t=    0.0s 22:28:11Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/spot
+[t=    2.0s 22:28:13Z] create OK id=wrw7d58i68e02a costPerHr=$0.79
+[t=    2.3s 22:28:14Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   17.7s 22:28:29Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   33.1s 22:28:45Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   48.5s 22:29:00Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.9s 22:29:15Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   79.2s 22:29:31Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   94.6s 22:29:46Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  110.1s 22:30:02Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  125.5s 22:30:17Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  141.0s 22:30:32Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  156.3s 22:30:48Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  171.7s 22:31:03Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  187.1s 22:31:19Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  202.5s 22:31:34Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  217.8s 22:31:49Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  233.2s 22:32:05Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  248.6s 22:32:20Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  264.0s 22:32:35Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  279.3s 22:32:51Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  294.7s 22:33:06Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  310.2s 22:33:22Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  325.5s 22:33:37Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  342.0s 22:33:53Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  357.4s 22:34:09Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  373.2s 22:34:25Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  388.5s 22:34:40Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  404.0s 22:34:55Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  419.4s 22:35:11Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  434.8s 22:35:26Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  450.1s 22:35:42Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  465.5s 22:35:57Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  480.9s 22:36:12Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  496.2s 22:36:28Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  511.5s 22:36:43Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  526.9s 22:36:58Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  542.3s 22:37:14Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  557.6s 22:37:29Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  573.0s 22:37:44Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  588.4s 22:38:00Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  603.8s 22:38:15Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  619.2s 22:38:31Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  634.6s 22:38:46Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  650.0s 22:39:01Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  665.4s 22:39:17Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  680.7s 22:39:32Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  696.1s 22:39:47Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  711.7s 22:40:03Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  727.1s 22:40:19Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  742.5s 22:40:34Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  757.8s 22:40:49Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  773.2s 22:41:05Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  788.6s 22:41:20Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  804.0s 22:41:35Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  819.4s 22:41:51Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  834.8s 22:42:06Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  850.1s 22:42:22Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  865.5s 22:42:37Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  880.9s 22:42:52Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  896.3s 22:43:08Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  911.3s 22:43:23Z] pod create attempt 1 failed: TimeoutError('pod wrw7d58i68e02a not RUNNING+SSH within 900s')
+[t=  911.3s 22:43:23Z] DELETE pod wrw7d58i68e02a
+[t=  911.8s 22:43:23Z] delete returned status=204 resp={}
+[t=  917.1s 22:43:29Z] pod wrw7d58i68e02a confirmed terminated (404)
+[t=  947.1s 22:43:59Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/spot
+[t=  948.1s 22:44:00Z] create OK id=fx2ahvtqytqyg7 costPerHr=$0.79
+[t=  948.4s 22:44:00Z] poll desiredStatus=RUNNING publicIp= ssh_port=None

@@ -114,9 +114,11 @@ bundle_and_mark() {
   if [ -n "${COSTCAP_PID:-}" ]; then
     kill "$COSTCAP_PID" 2>/dev/null || true
   fi
-  kill "$(cat $RDIR/server.pid 2>/dev/null)"     2>/dev/null || true
-  kill "$(cat $RDIR/gpu_trace.pid 2>/dev/null)" 2>/dev/null || true
+  kill "$(cat $RDIR/server.pid 2>/dev/null)"      2>/dev/null || true
+  kill "$(cat $RDIR/gpu_trace.pid 2>/dev/null)"   2>/dev/null || true
+  kill "$(cat $RDIR/gauge_trace.pid 2>/dev/null)" 2>/dev/null || true
   sleep 2; pkill -9 -f "vllm.entrypoints" 2>/dev/null || true
+  pkill -9 -f "kvwarden" 2>/dev/null || true
   cp /workspace/bootstrap.log "$RDIR/bootstrap.log" 2>/dev/null || true
   tar -czf "$TARBALL" -C /workspace "results/$RUN_NAME" 2>/dev/null \
     && echo "archive: $(du -h $TARBALL | cut -f1)" \
@@ -184,6 +186,25 @@ nohup kvwarden serve --config "$CONFIG" --port 8000 --log-level INFO \
   > "$RDIR/server.log" 2>&1 &
 echo $! > "$RDIR/server.pid"
 SERVER_PID=$(cat "$RDIR/server.pid"); echo "serve pid=$SERVER_PID"
+
+# T2 gauge scraper (issue #103, M4 Path C). 250 ms cadence against the
+# vLLM engine port (default 8001 — kvwarden /metrics on :8000 only
+# exposes its own MetricsCollector, not vLLM's vllm:* metrics). Writes
+# (epoch_s, gauge_value_or_NA) tuples to gauge_trace.csv. Runs for the
+# full cell duration; the EXIT trap kills it via the PID file.
+echo "epoch_s,gauge" > "$RDIR/gauge_trace.csv"
+nohup bash -c '
+  while true; do
+    NOW=$(date +%s.%N)
+    V=$(curl -fsS -m 1 http://localhost:8001/metrics 2>/dev/null \
+        | awk "/^vllm:kv_cache_usage_perc[ {]/ { for (i=NF; i>=1; i--) { if (\$i ~ /^[0-9.eE+-]+\$/) { print \$i; exit } } }")
+    if [ -z "$V" ]; then V=NA; fi
+    echo "$NOW,$V" >> '"$RDIR"'/gauge_trace.csv
+    sleep 0.25
+  done
+' > "$RDIR/gauge_trace.err" 2>&1 &
+echo $! > "$RDIR/gauge_trace.pid"
+echo "gauge scraper pid=$(cat $RDIR/gauge_trace.pid) (250 ms vs localhost:8001/metrics)"
 
 # ---- Phase 5: wait for /v1/models stable ----
 phase_ts 5
