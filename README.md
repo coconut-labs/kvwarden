@@ -116,12 +116,20 @@ The same admission mechanism holds on larger models. Gate 2.3 (70B dense, TP=4 o
 
 ## About the name
 
-kvwarden ships tenant-fair admission today. Tenant-aware KV cache eviction — the feature the name implies — is a scaffold in [`src/kvwarden/cache/manager.py`](src/kvwarden/cache/manager.py), not a shipping feature. The path to making the name true is tracked in [#103](https://github.com/coconut-labs/kvwarden/issues/103) and targets the 0.2 release. If you pip install 0.1.3 expecting KV-cache isolation today, you will not get it; you get admission-gate fairness, which is what the hero number measures.
+kvwarden ships tenant-fair admission today. The name still over-promises: nothing in 0.1.x reads or writes the KV cache. The actual trajectory:
+
+- **0.1.x (today):** tenant-aware admission — token bucket at the budget gate. Engine-blind to tenants; we put the policy one layer up.
+- **0.2 (mid-June):** cache-pressure-aware admission. Same gate, now informed by the engine's `vllm:kv_cache_usage_perc` gauge, so the bucket scales priority by cache load. Still admission, still doesn't touch the cache — but smarter gating. RFC: [docs/rfcs/T2-cache-pressure-admission.md](docs/rfcs/T2-cache-pressure-admission.md). The original "tenant-aware KV eviction" framing for 0.2 was reframed on 2026-04-28 after we verified the eviction scaffold is a shadow ledger no engine reads — see [#103](https://github.com/coconut-labs/kvwarden/issues/103) for the supersession trail.
+- **0.3+ (LMCache substrate):** actual per-tenant KV cache management. This is where the name finally becomes literal.
+
+**0.2 limitation, surfaced upfront:** `vllm:kv_cache_usage_perc` is labeled only by `model_name`, not by tenant. 0.2 lets kvwarden react to *global* cache pressure; it cannot see *which* tenant is occupying the cache. Per-tenant cache visibility waits on LMCache (0.3+).
+
+If you pip install 0.1.5 expecting KV-cache isolation today, you will not get it; you get admission-gate fairness, which is what the hero number measures.
 
 ## What's next
 
 - [#102 T1: Distribution](https://github.com/coconut-labs/kvwarden/issues/102) — 10 onboarding installs in week 1
-- [#103 T2: Name-truth](https://github.com/coconut-labs/kvwarden/issues/103) — tenant-aware KV eviction for 0.2
+- [#103 T2: Name-truth](https://github.com/coconut-labs/kvwarden/issues/103) — cache-pressure admission for 0.2; LMCache-based per-tenant cache for 0.3+
 - [#104 T3: Moat](https://github.com/coconut-labs/kvwarden/issues/104) — vllm-project/production-stack router + LiteLLM adapter
 - [#105 W1: Launch blockers](https://github.com/coconut-labs/kvwarden/issues/105) — pre-launch QA + day-0 ops
 
@@ -132,7 +140,7 @@ kvwarden ships opt-in, anonymous install/usage telemetry. First interactive run 
 ## Tests
 
 ```bash
-pytest tests/unit/        # 153 tests, no GPU needed, ~10 s
+pytest tests/unit/        # ~200 tests, no GPU needed, ~10 s
 ruff check src/ tests/
 ruff format --check src/ tests/
 ```

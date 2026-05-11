@@ -20,7 +20,7 @@ Both are excellent and both require Kubernetes. Dynamo v1.0 is NVIDIA's datacent
 
 ## Is this production-ready?
 
-Honestly: no, not at scale yet. Here's the exact state. v0.1.2 on PyPI. 153 unit tests passing in ~10 seconds on CPU. The rate-limit mechanism is empirically validated at N=2 and N=6 tenants on A100 + Llama-3.1-8B + vLLM 0.19.1, with an N=8 CONFIRM and a Llama-3.1-70B TP=4 CONFIRM where the code path runs cleanly but the engine wasn't starved at our offered load. What I have not yet shipped: chaos testing, graceful engine-crash handling under active traffic, 7-day soak, or a real multi-week production deployment at a partner. I'm looking for beta users who will run it against real traffic and tell me where it breaks. File an issue with prometheus_dump.txt + server.log — that's the data I need.
+Honestly: no, not at scale yet. Here's the exact state. v0.1.5 on PyPI. ~200 unit tests passing in ~10 seconds on CPU. The rate-limit mechanism is empirically validated at N=2 and N=6 tenants on A100 + Llama-3.1-8B + vLLM 0.19.1, with an N=8 CONFIRM and a Llama-3.1-70B TP=4 CONFIRM where the code path runs cleanly but the engine wasn't starved at our offered load. What I have not yet shipped: chaos testing, graceful engine-crash handling under active traffic, 7-day soak, or a real multi-week production deployment at a partner. I'm looking for beta users who will run it against real traffic and tell me where it breaks. File an issue with prometheus_dump.txt + server.log — that's the data I need.
 
 ## What does "tenant" mean here?
 
@@ -41,6 +41,10 @@ The honest one-liner: *A100 at 32 RPS flooder is the saturation regime where FIF
 ## What happens when a tenant exceeds their quota?
 
 They get a 429 Too Many Requests response, and the `tenant_rejected` Prometheus counter increments with a `{tenant_id}` label so you can alert on it. The rejection happens at the budget gate, before the engine is involved — so a misbehaving tenant cannot saturate the engine queue regardless of how much load they offer. The bucket refills at `rate_limit_rpm / 60` tokens per second and caps at `rate_limit_burst` tokens, so a tenant can burst up to `rate_limit_burst` requests immediately after a quiet period and then sustains at `rate_limit_rpm` per minute. This is the mechanism that holds the quiet-tenant p99 flat in the hero bench.
+
+## The name says "KV warden" but you're not touching the KV cache — what gives?
+
+Fair. 0.1.x ships tenant-aware admission, not KV-cache management — the bucket lives at the budget gate, the engine still runs LRU eviction tenant-blind. 0.2 (mid-June) closes part of the gap with **cache-pressure-aware admission**: poll vLLM's `vllm:kv_cache_usage_perc` gauge and scale admission priority by cache load, so the bucket gets tighter when the engine is under pressure. Still admission, still doesn't touch the cache, but the gating gets smarter. The honest limitation: `vllm:kv_cache_usage_perc` is labeled by `model_name` only, not by tenant — so 0.2 reacts to *global* cache pressure, not *whose* pressure. Per-tenant cache visibility waits on LMCache (0.3+), which is the path where the name finally becomes literal. RFC for 0.2 lives at [docs/rfcs/T2-cache-pressure-admission.md](https://github.com/coconut-labs/kvwarden/blob/main/docs/rfcs/T2-cache-pressure-admission.md); supersession trail of the original eviction framing is on [#103](https://github.com/coconut-labs/kvwarden/issues/103).
 
 ## How does pricing / licensing work?
 
