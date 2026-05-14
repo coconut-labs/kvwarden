@@ -168,7 +168,7 @@ MIT. See [LICENSE](LICENSE).
   title  = {kvwarden: tenant-fair LLM inference on a single GPU},
   author = {Patel, Shrey and {Coconut Labs contributors}},
   year   = {2026},
-  version = {0.1.3},
+  version = {0.1.5},
   url    = {https://github.com/coconut-labs/kvwarden}
 }
 ```
