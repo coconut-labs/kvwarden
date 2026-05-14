@@ -16,7 +16,7 @@ object with these fields and nothing else:
 | Field            | Example                                | Notes                                          |
 |------------------|----------------------------------------|------------------------------------------------|
 | `install_id`     | `f47ac10b-58cc-4372-a567-0e02b2c3d479` | uuid4 minted on your machine on first run       |
-| `version`        | `0.1.2`                                | KVWarden's own version                         |
+| `version`        | `0.1.5`                                | KVWarden's own version                         |
 | `python_version` | `3.12`                                 | major.minor only                                |
 | `platform`       | `linux`                                | one of `linux` / `darwin` / `win32` / `other`  |
 | `gpu_class`      | `a100`                                 | from `nvidia-smi`; bucketed to `h100`/`a100`/`rtx4090`/`other`/`none` |

@@ -48,7 +48,7 @@ kvwarden serve --config configs/quickstart_fairness.yaml
 curl localhost:8000/v1/completions -H "X-Tenant-ID: quiet" -d '{...}'
 ```
 
-PyPI: v0.1.2. 153 unit tests. 4,100 LOC src, ~3,500 LOC middleware, OpenAI-compatible HTTP API, no Kubernetes.
+PyPI: v0.1.5. ~200 unit tests. 4,100 LOC src, ~3,500 LOC middleware, OpenAI-compatible HTTP API, no Kubernetes.
 
 **7/**
 Honest caveats. This is validated at:

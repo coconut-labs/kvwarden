@@ -1,7 +1,7 @@
 # InferGrid — Project Progress
 
-**Last updated:** April 21, 2026 (post-launch-polish + PyPI 0.1.2 + LP live at infergrid.org, through PR #76)
-**Repository:** [coconut-labs/infergrid](https://github.com/coconut-labs/infergrid)
+**Last updated:** May 13, 2026 (M3 Show HN launch — v0.1.5 on PyPI, doc reframe to cache-pressure admission, through PR #132)
+**Repository:** [coconut-labs/kvwarden](https://github.com/coconut-labs/kvwarden) (renamed from `infergrid` on 2026-04-22 — see [rename history](#) below)
 **Author:** Shrey Patel (patelshrey77@gmail.com)
 
 ---
@@ -702,3 +702,40 @@ Post-hoc shadow review surfaced a material framing risk. The 4 gates hold agains
 - **Docker Hub `kvwarden` namespace reserved on 2026-04-22.** Token stored in `~/.infergrid/secrets.env` as `DOCKER_HUB_TOKEN`. No images pushed yet — reservation only.
 - **PyPI `kvwarden` 0.1.3 first real release shipped on 2026-04-22.** Live at https://pypi.org/project/kvwarden/0.1.3/; `pip install kvwarden` now resolves to 0.1.3 (the 0.0.1 stub remains pin-queryable). Uploaded with the project-scoped `PYPI_KVWARDEN_TOKEN` (stored in `~/.infergrid/secrets.env`); the prior account-scoped token from the 0.0.1 stub should be revoked now. Git tag `v0.1.3` pushed. Wheel smoke-tested pre-upload on macOS Python 3.13.7: version, --help, doctor, man topics, bench reproduce-hero --help all clean.
 - **Paste-ready artifacts for all four user-side blockers landed in #99** (squash-merged to `main` as ed02973): Samuel email at `docs/naming/email_samuel_bell.md`, cold outreach at `docs/launch/cold_outreach_template.md`, PyPI stub at `scripts/publish_kvwarden_stub.sh` + `docs/launch/pypi_reservation.md`, demo script at `docs/launch/demo_video_script.md`. Each blocker now a few-minutes execution for the user rather than a vague TODO.
+
+## 2026-04-22 → 2026-05-02 — T2 chapter scaffolded, M4 prep landed
+
+Detail in [`docs/rfcs/T2-cache-pressure-admission.md`](docs/rfcs/T2-cache-pressure-admission.md) and the [M3 SHIPPED section of memory](https://github.com/coconut-labs/kvwarden/issues/103#issuecomment-4425678050). Highlights:
+
+- **T2 reframed 2026-04-28.** Original plan was tenant-aware KV eviction; god-planner verified the cache-manager scaffold is a shadow ledger no engine adapter reads, so v0.2 reframed to **cache-pressure-aware admission** (poll vLLM's `vllm:kv_cache_usage_perc`, scale admission priority by global cache load). Original eviction RFC (#116) closed as superseded by RFC #121.
+- **M1 SHIPPED 2026-04-30** (8 PRs squash-merged to main): #114 docstrings, #115 sig stub, #119 Gate 3 bench config, #121 cache-pressure RFC, #123 tests skeleton, #124 py3.13 CI, #125 M4 harness flags, #126 Docker Compose bundle.
+- **M4 unblocked but probe deferred.** Gate 3 Path C harness gaps (`--prefix-overlap`, `--bias-flooder-cost`) landed via #125. Pre-launch M4 probe attempted 2026-05-02/03 — aborted at RunPod provisioning ($5.33 sunk, no bench data). Orchestrator polled `desiredStatus` instead of `runtime.publicIp != ""`. Pre-conditions for next attempt locked in `results/gate3_TBD/OUTCOME.md`. M4 returns to its locked 05-13 → 05-19 post-Show-HN window.
+- **P1 pre-flight 2026-05-02** (#128): vLLM gauge endpoint verified + #125 harness smoke verified. M4 unblocked apart from the provisioning fix.
+- **CI integration-tests gate added in #115.** Prior CI ran `pytest tests/unit/` only; now also runs `pytest tests/integration/` so silent skips are visible.
+
+## 2026-05-12 — M3 Show HN launch (v0.1.5 on PyPI)
+
+### What shipped
+
+| artifact | location |
+|---|---|
+| PR #132 — doc reframe + version bump | merged squash to main as `0def248` |
+| git tag `v0.1.5` | annotated, pushed |
+| GitHub release v0.1.5 | https://github.com/coconut-labs/kvwarden/releases/tag/v0.1.5 (wheel + sdist attached) |
+| PyPI `kvwarden==0.1.5` | https://pypi.org/project/kvwarden/0.1.5/ |
+| Issue #103 supersession pin | https://github.com/coconut-labs/kvwarden/issues/103#issuecomment-4425678050 |
+| `CHANGELOG.md` | new — Keep-a-Changelog format, v0.0.1 → v0.1.5 |
+
+### What v0.1.5 changes
+
+Docs-only release. No Python source touched between v0.1.4 (2026-04-22) and v0.1.5; the tag exists so PyPI, GitHub, README pin, FAQ pin, and the Show HN post draft all reference the same version on launch day.
+
+- **README "About the name"** — v0.2 framing reset from "tenant-aware KV eviction" to "cache-pressure-aware admission" + v0.3+ via LMCache as the actual KV-cache-wardening path.
+- **Global-gauge limitation surfaced upfront** in README + FAQ: `vllm:kv_cache_usage_perc` is labeled by `model_name` only, not by tenant. v0.2 reacts to *global* cache pressure, not whose. Per-tenant cache visibility waits on LMCache (v0.3+). This was the load-bearing open RFC question (item 3) flagged "must resolve before M3."
+- **FAQ** — new entry: "The name says KV warden but you're not touching the KV cache."
+- **show_hn.md hero pin** — `v0.1.5`, `~200 unit tests`, `~$24 total compute` (drift from Gate 2.1b $1.64 + M4 abort $5.33 since the original draft).
+- **pyproject.toml** — `0.1.4` → `0.1.5`.
+
+### M4 path next
+
+M4 Path C measure-first probe window: **2026-05-13 → 2026-05-19**. Pre-conditions in `results/gate3_TBD/OUTCOME.md`. Do NOT begin A1 implementation until M4 reports — Path C is measure-first by locked design. M5a implementation (~200 LOC if M4 says go) targets 05-20 → 06-02. v0.2.0 ship target 2026-06-23.
