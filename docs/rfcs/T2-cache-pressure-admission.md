@@ -223,7 +223,7 @@ Discussion [#117](https://github.com/coconut-labs/kvwarden/discussions/117) is a
 |---|---|---|
 | M1 | 04-29 → 05-04 | This RFC + sig-stub edit + tests rewrite + bench config rewrite. Landing in parallel today across 4 sibling agents (R/T/B + this one). |
 | M2 | 05-05 → 05-11 | RFC review window. CI green across the reframed surface. PROGRESS.md anchor pointing at v0.2 chapter. |
-| M3 | 2026-05-12 | **Show HN — v0.1.0 ships.** RFC + skeletons + bench config visible in repo. No T2 code wired. |
+| M3 | 2026-05-12 | **Show HN — v0.1.5 ships.** RFC + skeletons + bench config visible in repo. No T2 code wired. (Shipped as v0.1.5, not v0.1.0, because the rename arc consumed 0.1.0–0.1.4 of the version space; see [CHANGELOG.md](../../CHANGELOG.md).) |
 | M4 | 05-13 → 05-19 | **Gate 3 Path C probe.** Arm 1 + Arm 2 on 1× A100. Decision gate per §8. |
 | M5a | 05-20 → 06-02 | ~200 LOC implementation if M4 says go. Poller + snapshot surface + admission scaling + priority composition + tests. Unwind T-agent xfail markers. |
 | M5b | 05-20 → 06-02 | (c) disconfirm publication if M4 says no-go. Park to v0.3. Chapter ships as null result + replay tooling. |

@@ -32,15 +32,15 @@ Gimlet is the only production competitor with fairness, and they're a managed mu
 
 ## Traction and validation
 
-- **PyPI:** `kvwarden 0.1.2` live.
+- **PyPI:** `kvwarden 0.1.5` live.
 - **Landing page:** kvwarden.org with waitlist.
-- **Code:** 4,100 LOC src, 2,900 LOC tests, 153 unit tests passing, CI-gated lint + format.
+- **Code:** 4,100 LOC src, 2,900 LOC tests, ~200 unit tests passing, CI-gated lint + format.
 - **Empirical gate ladder v0.2 — 4 gates, 3 CONFIRM + 1 PASS:**
   - Gate 2.1 (N=8 tenants, A100, Llama-3.1-8B): CONFIRM
   - Gate 2.4 (Mixtral-8×7B MoE, 2×A100 TP=2): CONFIRM with engine-headroom caveat
   - Gate 2.3 (Llama-3.1-70B, 4×H100 TP=4): CONFIRM — mechanism scales 8B→70B and 1-GPU→TP=4; p50 ratio flat (1.03× at 8B → 1.07× at 70B)
   - Gate 2.2 (mixed prompt-length distribution): PASS
-- **Total compute spend across full experimental arc:** ~$17 on RunPod, self-funded.
+- **Total compute spend across full experimental arc:** ~$24 on RunPod, self-funded.
 
 ## Honest caveats
 

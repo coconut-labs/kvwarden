@@ -56,9 +56,9 @@ $ kvwarden bench reproduce-hero --flavor=2tenant
 ```bash
 $ pip install kvwarden
 ```
-**Viewer sees:** pip flashes `Successfully installed kvwarden-0.1.0`, then cut to a static kvwarden.org end-card.
+**Viewer sees:** pip flashes `Successfully installed kvwarden-0.1.5`, then cut to a static kvwarden.org end-card.
 
-> **Note:** the last line shows `kvwarden-0.1.0`, which only lands on PyPI when the real 0.1.0 release ships. If you're filming before the PyPI upload, substitute `Successfully installed kvwarden-0.0.1` (the stub), or re-record the last second after the real upload.
+> **Note:** the last line shows `kvwarden-0.1.5`, which is the Show HN launch tag live on PyPI as of 2026-05-12. Re-record if the version on PyPI has moved by film time.
 
 ---
 
@@ -80,7 +80,7 @@ pip install kvwarden
 $ pip install kvwarden
 $ kvwarden --help
 ```
-**Viewer sees:** `Successfully installed kvwarden-0.1.0`, then the top-level `kvwarden --help` output showing the subcommand list (`serve`, `bench`, `status`, `models`, `man`, `telemetry`).
+**Viewer sees:** `Successfully installed kvwarden-0.1.5`, then the top-level `kvwarden --help` output showing the subcommand list (`serve`, `bench`, `status`, `models`, `man`, `telemetry`).
 
 ### 0:07-0:15 — bench command
 **Voiceover:** "The headline bench replays the published measurement — two tenants, Llama-3.1-8B, vLLM 0.19.1 — against any vLLM-compatible engine you point it at."
