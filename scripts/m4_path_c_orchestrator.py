@@ -45,11 +45,12 @@ for _proxy_var in (
 
 REST_BASE = "https://rest.runpod.io/v1"
 WORKTREE = Path(__file__).resolve().parent.parent
-RESULTS_ROOT = WORKTREE / "results" / "m4_path_c_probe_20260502"
+_TODAY = time.strftime("%Y%m%d", time.gmtime())
+RESULTS_ROOT = WORKTREE / "results" / f"m4_path_c_probe_{_TODAY}"
 ORCH_LOG = RESULTS_ROOT / "orchestrator.log"
 
-POD_NAME = "kvwarden-m4-path-c-20260502"
-GPU_TYPE_ID = "NVIDIA A100-SXM4-80GB"
+POD_NAME = f"kvwarden-m4-path-c-{_TODAY}"
+GPU_TYPE_ID = os.environ.get("GPU_TYPE_ID", "NVIDIA A100-SXM4-80GB")
 IMAGE = "runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04"
 CONTAINER_DISK_GB = 100
 HF_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
@@ -121,21 +122,22 @@ def api(method: str, path: str, body: dict | None = None, timeout: int = 30):
         return resp.status_code, raw
 
 
-def create_pod(pubkey: str) -> dict:
-    # 2026-05-02: SECURE A100 SXM4 80GB stalled in init for 15 min on the
-    # first attempt (publicIp / portMappings never populated; Gate 1.5
-    # memory note re: stuck SECURE pods). Pivoted to COMMUNITY/spot — P1
-    # proved that path at $0.79/hr with sshd via PUBLIC_KEY env. M4 is
-    # 6 cells × ~13 min each; spot interruption risk over 80 min is
-    # acceptable for a measure-first probe whose verdict tolerates
-    # missing 1-2 cells.
+def create_pod(pubkey: str, cloud_type: str = "SECURE", interruptible: bool = False) -> dict:
+    # 2026-05-15: GraphQL price API confirms A100 SXM4 80GB SECURE on-demand at
+    # $1.39/hr (under runbook's $2.00 ceiling). SECURE non-interruptible is the
+    # default — a 6-cell sequential bench cannot tolerate mid-bench preemption
+    # without corrupting the threshold-table inputs.
+    # Override via --cloud-type / --interruptible if today's SECURE inventory is
+    # bad and the probe redirects to COMMUNITY/spot (P1 2026-05-02 proved that
+    # path at $0.79/hr; spot interruption risk over 80 min is acceptable for a
+    # measure-first probe whose verdict tolerates missing 1-2 cells).
     body = {
         "name": POD_NAME,
         "imageName": IMAGE,
         "gpuTypeIds": [GPU_TYPE_ID],
         "gpuCount": 1,
-        "cloudType": "COMMUNITY",
-        "interruptible": True,
+        "cloudType": cloud_type,
+        "interruptible": interruptible,
         "containerDiskInGb": CONTAINER_DISK_GB,
         "ports": ["22/tcp", "8000/http", "8001/http"],
         "env": {
@@ -145,7 +147,7 @@ def create_pod(pubkey: str) -> dict:
         },
         "supportPublicIp": True,
     }
-    log(f"create_pod request: gpu={GPU_TYPE_ID} image={IMAGE} cloud=COMMUNITY/spot")
+    log(f"create_pod request: gpu={GPU_TYPE_ID} image={IMAGE} cloud={cloud_type}/interruptible={interruptible}")
     status, resp = api("POST", "/pods", body)
     if status not in (200, 201):
         log(f"create FAIL status={status} resp={str(resp)[:300]}")
@@ -384,10 +386,74 @@ def run_cell(public_ip: str, ssh_port: int, arm: str, seed: int, cell_dir: Path)
     }
 
 
+def probe(probe_timeout_s: int = 120, cloud_type: str = "SECURE", interruptible: bool = False) -> int:
+    """Spin-and-tear-down SKU health probe.
+
+    Creates a pod on the configured GPU_TYPE_ID, waits for publicIp + ssh_port
+    within probe_timeout_s seconds, then tears down. Returns 0 on go, 1 on no-go.
+
+    This is the 2-min precondition added after the 2026-05-02/03 aborted attempt
+    where the orchestrator spent $5.33 on pods that held desiredStatus=RUNNING
+    for hours without ever populating publicIp. See
+    results/m4_path_c_probe_20260502/OUTCOME.md.
+    """
+    pubkey = Path("~/.ssh/id_ed25519.pub").expanduser().read_text().strip()
+    pod_id = ""
+    t0 = time.time()
+    log(f"PROBE: spinning {GPU_TYPE_ID} {cloud_type}/interruptible={interruptible} with {probe_timeout_s}s deadline")
+    try:
+        pod = create_pod(pubkey, cloud_type=cloud_type, interruptible=interruptible)
+        pod_id = pod["id"]
+        log(f"PROBE: pod created id={pod_id}; waiting for publicIp+ssh_port")
+        try:
+            pod = wait_for_running(pod_id, timeout_s=probe_timeout_s)
+        except TimeoutError as te:
+            log(f"PROBE NO-GO: {te}; tearing down")
+            return 1
+        public_ip = pod["publicIp"]
+        ssh_port = int(pod["portMappings"]["22"])
+        wall = time.time() - t0
+        log(
+            f"PROBE GO: pod {pod_id} reachable in {wall:.1f}s "
+            f"(ip={public_ip} ssh_port={ssh_port})"
+        )
+        return 0
+    except Exception as exc:
+        log(f"PROBE EXCEPTION: {type(exc).__name__}: {exc}")
+        return 1
+    finally:
+        if pod_id:
+            try:
+                delete_pod(pod_id)
+                log(f"PROBE: pod {pod_id} torn down")
+            except Exception as de:
+                log(f"PROBE delete error: {de} (manual cleanup may be needed)")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--reuse-pod", help="Existing pod id to reuse")
+    parser.add_argument(
+        "--probe-only", action="store_true",
+        help=(
+            "Spin a pod on the configured SKU, wait for publicIp + ssh_port "
+            "within --probe-timeout seconds, tear it down, return go/no-go. "
+            "Use as a 2-min precondition before the full bench."
+        ),
+    )
+    parser.add_argument(
+        "--probe-timeout", type=int, default=120,
+        help="Probe deadline in seconds (default 120)",
+    )
+    parser.add_argument(
+        "--cloud-type", default="SECURE", choices=["SECURE", "COMMUNITY"],
+        help="RunPod cloud tier (default SECURE)",
+    )
+    parser.add_argument(
+        "--interruptible", action="store_true",
+        help="Use interruptible/spot pricing (default false for SECURE non-interruptible)",
+    )
     parser.add_argument(
         "--arms", default="arm1,arm2",
         help="Comma-list of arms to run (default arm1,arm2)",
@@ -397,6 +463,10 @@ def main() -> int:
         help="Comma-list of seeds (default 0,1,2)",
     )
     args = parser.parse_args()
+
+    if args.probe_only:
+        RESULTS_ROOT.mkdir(parents=True, exist_ok=True)
+        return probe(args.probe_timeout, cloud_type=args.cloud_type, interruptible=args.interruptible)
 
     arms = [a.strip() for a in args.arms.split(",") if a.strip()]
     seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
