@@ -1,6 +1,6 @@
 [project]
 name = "kvwarden"
-version = "0.1.5"
+version = "0.1.6"
 description = "Tenant-fair LLM inference orchestration on a single GPU. No Kubernetes."
 readme = "README.md"
 license = {text = "MIT"}
@@ -16,13 +16,18 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
+# Runtime deps are exactly what `src/kvwarden/` imports — nothing more.
+# numpy, pandas and httpx were declared here through v0.1.5 but are never
+# imported by the shipped package; they belong to the bench harness and the
+# pod orchestrator scripts, neither of which is in the wheel. They moved to
+# the `bench` extra in v0.1.6. Measured on py3.13: a clean install goes from
+# 144 MB / 27 packages to 33 MB / 18. It also retires the stale `numpy<2.3`
+# ceiling — a vLLM-0.8.5-era numba constraint already lifted in
+# requirements-gpu.txt but never mirrored here.
 dependencies = [
     "certifi",
-    "numpy>=1.24,<2.3",
-    "pandas~=2.0",
     "pyyaml>=6.0",
     "prometheus-client~=0.19",
-    "httpx~=0.25",
     "aiohttp~=3.9",
     "rich>=13.0,<16.0",
 ]
@@ -34,13 +39,34 @@ Repository = "https://github.com/coconut-labs/kvwarden"
 Issues = "https://github.com/coconut-labs/kvwarden/issues"
 
 [project.optional-dependencies]
+# What the bench harness and orchestrator scripts need. Not required to run
+# the router — `pip install kvwarden` stays lean.
+bench = [
+    "numpy>=1.24",
+    "pandas>=2.0,<4.0",
+    "httpx>=0.25,<1.0",
+]
 dev = [
-    "pytest~=7.0",
-    "pytest-asyncio~=0.21",
+    # dev pulls bench because tests/unit/test_profiling_utils.py and
+    # tests/integration/test_benchmark_client.py import numpy/pandas. Without
+    # this, `pip install -e ".[dev]"` collects 2 errors instead of running.
+    "kvwarden[bench]",
+    # pytest floor raised to 8 in v0.1.6: 7.4.4 carries PYSEC-2026-1845, and
+    # requirements-gpu.txt already asked for >=8.0 — CI was installing the
+    # vulnerable one from this extra.
+    "pytest>=8.0,<10.0",
+    # Floor raised to the 1.x line rather than left spanning the 0.x/1.x
+    # boundary: 1.4.0 is what the suite was verified against, and 0.23's
+    # fixture-loop-scope default differs.
+    "pytest-asyncio>=1.0,<2.0",
     "pytest-aiohttp~=1.0",
-    "black~=23.0",
-    "ruff~=0.1",
-    "mypy~=1.0",
+    # black dropped in v0.1.6. It was never wired into CI (ruff format is the
+    # gate) and 23.12.1 carried three advisories: PYSEC-2024-48,
+    # PYSEC-2026-2120, PYSEC-2026-2121.
+    # ruff pinned to a real minor range. `~=0.1` allowed anything below 1.0,
+    # so a new minor's default rule set could break CI with no diff on our side.
+    "ruff>=0.16,<0.17",
+    "mypy>=1.11,<3.0",
     "yappi~=1.4",
 ]
 profiling = [
@@ -51,7 +77,9 @@ profiling = [
     "datasets~=2.14",
     "jupyter~=1.0",
     "ipykernel~=6.25",
-    "transformers>=4.51.1,<5.0",
+    # Ceiling raised to <6.0 in v0.1.6 to match requirements-gpu.txt, which
+    # lifted the <5.0 bound when the GPU tree moved to vLLM 0.19.1.
+    "transformers>=4.51.1,<6.0",
 ]
 vllm = ["vllm==0.19.1", "numpy>=1.24"]
 sglang = ["sglang~=0.3.0"]
@@ -78,3 +106,6 @@ ignore = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# Explicit under pytest-asyncio 1.x; leaving it unset makes the default a
+# moving target across minors.
+asyncio_default_fixture_loop_scope = "function"

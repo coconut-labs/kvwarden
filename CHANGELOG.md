@@ -10,6 +10,54 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the pro
 
 - **Cache-pressure-aware admission.** kvwarden polls vLLM's `vllm:kv_cache_usage_perc` gauge (250 ms cadence) and scales admission priority by engine cache load. Same budget gate, smarter gating. Honest scope: 0.2 reacts to *global* cache pressure, not per-tenant pressure (the gauge has no tenant label). Per-tenant cache visibility waits on the LMCache substrate in 0.3+. RFC: [`docs/rfcs/T2-cache-pressure-admission.md`](docs/rfcs/T2-cache-pressure-admission.md). Tracker: [#103](https://github.com/coconut-labs/kvwarden/issues/103). Gated on the M4 Path C measure-first probe (2026-05-13 → 2026-05-19).
 
+## [0.1.6] — unreleased — dependency hygiene
+
+Maintenance release. No behaviour change to the router, the admission gate, or the tenant budget — every published number still stands and no bench was re-run. What changed is the dependency surface and the CI gates around it.
+
+### Removed
+
+- **`numpy`, `pandas` and `httpx` dropped from runtime dependencies.** None of the three is imported anywhere under `src/kvwarden/`; they were only ever needed by the bench harness (`benchmarks/`) and the pod orchestrators (`scripts/`), neither of which ships in the wheel. Verified against the built wheel — its only top-level entry is `kvwarden/`.
+
+  Measured effect on a clean py3.13 install: **144 MB / 27 packages → 33 MB / 18 packages.**
+
+  They are still one flag away — `pip install kvwarden[bench]` restores all three.
+
+  **Potentially breaking** if you relied on `pip install kvwarden` to pull numpy/pandas/httpx into your environment as a side effect. Add the `bench` extra, or declare them yourself.
+
+- **`black` dropped from the `dev` extra.** It was never wired into CI — `ruff format` is the formatting gate — and 23.12.1 carried three advisories (PYSEC-2024-48, PYSEC-2026-2120, PYSEC-2026-2121).
+
+### Fixed
+
+- **`pytest` floor raised to `>=8.0`.** The `dev` extra pinned `~=7.0`, resolving to 7.4.4, which carries PYSEC-2026-1845 — and `requirements-gpu.txt` had asked for `>=8.0` since the vLLM 0.19.1 bump. CI installs from the `dev` extra, so CI was running the vulnerable one. Suite verified green on pytest 9.1.1.
+
+- **Three pyproject ↔ requirements-gpu.txt contradictions closed.** The GPU requirements file documented the `numpy<2.3` ceiling and the `transformers<5.0` ceiling as lifted when the tree moved to vLLM 0.19.1, but `pyproject.toml` still carried both, plus the conflicting pytest floor above. `pyproject.toml` now agrees: no numpy ceiling, `transformers>=4.51.1,<6.0`, `pytest>=8.0`.
+
+- **`pip install -e ".[dev]"` no longer collects errors.** `dev` now pulls `kvwarden[bench]`, because `tests/unit/test_profiling_utils.py` and `tests/integration/test_benchmark_client.py` import numpy and pandas directly. Without it, moving those two out of runtime deps would have broken collection on a fresh clone.
+
+### Changed
+
+- **`pytest-asyncio` floor raised to `>=1.0,<2.0`** and `asyncio_default_fixture_loop_scope = "function"` set explicitly, so the fixture loop scope stops being a moving target across minors. Verified on 1.4.0.
+
+- **`ruff` constrained to `>=0.16,<0.17`** in both the `dev` extra and the CI lint job. The old `~=0.1` admitted any minor below 1.0, so a new default rule set could turn CI red with no change on our side. Rule selection is unchanged.
+
+- **`mypy` floor raised to `>=1.11,<3.0`.** Still not a CI gate; the bump is hygiene only.
+
+### Added
+
+- **`bench` extra** — `numpy`, `pandas`, `httpx`. What the benchmark harness and the RunPod orchestrators need, separated from what the router needs.
+
+- **`audit` CI job** running `pip-audit` against the installed `dev` tree, on every push and PR. The four advisories above sat in the dev extra for months with nothing watching for them.
+
+### Unchanged, deliberately
+
+- **`vllm==0.19.1` stays hard-pinned** (latest is 0.26.0). Every published number — the 53.9 / 1,585 / 61.5 ms hero, the N=6 generalization — is keyed to 0.19.1. Widening this without a GPU re-bench would quietly detach the claims from the pin they were measured on. Tracked separately.
+- **`sglang~=0.3.0` stays** (latest is 0.5.17) for the same reason, and because the adapter almost certainly needs work to follow.
+- **Python 3.14 is not in the CI matrix.** Adding a leg nobody has watched pass is not a gate.
+
+### Verification
+
+Full suite on py3.13: **281 passed, 4 skipped, 10 xfailed**. `ruff check` and `ruff format --check` clean over 48 files. `pip-audit` clean on both the runtime-only and the `dev` trees (only the venv's own bundled `pip` is flagged, which CI upgrades before installing).
+
 ## [0.1.5] — 2026-05-12 — Show HN launch tag
 
 Docs-only release. No Python source changes since v0.1.4; this tag exists so PyPI, the GitHub release page, the README pin, the FAQ pin, and the Show HN post draft all reference the same version on launch day.

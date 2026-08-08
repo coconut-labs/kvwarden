@@ -18,6 +18,9 @@ numpy>=1.24
 
 # === Profiling dependencies ===
 aiohttp>=3.9,<4.0
+# Deliberately tighter than the `bench` extra's pandas>=2.0,<4.0. This tree is
+# version-locked to vLLM 0.19.1 (the version every published number is keyed
+# to); pandas 3.x is untested against it. Not drift — see CHANGELOG v0.1.6.
 pandas>=2.2,<3.0
 matplotlib>=3.8,<4.0
 pyyaml>=6.0,<7.0
