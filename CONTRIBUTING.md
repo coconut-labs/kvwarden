@@ -9,8 +9,13 @@ Thank you for your interest in contributing to KVWarden! This document provides 
 git clone https://github.com/coconut-labs/kvwarden.git
 cd kvwarden
 
-# Install with dev dependencies (pulls pytest, ruff, pytest-asyncio, etc.)
+# Install with dev dependencies (pytest, ruff, mypy — and the `bench` extra,
+# which `dev` pulls in because a couple of tests import numpy/pandas directly)
 pip install -e ".[dev,profiling]"
+
+# Just running the router needs none of that — the runtime dependency set is
+# five packages and does not include numpy, pandas or httpx (see CHANGELOG
+# v0.1.6). `pip install kvwarden[bench]` if you want the benchmark harness.
 
 # Run the unit test suite (no GPU needed, ~10 s)
 pytest tests/unit/ -v
@@ -24,8 +29,9 @@ ruff check src/ tests/
 ruff format --check src/ tests/
 ```
 
-CI runs the test matrix on Python 3.11 and 3.12 plus the ruff gate; a red
-PR cannot merge to `main`. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+CI runs the test matrix on Python 3.11, 3.12 and 3.13, plus a ruff gate and a
+`pip-audit` gate; a red PR cannot merge to `main`. See
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ## Architecture Overview
 
@@ -77,7 +83,7 @@ See `scripts/cloud_benchmark.sh` for full options.
 - Include benchmark results if your change affects performance
 - Add type hints to all public functions
 - Style is enforced by `ruff` in CI (see Development Setup above). `ruff check` + `ruff format --check` must pass; run `ruff format src/ tests/` locally to fix formatting automatically.
-- Branch protection requires all 3 CI checks (`test (py3.11)`, `test (py3.12)`, `lint (ruff)`) passing + 1 review.
+- Branch protection requires the CI checks (`test (py3.11)`, `test (py3.12)`, `test (py3.13)`, `lint (ruff)`) passing + 1 review. The `audit (pip-audit)` job added in v0.1.6 runs on every PR but is not yet in the required set — add it in repo settings once it has a few green runs.
 
 ## Reporting Issues
 
