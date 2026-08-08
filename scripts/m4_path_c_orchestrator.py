@@ -24,6 +24,7 @@ DELETEd and verified 404.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import signal
@@ -33,6 +34,14 @@ import time
 from pathlib import Path
 
 import httpx
+
+# Single worker that survives api() hangs. Observed twice on 2026-05-17/18:
+# wait_for_running poll loops hung for 32-48 min on a single api() call,
+# burning $0.75-$1.20 per hang on idle stuck-provisioning pods. httpx's
+# 30s client timeout didn't fire — suspected client-side DNS / TCP wedge
+# on macOS that the user-space httpx timeout can't preempt. Worker-thread
+# timeout returns control even if the underlying socket call leaks.
+_API_TIMEOUT_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
 # Strip proxy env vars before httpx instantiates a client — local shell
 # may export ALL_PROXY=socks5h://... which forces httpx to require the
@@ -110,7 +119,7 @@ def _client() -> httpx.Client:
     return _HTTP
 
 
-def api(method: str, path: str, body: dict | None = None, timeout: int = 30):
+def _api_inner(method: str, path: str, body: dict | None, timeout: int):
     try:
         resp = _client().request(method, path, json=body, timeout=timeout)
     except httpx.RequestError as exc:
@@ -120,6 +129,18 @@ def api(method: str, path: str, body: dict | None = None, timeout: int = 30):
         return resp.status_code, json.loads(raw) if raw else {}
     except json.JSONDecodeError:
         return resp.status_code, raw
+
+
+def api(method: str, path: str, body: dict | None = None, timeout: int = 30):
+    # Outer thread-based timeout: httpx's 30s client timeout has missed
+    # twice (32-min and 48-min hangs in M4 probe). Outer cap = inner + 5s
+    # so we only fire if httpx is the one wedged, not the network.
+    fut = _API_TIMEOUT_POOL.submit(_api_inner, method, path, body, timeout)
+    try:
+        return fut.result(timeout=timeout + 5)
+    except concurrent.futures.TimeoutError:
+        # Worker leaks (bounded by pool size 4) but we get control back.
+        return -1, "outer_thread_timeout"
 
 
 def create_pod(pubkey: str, cloud_type: str = "SECURE", interruptible: bool = False) -> dict:

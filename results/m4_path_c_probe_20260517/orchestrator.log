@@ -43,3 +43,292 @@
 [t=    0.0s 18:34:27Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
 [t=    0.5s 18:34:28Z] create FAIL status=500 resp={'error': 'create pod: There are no longer any instances available with the request specifications. Please try again later.', 'status': 500}
 [t=    0.5s 18:34:28Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 19:21:37Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 19:21:37Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.0s 19:21:38Z] create OK id=irzy7g9ptc9opw costPerHr=$1.49
+[t=    1.0s 19:21:38Z] PROBE: pod created id=irzy7g9ptc9opw; waiting for publicIp+ssh_port
+[t=    1.3s 19:21:38Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.8s 19:21:54Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.1s 19:22:09Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.6s 19:22:24Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.0s 19:22:40Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   78.4s 19:22:55Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   93.7s 19:23:10Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  109.1s 19:23:26Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  124.1s 19:23:41Z] PROBE NO-GO: pod irzy7g9ptc9opw not RUNNING+SSH within 120s; tearing down
+[t=  124.1s 19:23:41Z] DELETE pod irzy7g9ptc9opw
+[t=  124.7s 19:23:41Z] delete returned status=204 resp={}
+[t=  130.1s 19:23:47Z] pod irzy7g9ptc9opw confirmed terminated (404)
+[t=  130.1s 19:23:47Z] PROBE: pod irzy7g9ptc9opw torn down
+[t=    0.0s 19:44:56Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 19:44:56Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 19:44:56Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 19:44:56Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 19:44:57Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 19:44:57Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 19:44:57Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 19:44:57Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 19:44:57Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 19:44:57Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 19:44:58Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 19:44:58Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 19:44:58Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 19:44:58Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 19:44:59Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 19:44:59Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 19:44:59Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 19:44:59Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    0.6s 19:44:59Z] create FAIL status=500 resp={'error': 'create pod: There are no longer any instances available with the request specifications. Please try again later.', 'status': 500}
+[t=    0.6s 19:44:59Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:40:27Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 20:40:27Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.2s 20:40:28Z] create OK id=7zg8oaj64rirmy costPerHr=$1.49
+[t=    1.2s 20:40:28Z] PROBE: pod created id=7zg8oaj64rirmy; waiting for publicIp+ssh_port
+[t=    1.6s 20:40:28Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   17.3s 20:40:44Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  440.9s 20:47:47Z] PROBE NO-GO: pod 7zg8oaj64rirmy not RUNNING+SSH within 120s; tearing down
+[t=  440.9s 20:47:47Z] DELETE pod 7zg8oaj64rirmy
+[t=  440.9s 20:47:47Z] delete returned status=-1 resp=transport_error: ConnectError('[Errno 8] nodename nor servname provided, or not known')
+[t=  446.3s 20:47:53Z] post-delete GET status=200 (waiting for 404)
+[t=  451.8s 20:47:58Z] post-delete GET status=200 (waiting for 404)
+[t=  457.7s 20:48:04Z] post-delete GET status=200 (waiting for 404)
+[t=  463.1s 20:48:10Z] post-delete GET status=200 (waiting for 404)
+[t=  468.6s 20:48:15Z] post-delete GET status=200 (waiting for 404)
+[t=  782.3s 20:53:29Z] post-delete GET status=200 (waiting for 404)
+[t=  782.3s 20:53:29Z] WARN: pod 7zg8oaj64rirmy did not return 404 after delete; check console
+[t=  782.3s 20:53:29Z] PROBE: pod 7zg8oaj64rirmy torn down
+[t=    0.0s 20:53:29Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 20:53:29Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.7s 20:53:30Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.7s 20:53:30Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:53:30Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 20:53:30Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.7s 20:53:31Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.7s 20:53:31Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:53:31Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 20:53:31Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 20:53:31Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 20:53:31Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:53:31Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 20:53:31Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    2.0s 20:53:33Z] create OK id=akzuczrq0lxjlq costPerHr=$1.39
+[t=    2.0s 20:53:33Z] PROBE: pod created id=akzuczrq0lxjlq; waiting for publicIp+ssh_port
+[t=    2.3s 20:53:34Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   17.8s 20:53:49Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   33.1s 20:54:05Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   48.5s 20:54:20Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.5s 20:54:35Z] PROBE NO-GO: pod akzuczrq0lxjlq not RUNNING+SSH within 60s; tearing down
+[t=   63.5s 20:54:35Z] DELETE pod akzuczrq0lxjlq
+[t=   64.0s 20:54:35Z] delete returned status=204 resp={}
+[t=   69.3s 20:54:41Z] pod akzuczrq0lxjlq confirmed terminated (404)
+[t=   69.3s 20:54:41Z] PROBE: pod akzuczrq0lxjlq torn down
+[t=    0.0s 20:55:10Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 20:55:10Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.2s 20:55:12Z] create OK id=n0o3bjv7v9w093 costPerHr=$1.49
+[t=    1.2s 20:55:12Z] PROBE: pod created id=n0o3bjv7v9w093; waiting for publicIp+ssh_port
+[t=    1.5s 20:55:12Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.9s 20:55:27Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.3s 20:55:43Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.7s 20:55:58Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.0s 20:56:13Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   78.6s 20:56:29Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   93.9s 20:56:44Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  109.3s 20:57:00Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  124.3s 20:57:15Z] PROBE NO-GO: pod n0o3bjv7v9w093 not RUNNING+SSH within 120s; tearing down
+[t=  124.3s 20:57:15Z] DELETE pod n0o3bjv7v9w093
+[t=  124.9s 20:57:15Z] delete returned status=204 resp={}
+[t=  130.2s 20:57:21Z] pod n0o3bjv7v9w093 confirmed terminated (404)
+[t=  130.2s 20:57:21Z] PROBE: pod n0o3bjv7v9w093 torn down
+[t=    0.0s 20:57:21Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 20:57:21Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 20:57:21Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 20:57:21Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:57:21Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 20:57:21Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 20:57:22Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 20:57:22Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:57:22Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 20:57:22Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.5s 20:57:23Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.5s 20:57:23Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 20:57:23Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 20:57:23Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    0.9s 20:57:24Z] create OK id=b2mqkcvdwm7omn costPerHr=$1.39
+[t=    0.9s 20:57:24Z] PROBE: pod created id=b2mqkcvdwm7omn; waiting for publicIp+ssh_port
+[t=    1.2s 20:57:24Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.6s 20:57:39Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.0s 20:57:55Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.4s 20:58:10Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   62.4s 20:58:25Z] PROBE NO-GO: pod b2mqkcvdwm7omn not RUNNING+SSH within 60s; tearing down
+[t=   62.4s 20:58:25Z] DELETE pod b2mqkcvdwm7omn
+[t=   62.9s 20:58:26Z] delete returned status=204 resp={}
+[t=   68.3s 20:58:31Z] pod b2mqkcvdwm7omn confirmed terminated (404)
+[t=   68.3s 20:58:31Z] PROBE: pod b2mqkcvdwm7omn torn down
+[t=    0.0s 21:14:46Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 21:14:46Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.3s 21:14:47Z] create OK id=04ijy3ieg117t0 costPerHr=$1.49
+[t=    1.3s 21:14:47Z] PROBE: pod created id=04ijy3ieg117t0; waiting for publicIp+ssh_port
+[t=    1.6s 21:14:47Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   18.5s 21:15:04Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   34.0s 21:15:20Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   49.5s 21:15:35Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   65.0s 21:15:51Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   80.5s 21:16:06Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   95.9s 21:16:21Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  111.4s 21:16:37Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  126.4s 21:16:52Z] PROBE NO-GO: pod 04ijy3ieg117t0 not RUNNING+SSH within 120s; tearing down
+[t=  126.4s 21:16:52Z] DELETE pod 04ijy3ieg117t0
+[t=  127.0s 21:16:52Z] delete returned status=204 resp={}
+[t=  132.3s 21:16:58Z] pod 04ijy3ieg117t0 confirmed terminated (404)
+[t=  132.3s 21:16:58Z] PROBE: pod 04ijy3ieg117t0 torn down
+[t=    0.0s 21:16:58Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 21:16:58Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 21:16:59Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 21:16:59Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 21:16:59Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 21:16:59Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 21:16:59Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 21:16:59Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 21:16:59Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 21:16:59Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.5s 21:17:00Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.5s 21:17:00Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 21:17:00Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 21:17:00Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    0.9s 21:17:01Z] create OK id=u0oyqbsuo40i5z costPerHr=$1.39
+[t=    0.9s 21:17:01Z] PROBE: pod created id=u0oyqbsuo40i5z; waiting for publicIp+ssh_port
+[t=    1.3s 21:17:01Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.8s 21:17:17Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.3s 21:17:32Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.7s 21:17:48Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   62.7s 21:18:03Z] PROBE NO-GO: pod u0oyqbsuo40i5z not RUNNING+SSH within 60s; tearing down
+[t=   62.7s 21:18:03Z] DELETE pod u0oyqbsuo40i5z
+[t=   63.2s 21:18:03Z] delete returned status=204 resp={}
+[t=   68.5s 21:18:09Z] pod u0oyqbsuo40i5z confirmed terminated (404)
+[t=   68.5s 21:18:09Z] PROBE: pod u0oyqbsuo40i5z torn down
+[t=    0.0s 21:44:44Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 21:44:44Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.1s 21:44:45Z] create OK id=dk4dmk96164gw2 costPerHr=$1.49
+[t=    1.1s 21:44:45Z] PROBE: pod created id=dk4dmk96164gw2; waiting for publicIp+ssh_port
+[t=    1.4s 21:44:45Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.7s 21:45:01Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.1s 21:45:16Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.6s 21:45:32Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.0s 21:45:47Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   78.7s 21:46:03Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   94.0s 21:46:18Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  109.4s 21:46:33Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  124.4s 21:46:48Z] PROBE NO-GO: pod dk4dmk96164gw2 not RUNNING+SSH within 120s; tearing down
+[t=  124.4s 21:46:48Z] DELETE pod dk4dmk96164gw2
+[t=  124.9s 21:46:49Z] delete returned status=204 resp={}
+[t=  130.2s 21:46:54Z] pod dk4dmk96164gw2 confirmed terminated (404)
+[t=  130.2s 21:46:54Z] PROBE: pod dk4dmk96164gw2 torn down
+[t=    0.0s 21:46:54Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 21:46:54Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 21:46:55Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 21:46:55Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 21:46:55Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 21:46:55Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.5s 21:46:56Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.5s 21:46:56Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 21:46:56Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 21:46:56Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.5s 21:46:56Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.5s 21:46:56Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 21:46:57Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 21:46:57Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    0.9s 21:46:57Z] create OK id=i12b78z4v80878 costPerHr=$1.39
+[t=    0.9s 21:46:57Z] PROBE: pod created id=i12b78z4v80878; waiting for publicIp+ssh_port
+[t=    1.2s 21:46:58Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.6s 21:47:13Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.0s 21:47:28Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.4s 21:47:44Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   62.4s 21:47:59Z] PROBE NO-GO: pod i12b78z4v80878 not RUNNING+SSH within 60s; tearing down
+[t=   62.4s 21:47:59Z] DELETE pod i12b78z4v80878
+[t=   62.9s 21:47:59Z] delete returned status=204 resp={}
+[t=   68.3s 21:48:05Z] pod i12b78z4v80878 confirmed terminated (404)
+[t=   68.3s 21:48:05Z] PROBE: pod i12b78z4v80878 torn down
+[t=    0.0s 22:15:00Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 22:15:00Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.1s 22:15:01Z] create OK id=qvjr1r868zxhvw costPerHr=$1.49
+[t=    1.1s 22:15:01Z] PROBE: pod created id=qvjr1r868zxhvw; waiting for publicIp+ssh_port
+[t=    1.4s 22:15:01Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.8s 22:15:16Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.2s 22:15:32Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.5s 22:15:47Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.9s 22:16:03Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   79.3s 22:16:19Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   94.8s 22:16:34Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  110.1s 22:16:50Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  125.1s 22:17:05Z] PROBE NO-GO: pod qvjr1r868zxhvw not RUNNING+SSH within 120s; tearing down
+[t=  125.1s 22:17:05Z] DELETE pod qvjr1r868zxhvw
+[t=  128.3s 22:17:08Z] delete returned status=204 resp={}
+[t=  133.9s 22:17:13Z] pod qvjr1r868zxhvw confirmed terminated (404)
+[t=  133.9s 22:17:13Z] PROBE: pod qvjr1r868zxhvw torn down
+[t=    0.0s 22:17:14Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 22:17:14Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.6s 22:17:15Z] create OK id=wd00bxitb5o096 costPerHr=$1.39
+[t=    1.6s 22:17:15Z] PROBE: pod created id=wd00bxitb5o096; waiting for publicIp+ssh_port
+[t=    2.1s 22:17:16Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   17.5s 22:17:31Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.9s 22:17:47Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   49.1s 22:18:03Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   64.1s 22:18:18Z] PROBE NO-GO: pod wd00bxitb5o096 not RUNNING+SSH within 60s; tearing down
+[t=   64.1s 22:18:18Z] DELETE pod wd00bxitb5o096
+[t=   64.7s 22:18:18Z] delete returned status=204 resp={}
+[t=   70.0s 22:18:24Z] pod wd00bxitb5o096 confirmed terminated (404)
+[t=   70.0s 22:18:24Z] PROBE: pod wd00bxitb5o096 torn down
+[t=    0.0s 22:18:24Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 22:18:24Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 22:18:24Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 22:18:24Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 22:18:25Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 22:18:25Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 22:18:25Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 22:18:25Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 22:18:25Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 22:18:25Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    0.9s 22:18:26Z] create OK id=j1dipi0xbwp7b2 costPerHr=$1.39
+[t=    0.9s 22:18:26Z] PROBE: pod created id=j1dipi0xbwp7b2; waiting for publicIp+ssh_port
+[t=    1.2s 22:18:27Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   16.6s 22:18:42Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.0s 22:18:57Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.4s 22:19:13Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   62.5s 22:19:28Z] PROBE NO-GO: pod j1dipi0xbwp7b2 not RUNNING+SSH within 60s; tearing down
+[t=   62.5s 22:19:28Z] DELETE pod j1dipi0xbwp7b2
+[t=   63.0s 22:19:28Z] delete returned status=204 resp={}
+[t=   68.3s 22:19:34Z] pod j1dipi0xbwp7b2 confirmed terminated (404)
+[t=   68.3s 22:19:34Z] PROBE: pod j1dipi0xbwp7b2 torn down
+[t=    0.0s 22:44:46Z] PROBE: spinning NVIDIA A100-SXM4-80GB SECURE/interruptible=False with 120s deadline
+[t=    0.0s 22:44:46Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    1.1s 22:44:47Z] create OK id=1begzvptssc8fo costPerHr=$1.49
+[t=    1.1s 22:44:47Z] PROBE: pod created id=1begzvptssc8fo; waiting for publicIp+ssh_port
+[t=    1.4s 22:44:47Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   17.2s 22:45:03Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   32.6s 22:45:19Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   47.9s 22:45:34Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   63.4s 22:45:49Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   78.8s 22:46:05Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=   94.2s 22:46:20Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  109.5s 22:46:36Z] poll desiredStatus=RUNNING publicIp= ssh_port=None
+[t=  124.5s 22:46:51Z] PROBE NO-GO: pod 1begzvptssc8fo not RUNNING+SSH within 120s; tearing down
+[t=  124.6s 22:46:51Z] DELETE pod 1begzvptssc8fo
+[t=  125.2s 22:46:51Z] delete returned status=204 resp={}
+[t=  130.5s 22:46:56Z] pod 1begzvptssc8fo confirmed terminated (404)
+[t=  130.5s 22:46:56Z] PROBE: pod 1begzvptssc8fo torn down
+[t=    0.0s 22:46:57Z] PROBE: spinning NVIDIA A100 80GB PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 22:46:57Z] create_pod request: gpu=NVIDIA A100 80GB PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.5s 22:46:57Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.5s 22:46:57Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 22:46:57Z] PROBE: spinning NVIDIA H100 80GB HBM3 SECURE/interruptible=False with 60s deadline
+[t=    0.0s 22:46:57Z] create_pod request: gpu=NVIDIA H100 80GB HBM3 image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.6s 22:46:58Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.6s 22:46:58Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 22:46:58Z] PROBE: spinning NVIDIA H100 PCIe SECURE/interruptible=False with 60s deadline
+[t=    0.0s 22:46:58Z] create_pod request: gpu=NVIDIA H100 PCIe image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=SECURE/interruptible=False
+[t=    0.5s 22:46:59Z] create FAIL status=500 resp={'error': 'create pod: There are no instances currently available', 'status': 500}
+[t=    0.5s 22:46:59Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
+[t=    0.0s 22:46:59Z] PROBE: spinning NVIDIA A100-SXM4-80GB COMMUNITY/interruptible=True with 60s deadline
+[t=    0.0s 22:46:59Z] create_pod request: gpu=NVIDIA A100-SXM4-80GB image=runpod/pytorch:2.1.0-py3.10-cuda12.1.1-devel-ubuntu22.04 cloud=COMMUNITY/interruptible=True
+[t=    0.5s 22:46:59Z] create FAIL status=500 resp={'error': 'create pod: There are no longer any instances available with the request specifications. Please try again later.', 'status': 500}
+[t=    0.5s 22:46:59Z] PROBE EXCEPTION: RuntimeError: pod create failed: status=500
