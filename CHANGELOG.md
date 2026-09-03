@@ -10,7 +10,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the pro
 
 - **Cache-pressure-aware admission.** kvwarden polls vLLM's `vllm:kv_cache_usage_perc` gauge (250 ms cadence) and scales admission priority by engine cache load. Same budget gate, smarter gating. Honest scope: 0.2 reacts to *global* cache pressure, not per-tenant pressure (the gauge has no tenant label). Per-tenant cache visibility waits on the LMCache substrate in 0.3+. RFC: [`docs/rfcs/T2-cache-pressure-admission.md`](docs/rfcs/T2-cache-pressure-admission.md). Tracker: [#103](https://github.com/coconut-labs/kvwarden/issues/103). Gated on the M4 Path C measure-first probe (2026-05-13 → 2026-05-19).
 
-## [0.1.6] — unreleased — dependency hygiene
+## [0.1.6] — 2026-08-08 — dependency hygiene
 
 Maintenance release. No behaviour change to the router, the admission gate, or the tenant budget — every published number still stands and no bench was re-run. What changed is the dependency surface and the CI gates around it.
 
@@ -108,7 +108,8 @@ Prior to the 2026-04-22 rename, the same codebase shipped on PyPI under the [`in
 - **infergrid 0.1.2** (2026-04-20) — Interactive `serve` wizard, offline `man [topic]` help, `doctor` env sanity check, rich-table CLI output, durable `__version__` via `importlib.metadata`.
 - **infergrid 0.1.1** (2026-04-20) — `pyproject.toml` TOML structure fix that broke `pip install -e .` on some Python builds.
 
-[Unreleased]: https://github.com/coconut-labs/kvwarden/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/coconut-labs/kvwarden/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/coconut-labs/kvwarden/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/coconut-labs/kvwarden/releases/tag/v0.1.5
 [0.1.4]: https://github.com/coconut-labs/kvwarden/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/coconut-labs/kvwarden/compare/v0.0.1...v0.1.3

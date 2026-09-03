@@ -124,7 +124,7 @@ kvwarden ships tenant-fair admission today. The name still over-promises: nothin
 
 **0.2 limitation, surfaced upfront:** `vllm:kv_cache_usage_perc` is labeled only by `model_name`, not by tenant. 0.2 lets kvwarden react to *global* cache pressure; it cannot see *which* tenant is occupying the cache. Per-tenant cache visibility waits on LMCache (0.3+).
 
-If you pip install 0.1.5 expecting KV-cache isolation today, you will not get it; you get admission-gate fairness, which is what the hero number measures.
+If you pip install 0.1.6 expecting KV-cache isolation today, you will not get it; you get admission-gate fairness, which is what the hero number measures.
 
 ## What's next
 
@@ -168,7 +168,7 @@ MIT. See [LICENSE](LICENSE).
   title  = {kvwarden: tenant-fair LLM inference on a single GPU},
   author = {Patel, Shrey and {Coconut Labs contributors}},
   year   = {2026},
-  version = {0.1.5},
+  version = {0.1.6},
   url    = {https://github.com/coconut-labs/kvwarden}
 }
 ```
