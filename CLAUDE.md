@@ -58,3 +58,56 @@ length-bucketed `AdmissionController.acquire(priority, timeout)`
   Tests go in `tests/unit/` with fakes.
 - Published numbers are pinned to what they were measured on. Don't restate a
   benchmark claim without the config and engine version behind it.
+
+## Status requests
+
+"Status", "brief status", "where are we" and similar mean **engineering
+state only**: what shipped, what's in flight, what's blocked, and known
+technical debt in this repo. Answer from the section below plus `git log`
+and `CHANGELOG.md`. Keep it under 20 lines.
+
+Out of scope for a status answer: release/account operations, credentials,
+CI billing, anything outside this repo's code and design. If one of those
+is genuinely blocking engineering work, name the blocker in one line
+without detail.
+
+## Current state
+
+**Shipped — v0.1.6, PyPI, 2026-08-08.** v0.1.x is tenant-aware *admission*:
+per-tenant token bucket at the budget gate (`tenant/manager.py:73`), DRR
+priority composition (`router/router.py:458-476`), length-bucketed
+concurrency gate (`router/admission.py`). Measured on A100 + Llama-3.1-8B +
+vLLM 0.19.1: quiet-tenant p99 TTFT 53.9 ms solo, 1,585 ms behind a flooder
+under FIFO, 61.5 ms post-warmup with the token bucket (1.14× solo).
+v0.1.6 itself was dependency hygiene — runtime deps 144 MB/27 packages →
+33 MB/18, four advisories cleared, `pip-audit` added to CI.
+
+**In flight — v0.2, RFC T2 cache-pressure admission.** Design is locked in
+`docs/rfcs/T2-cache-pressure-admission.md`; no implementation yet. Poll the
+engine's `vllm:kv_cache_usage_perc`, smooth it, and let it amplify the DRR
+deficit in the priority composition. Identity at zero pressure, so v0.1
+behavior is recovered exactly when the cache is cold.
+
+**Blocked on:** an A100 probe run. The M4 attempt burned 512 pod requests
+over four days without landing capacity, so the curve's watermarks are
+still the RFC's placeholders rather than measured.
+
+**Known technical debt, roughly by cost:**
+
+1. `profiling/scripts/profiling_utils.py` `count_tokens` catches only
+   `ImportError`. Any environment with `transformers` installed but no
+   access to the gated Llama repo gets an uncaught 401 and 8 failing
+   integration tests. The `except` is too narrow.
+2. `KVWardenConfig.from_yaml` has no validation — unknown top-level keys
+   are silently dropped, so a typo'd knob fails silently and looks like the
+   feature doesn't work.
+3. `CacheManager` is a shadow ledger; no engine adapter reads it. Known and
+   deliberate — it's why T2 was reframed from eviction to admission — but
+   the dead surface is still there.
+4. No publish workflow. Releases are a manual local build and upload.
+5. Branch protection on `main` requires `test (py3.11)`, `test (py3.12)`
+   and `lint (ruff)`. The `test (py3.13)` and `audit (pip-audit)` jobs run
+   but aren't required, so they can't block a merge.
+6. #127 — the engine endpoint is effectively hardcoded to localhost because
+   the Compose bundle shares a network namespace. Needs to be a real
+   `engine_endpoint` field on `ModelConfig`.
