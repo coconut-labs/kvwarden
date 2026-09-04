@@ -91,6 +91,19 @@ class EngineAdapter(abc.ABC):
         """HTTP base URL for this engine instance."""
         return f"http://localhost:{self.port}"
 
+    @property
+    def metrics_url(self) -> str:
+        """Prometheus scrape URL for this engine instance.
+
+        How an adapter advertises itself to the cache-pressure poller
+        (`cache/pressure.py`). Both vLLM and SGLang serve their metrics at
+        ``/metrics`` on the same port as the API, so the base class covers
+        both; an engine that moved it would override here.
+
+        T2 — issue #103.
+        """
+        return f"{self.base_url}/metrics"
+
     # ── Abstract: subclasses must implement ────────────────────────
 
     @abc.abstractmethod

@@ -181,6 +181,15 @@ class CacheManager:
         self._hits: dict[str, int] = {t: 0 for t in TIER_ORDER}
         self._misses: int = 0
 
+        # Latest engine KV-cache-pressure reading, fed by
+        # `cache/pressure.py`'s poller. Defaults live here rather than
+        # appearing on first poll so a manager with no poller attached
+        # still answers `snapshot()` with both keys — /status and the
+        # admission path never KeyError on a cold start.
+        # T2 — issue #103.
+        self._kv_cache_pressure: float = 0.0
+        self._kv_cache_pressure_last_poll_ts: float | None = None
+
         # LMCache integration (optional)
         self._lmcache: Any = None
         try:
@@ -484,6 +493,34 @@ class CacheManager:
             return 0.0
         return total_hits / total
 
+    def record_kv_cache_pressure(
+        self, pressure: float | None, ts: float | None = None
+    ) -> None:
+        """Record an engine KV-cache-pressure reading.
+
+        Called by `CachePressurePoller` off the request hot path. The value
+        is global per engine instance — vLLM's gauge carries no per-tenant
+        label — so this is engine state, not tenant attribution.
+
+        Args:
+            pressure: Gauge value in [0.0, 1.0], clamped defensively. ``None``
+                means the poller has no signal and is recorded as 0.0, which
+                returns admission to its v0.1 behavior.
+            ts: Unix epoch seconds for the reading. Defaults to now.
+                Observational — surfaced through /status, not used to gate
+                anything in v0.2.
+        """
+        if pressure is None:
+            self._kv_cache_pressure = 0.0
+        else:
+            self._kv_cache_pressure = min(1.0, max(0.0, float(pressure)))
+        self._kv_cache_pressure_last_poll_ts = time.time() if ts is None else ts
+
+    @property
+    def kv_cache_pressure(self) -> float:
+        """Latest engine KV cache pressure in [0.0, 1.0]. 0.0 means no signal."""
+        return self._kv_cache_pressure
+
     def snapshot(self) -> dict[str, Any]:
         """Plain-dict snapshot for CLI status display.
 
@@ -505,6 +542,8 @@ class CacheManager:
                 for name, s in ts.items()
             },
             "model_blocks": self.model_block_counts(),
+            "kv_cache_pressure": self._kv_cache_pressure,
+            "kv_cache_pressure_last_poll_ts": self._kv_cache_pressure_last_poll_ts,
         }
 
     # ------------------------------------------------------------------

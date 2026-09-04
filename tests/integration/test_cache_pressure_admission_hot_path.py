@@ -60,15 +60,15 @@ def test_pressure_recovery_resumes_normal_priority() -> None:
     del cm  # silence unused-var while skipped
 
 
-@pytest.mark.skip(reason="T2 W4-W6 admission wiring")
 def test_snapshot_exposes_pressure_key_and_metadata() -> None:
-    """`CacheManager.snapshot()` must expose `kv_cache_pressure` (float in
-    [0,1]) plus poll metadata (last poll timestamp) once the W4 poller is
-    wired. Today the snapshot has no such key."""
+    """`CacheManager.snapshot()` exposes `kv_cache_pressure` (float in [0,1])
+    plus the last-poll timestamp, on a manager with no poller attached."""
     cm = _make_manager()
-    # TODO(T2-W4): the W4 poller writes to cm._kv_cache_pressure
-    # (or equivalent). snapshot() surfaces it under "kv_cache_pressure"
-    # plus a "kv_cache_pressure_last_poll_ts" timestamp for staleness checks.
     snap = cm.snapshot()
-    assert "kv_cache_pressure" in snap
-    assert "kv_cache_pressure_last_poll_ts" in snap
+    assert snap["kv_cache_pressure"] == 0.0
+    assert snap["kv_cache_pressure_last_poll_ts"] is None
+
+    cm.record_kv_cache_pressure(0.62)
+    snap = cm.snapshot()
+    assert snap["kv_cache_pressure"] == pytest.approx(0.62)
+    assert snap["kv_cache_pressure_last_poll_ts"] is not None

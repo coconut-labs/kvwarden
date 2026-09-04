@@ -7,7 +7,7 @@ what. All policy lives one layer above the engine boundary.
 ## Commands
 
 ```
-pytest tests/unit/ -q        # 288 pass, ~13s, no GPU
+pytest tests/unit/ -q        # 307 pass, ~13s, no GPU
 ruff check src/ tests/
 ruff format --check src/ tests/
 ```
