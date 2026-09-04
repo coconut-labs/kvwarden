@@ -17,11 +17,143 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
+if TYPE_CHECKING:
+    from kvwarden.cache.manager import TenantPolicy
+
 logger = logging.getLogger(__name__)
+
+
+# ── Cache-pressure priority scaling (T2 — issue #103) ────────────────
+#
+# RFC: docs/rfcs/T2-cache-pressure-admission.md. Pure functions, no I/O.
+# The engine's KV cache pressure is orthogonal to kvwarden's per-tenant
+# deficit ledger; these compose the two into the single int the
+# AdmissionController orders by.
+#
+# Watermarks below are the RFC's placeholders, NOT measured values. The
+# Gate 3 M4 probe that would fix them has not landed capacity, so they
+# stay overridable per-deployment rather than baked in.
+
+CACHE_PRESSURE_SOFT_THRESHOLD: float = 0.5
+CACHE_PRESSURE_HARD_THRESHOLD: float = 0.9
+CACHE_PRESSURE_SATURATION_CEILING: float = 4.0
+
+
+def cache_load_scaling(
+    pressure: float | None,
+    *,
+    soft_threshold: float = CACHE_PRESSURE_SOFT_THRESHOLD,
+    hard_threshold: float = CACHE_PRESSURE_HARD_THRESHOLD,
+    ceiling: float = CACHE_PRESSURE_SATURATION_CEILING,
+) -> float:
+    """Map engine KV cache pressure to a deficit amplification factor.
+
+    Piecewise linear: identity below the soft threshold, a straight ramp
+    to the ceiling between the thresholds, saturated above the hard one.
+
+    Two invariants hold under any tuning pass (RFC §Design):
+
+    - **Identity at zero pressure.** ``cache_load_scaling(0.0) == 1.0``,
+      so v0.1 admission behavior is recovered exactly on a cold cache.
+    - **Bounded above.** The ceiling caps amplification so one saturated
+      engine cannot starve a tenant whose deficit happens to be small.
+
+    The RFC sketch ramps ``1.0 + 6.0 * (p - 0.5)`` and then jumps to 4.0,
+    which is discontinuous at the hard threshold (3.4 → 4.0). Ramping to
+    the ceiling instead removes the jump and preserves both RFC-pinned
+    points, ``scale(0.5) == 1.0`` and ``scale(0.9) == 4.0``.
+
+    Args:
+        pressure: Gauge value in [0.0, 1.0]. ``None`` means no reading
+            (poller down, or never polled) and yields identity —
+            fail-open, never fail-shut. Out-of-range values are clamped,
+            defensively against an engine-side gauge bug.
+        soft_threshold: Pressure below which scaling is identity.
+        hard_threshold: Pressure at and above which scaling saturates.
+        ceiling: Maximum amplification factor.
+
+    Returns:
+        A float >= 1.0, monotone non-decreasing in ``pressure``.
+    """
+    if pressure is None:
+        return 1.0
+
+    p = min(1.0, max(0.0, float(pressure)))
+
+    if p <= soft_threshold:
+        return 1.0
+    if p >= hard_threshold:
+        return ceiling
+
+    span = hard_threshold - soft_threshold
+    if span <= 0.0:
+        # Degenerate config (soft >= hard): the ramp has no width, so the
+        # curve is a step at the threshold.
+        return ceiling
+    return 1.0 + (ceiling - 1.0) * (p - soft_threshold) / span
+
+
+def compose_priority(
+    tenant_id: str,
+    base_priority: int,
+    policy: TenantPolicy | None,
+    kv_cache_pressure: float | None,
+    *,
+    soft_threshold: float = CACHE_PRESSURE_SOFT_THRESHOLD,
+    hard_threshold: float = CACHE_PRESSURE_HARD_THRESHOLD,
+    ceiling: float = CACHE_PRESSURE_SATURATION_CEILING,
+) -> int:
+    """Amplify a tenant's DRR deficit by engine cache pressure.
+
+    ``base_priority`` is the **deficit component only** — the caller adds
+    the length-bucket tie-breaker after this returns. Passing a
+    bucket-inclusive value would amplify the tie-breaker too and break
+    "bucket breaks ties within tenant tier" (`router.py:458-476`).
+
+    A tenant's ``tenant_weights`` entry is an admission *cost* weight, so
+    a low weight means an expensive tenant: cost is ``1 / weight``. The
+    cost is blended in proportionally to how far the scale has travelled
+    toward the ceiling, so it arrives smoothly rather than as a cliff at
+    the soft threshold — at ``scale == 1.0`` no weight applies at all, at
+    the ceiling the full ``1 / weight`` does.
+
+    Args:
+        tenant_id: Tenant the request belongs to.
+        base_priority: The tenant's DRR deficit score. Lower is served
+            first, matching AdmissionController and BUCKET_PRIORITY.
+        policy: Tenant weights, or ``None`` for uniform weighting.
+        kv_cache_pressure: Latest engine gauge reading, or ``None``.
+
+    Returns:
+        The amplified priority. Equals ``base_priority`` exactly whenever
+        the scale is identity, whatever the policy says.
+    """
+    scale = cache_load_scaling(
+        kv_cache_pressure,
+        soft_threshold=soft_threshold,
+        hard_threshold=hard_threshold,
+        ceiling=ceiling,
+    )
+    if scale <= 1.0:
+        return base_priority
+
+    weight = 1.0
+    if policy is not None:
+        weight = policy.tenant_weights.get(tenant_id, 1.0)
+    if not weight > 0.0:
+        # A non-positive weight is a config error, not a request to
+        # divide by zero. There is no config validator to catch it
+        # upstream yet, so fall back to uniform rather than blow up in
+        # the request path.
+        weight = 1.0
+
+    cost = 1.0 / weight
+    blended = 1.0 + (cost - 1.0) * (scale - 1.0) / (ceiling - 1.0)
+    return round(base_priority * scale * blended)
 
 
 @dataclass(order=True)
