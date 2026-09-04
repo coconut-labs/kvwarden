@@ -7,7 +7,7 @@ what. All policy lives one layer above the engine boundary.
 ## Commands
 
 ```
-pytest tests/unit/ -q        # 307 pass, ~13s, no GPU
+pytest tests/unit/ -q        # 325 pass, ~13s, no GPU
 ruff check src/ tests/
 ruff format --check src/ tests/
 ```
@@ -43,6 +43,9 @@ length-bucketed `AdmissionController.acquire(priority, timeout)`
 | Prometheus registry | `common/metrics.py:36` `MetricsCollector._registry`. One registry: `AdmissionController` is handed `metrics._registry` at `router.py:195`, and `/metrics` serves `metrics.prometheus_output()` (`cli.py:303`). |
 | Config | `common/config.py` — plain dataclasses, `KVWardenConfig.from_yaml` is `raw.get()` with defaults. **No validator exists.** Unknown top-level keys are silently dropped; unknown keys inside `models:` raise `TypeError` via `ModelConfig(**m)`. |
 | Cache manager | `cache/manager.py`, instantiated at `cli.py:268`, passed to the router, exposes `snapshot()`. |
+| Cache-pressure curve | `router/admission.py` — `cache_load_scaling()` + `compose_priority()`. Pure, no I/O. |
+| Cache-pressure poller | `cache/pressure.py` — scrapes each adapter's `metrics_url`, records into `CacheManager`. |
+| Shadow recorder | `router/shadow.py` — constructed only when `cache_pressure_admission.enabled`, so its Prometheus series register lazily. |
 
 ## Rules
 
@@ -83,10 +86,17 @@ v0.1.6 itself was dependency hygiene — runtime deps 144 MB/27 packages →
 33 MB/18, four advisories cleared, `pip-audit` added to CI.
 
 **In flight — v0.2, RFC T2 cache-pressure admission.** Design is locked in
-`docs/rfcs/T2-cache-pressure-admission.md`; no implementation yet. Poll the
-engine's `vllm:kv_cache_usage_perc`, smooth it, and let it amplify the DRR
-deficit in the priority composition. Identity at zero pressure, so v0.1
-behavior is recovered exactly when the cache is cold.
+`docs/rfcs/T2-cache-pressure-admission.md`. Poll the engine's
+`vllm:kv_cache_usage_perc`, and let it amplify the DRR deficit in the
+priority composition. Identity at zero pressure, so v0.1 behavior is
+recovered exactly when the cache is cold.
+
+Slice 1 has landed on `feat/cache-pressure-shadow`: the curve, the poller,
+and shadow-mode recording behind the `cache_pressure_admission` config
+block, off by default. It measures the lever and does not pull it — the
+priority reaching `AdmissionController.acquire` is unchanged. Slice 2 is
+enforcement, and it should not land before a probe fixes the watermarks.
+Sample config: `configs/t2_cache_pressure_shadow.yaml`.
 
 **Blocked on:** an A100 probe run. The M4 attempt burned 512 pod requests
 over four days without landing capacity, so the curve's watermarks are

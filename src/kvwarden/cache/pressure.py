@@ -51,6 +51,8 @@ _SCRAPE_TIMEOUT_S: float = 0.2
 
 FetchFn = Callable[[str], Awaitable[str | None]]
 EndpointsFn = Callable[[], list[str]]
+# (pressure, consecutive_failures) after each scrape round.
+ReadingFn = Callable[[float, int], None]
 
 
 def parse_cache_pressure(
@@ -101,6 +103,9 @@ class CachePressurePoller:
         interval_s: Seconds between scrapes.
         fetch: Test seam. Overrides the aiohttp scrape with a coroutine that
             maps a URL to a response body, or ``None`` for unreachable.
+        on_reading: Called after each scrape round with the recorded
+            pressure and the current consecutive-failure run length. Used
+            to drive observability; must not raise.
     """
 
     def __init__(
@@ -111,12 +116,14 @@ class CachePressurePoller:
         interval_s: float = DEFAULT_POLL_INTERVAL_S,
         fetch: FetchFn | None = None,
         metric_name: str = KV_CACHE_PRESSURE_METRIC,
+        on_reading: ReadingFn | None = None,
     ) -> None:
         self._cache_manager = cache_manager
         self._endpoints = endpoints
         self._interval_s = interval_s
         self._fetch = fetch or self._fetch_http
         self._metric_name = metric_name
+        self._on_reading = on_reading
         self._session: aiohttp.ClientSession | None = None
         self._consecutive_failures = 0
 
@@ -164,6 +171,8 @@ class CachePressurePoller:
 
         pressure = max(readings) if readings else 0.0
         self._cache_manager.record_kv_cache_pressure(pressure)
+        if self._on_reading is not None:
+            self._on_reading(pressure, self._consecutive_failures)
         return pressure
 
     async def run(self) -> None:

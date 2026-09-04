@@ -1,0 +1,63 @@
+# T2 Slice 1 — cache-pressure admission in SHADOW mode.
+#
+# Identical to configs/gate2_fairness_drr.yaml except for the
+# `cache_pressure_admission` block at the bottom. Nothing about the
+# priority handed to the AdmissionController changes: this config
+# *measures* the cache-pressure lever, it does not pull it.
+#
+# What turning the block on does:
+#   1. Starts a 250 ms poller against each loaded engine's /metrics,
+#      reading `vllm:kv_cache_usage_perc`.
+#   2. Surfaces the reading at /status under cache.kv_cache_pressure.
+#   3. Per request, records the priority the lever WOULD have produced.
+#
+# What to read afterwards, on kvwarden's own /metrics:
+#   kvwarden_kv_cache_pressure            — did the workload pressure the
+#                                           cache at all? If p99 never
+#                                           clears ~0.7 the lever exists
+#                                           but was never exercised, and
+#                                           the run cannot disconfirm
+#                                           anything (RFC §8 kill criterion).
+#   kvwarden_cache_pressure_scale         — what the curve did, isolated.
+#   kvwarden_shadow_priority_delta        — per tenant, what it would cost.
+#   kvwarden_cache_pressure_poll_failures_total
+#                                         — climbing on a healthy engine
+#                                           means the gauge was renamed.
+#
+# The watermarks below are the RFC's placeholders, NOT measured values.
+# The M4 probe that would fix them has not landed capacity. Sweep them.
+
+host: 0.0.0.0
+port: 8000
+gpu_budget_fraction: 0.92
+
+max_concurrent: 256
+admission_queue_size: 2048
+engine_start_timeout_s: 420
+log_level: INFO
+
+tenant_defaults:
+  max_concurrent_requests: 512
+  rate_limit_rpm: 999999
+  priority: 1
+  scheduling: drr
+
+cache_pressure_admission:
+  enabled: true
+  poll_interval_ms: 250
+  soft_threshold: 0.5      # below this the curve is identity
+  hard_threshold: 0.9      # at and above this it saturates
+  saturation_ceiling: 4.0  # maximum deficit amplification
+  # Admission COST weight. Lower = more expensive under pressure, since
+  # cost is 1/weight. Tenants not listed weigh 1.0.
+  tenant_weights:
+    flooder: 0.25
+
+models:
+  - model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    short_name: "llama31-8b"
+    engine: "vllm"
+    dtype: "bfloat16"
+    gpu_memory_utilization: 0.85
+    max_model_len: 4096
+    tensor_parallel_size: 1

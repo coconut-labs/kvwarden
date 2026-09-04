@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the pro
 
 ## [Unreleased]
 
+### Added
+
+- **Cache-pressure admission, shadow mode.** New `cache_pressure_admission` config block, disabled by default. Enabled, it polls each loaded engine's `/metrics` for `vllm:kv_cache_usage_perc`, surfaces the reading at `/status` under `cache.kv_cache_pressure`, and records what the pressure lever *would* do to each request's priority — `kvwarden_kv_cache_pressure`, `kvwarden_cache_pressure_scale`, `kvwarden_shadow_priority_delta`, `kvwarden_cache_pressure_poll_failures_total`. The priority handed to the admission gate is unchanged; enforcement is a later slice, and should not land before a probe replaces the curve's placeholder watermarks with measured ones. Sample config: [`configs/t2_cache_pressure_shadow.yaml`](configs/t2_cache_pressure_shadow.yaml). Refs [#103](https://github.com/coconut-labs/kvwarden/issues/103).
+
 ### Planned for v0.2.0 (mid-June 2026)
 
 - **Cache-pressure-aware admission.** kvwarden polls vLLM's `vllm:kv_cache_usage_perc` gauge (250 ms cadence) and scales admission priority by engine cache load. Same budget gate, smarter gating. Honest scope: 0.2 reacts to *global* cache pressure, not per-tenant pressure (the gauge has no tenant label). Per-tenant cache visibility waits on the LMCache substrate in 0.3+. RFC: [`docs/rfcs/T2-cache-pressure-admission.md`](docs/rfcs/T2-cache-pressure-admission.md). Tracker: [#103](https://github.com/coconut-labs/kvwarden/issues/103). Gated on the M4 Path C measure-first probe (2026-05-13 → 2026-05-19).

@@ -1,10 +1,15 @@
-"""Pin the eventual cache-pressure -> admission hot-path wiring (skip until W4).
+"""Cache-pressure -> admission hot-path wiring.
 
 T2 reframed 2026-04-28T+1: kvwarden polls vLLM's `/metrics` for
 `vllm:kv_cache_usage_perc`, surfaces the gauge in `cache_manager.snapshot()`
-under the key `kv_cache_pressure`, and AdmissionController scales priority
-by `(cache_load × tenant_deficit)`. None of that wiring exists yet; bodies
-are skeletal and the skip marker keeps CI green until W4-W6 lands.
+under the key `kv_cache_pressure`, and composes it with the per-tenant DRR
+deficit.
+
+Slice 1 landed the snapshot surface, the poller, and shadow-mode recording,
+so the snapshot test below is live. The other three assert that admission
+*acts* on the pressure — deferring a flooder, then recovering — which is
+Slice 2. They stay skipped until enforcement lands, since Slice 1
+deliberately leaves the admitted priority unchanged.
 
 # T2 — issue #103, RFC at docs/rfcs/T2-cache-pressure-admission.md
 """
@@ -23,7 +28,7 @@ def _make_manager() -> CacheManager:
     )
 
 
-@pytest.mark.skip(reason="T2 W4-W6 admission wiring")
+@pytest.mark.skip(reason="T2 Slice 2 — enforcement; Slice 1 is shadow-only")
 def test_admission_reads_cache_pressure_from_snapshot() -> None:
     """End-to-end: a request hits AdmissionController, controller reads
     `cache_manager.snapshot()["kv_cache_pressure"]`, priority is composed."""
@@ -38,7 +43,7 @@ def test_admission_reads_cache_pressure_from_snapshot() -> None:
     # kv_cache_pressure=snap["kv_cache_pressure"]) under the hood.
 
 
-@pytest.mark.skip(reason="T2 W4-W6 admission wiring")
+@pytest.mark.skip(reason="T2 Slice 2 — enforcement; Slice 1 is shadow-only")
 def test_two_tenant_pressure_defers_flooder() -> None:
     """Under flooder spike + cache pressure, flooder admission is rejected
     or deferred once the gauge crosses threshold; quiet tenant unaffected."""
@@ -49,7 +54,7 @@ def test_two_tenant_pressure_defers_flooder() -> None:
     del cm  # silence unused-var while skipped
 
 
-@pytest.mark.skip(reason="T2 W4-W6 admission wiring")
+@pytest.mark.skip(reason="T2 Slice 2 — enforcement; Slice 1 is shadow-only")
 def test_pressure_recovery_resumes_normal_priority() -> None:
     """After cache pressure drops below the knee, admission resumes
     normal (DRR-only) priority composition for all tenants."""

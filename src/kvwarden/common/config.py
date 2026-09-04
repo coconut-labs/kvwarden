@@ -82,6 +82,34 @@ class TenantDefaults:
 
 
 @dataclass
+class CachePressureAdmissionConfig:
+    """Cache-pressure-aware admission (T2 — issue #103).
+
+    Off by default. Enabled, it starts the engine /metrics poller and
+    records what the cache-pressure lever *would* do to each request's
+    priority. It does not change the priority handed to the
+    AdmissionController — enforcement is a later slice.
+
+    The watermarks are the RFC's placeholders, not measured values. They
+    are config rather than constants precisely because the Gate 3 probe
+    that would fix them has not landed capacity yet, and a shadow run
+    should be able to sweep the curve without a redeploy.
+    """
+
+    enabled: bool = False
+    poll_interval_ms: int = 250
+    # Pressure below which the curve is identity.
+    soft_threshold: float = 0.5
+    # Pressure at and above which the curve saturates.
+    hard_threshold: float = 0.9
+    # Maximum deficit amplification.
+    saturation_ceiling: float = 4.0
+    # Per-tenant admission *cost* weight. Lower = more expensive under
+    # pressure: cost is 1/weight. Absent tenants weigh 1.0.
+    tenant_weights: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
 class KVWardenConfig:
     """Top-level KVWarden configuration."""
 
@@ -91,6 +119,9 @@ class KVWardenConfig:
     models: list[ModelConfig] = field(default_factory=list)
     cache: CacheConfig = field(default_factory=CacheConfig)
     tenant_defaults: TenantDefaults = field(default_factory=TenantDefaults)
+    cache_pressure_admission: CachePressureAdmissionConfig = field(
+        default_factory=CachePressureAdmissionConfig
+    )
     max_concurrent: int = 128
     admission_queue_size: int = 1024
     engine_start_timeout_s: int = 300
@@ -125,6 +156,15 @@ class KVWardenConfig:
         tenant_defaults = (
             TenantDefaults(**tenant_raw) if tenant_raw else TenantDefaults()
         )
+        # Threaded explicitly. `from_yaml` is `raw.get()` with defaults and
+        # has no validator, so a block that isn't read here parses as a
+        # silent no-op and looks like the feature is broken.
+        pressure_raw = raw.get("cache_pressure_admission", {})
+        cache_pressure_admission = (
+            CachePressureAdmissionConfig(**pressure_raw)
+            if pressure_raw
+            else CachePressureAdmissionConfig()
+        )
 
         return cls(
             host=raw.get("host", "0.0.0.0"),
@@ -133,6 +173,7 @@ class KVWardenConfig:
             models=models,
             cache=cache,
             tenant_defaults=tenant_defaults,
+            cache_pressure_admission=cache_pressure_admission,
             max_concurrent=raw.get("max_concurrent", 128),
             admission_queue_size=raw.get("admission_queue_size", 1024),
             engine_start_timeout_s=raw.get("engine_start_timeout_s", 300),

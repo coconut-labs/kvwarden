@@ -23,12 +23,14 @@ import aiohttp
 from aiohttp import web
 
 from kvwarden.cache.manager import CacheManager
+from kvwarden.cache.pressure import CachePressurePoller
 from kvwarden.common.config import KVWardenConfig, ModelConfig
 from kvwarden.common.metrics import MetricsCollector
 from kvwarden.engines.base import EngineAdapter, EngineCircuitOpenError
 from kvwarden.engines.sglang_adapter.adapter import SGLangAdapter
 from kvwarden.engines.vllm_adapter.adapter import VLLMAdapter
 from kvwarden.router.admission import AdmissionController, AdmissionTimeoutError
+from kvwarden.router.shadow import CachePressureShadow
 from kvwarden.tenant.manager import TenantManager
 
 logger = logging.getLogger(__name__)
@@ -225,6 +227,30 @@ class WorkloadRouter:
         self._load_locks: dict[str, asyncio.Lock] = {}
         self._load_locks_guard = asyncio.Lock()
 
+        # Cache-pressure admission (T2 — issue #103). Shadow-only: the
+        # poller feeds the cache manager and the recorder reports what the
+        # lever would have done. Neither touches the priority handed to the
+        # AdmissionController. Both stay None when the block is disabled,
+        # so nothing runs and no Prometheus series are registered.
+        self._cache_pressure_shadow: CachePressureShadow | None = None
+        self._cache_pressure_poller: CachePressurePoller | None = None
+        self._cache_pressure_task: asyncio.Task[None] | None = None
+        pressure_cfg = config.cache_pressure_admission
+        if pressure_cfg.enabled:
+            self._cache_pressure_shadow = CachePressureShadow(
+                pressure_cfg, registry=self.metrics._registry
+            )
+            self._cache_pressure_poller = CachePressurePoller(
+                cache_manager=self.cache_manager,
+                # A callable, not a list: models load and unload while the
+                # poller runs.
+                endpoints=lambda: [
+                    state.adapter.metrics_url for state in self._models.values()
+                ],
+                interval_s=pressure_cfg.poll_interval_ms / 1000.0,
+                on_reading=self._cache_pressure_shadow.observe_poll,
+            )
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -242,6 +268,11 @@ class WorkloadRouter:
                     name=f"worker-{bucket_name}-{i}",
                 )
                 self._workers.append(task)
+
+        if self._cache_pressure_poller is not None:
+            self._cache_pressure_task = asyncio.create_task(
+                self._cache_pressure_poller.run(), name="cache-pressure-poller"
+            )
 
         # Pre-load configured models. Sequentially — concurrent
         # adapter.start() calls would compete for GPU memory.
@@ -273,6 +304,11 @@ class WorkloadRouter:
     async def stop(self) -> None:
         """Stop all queue workers and engine subprocesses."""
         self._running = False
+
+        if self._cache_pressure_task is not None:
+            self._cache_pressure_task.cancel()
+            await asyncio.gather(self._cache_pressure_task, return_exceptions=True)
+            self._cache_pressure_task = None
 
         # Cancel workers
         for task in self._workers:
@@ -463,13 +499,33 @@ class WorkloadRouter:
         max_tokens = payload.get("max_tokens", 256)
         bucket = classify_request_length(max_tokens)
         bucket_priority = BUCKET_PRIORITY.get(bucket, 1)
+        deficit: int | None = None
         if self.config.tenant_defaults.scheduling == "drr":
             tenant_record = await self.tenant_manager.get_tenant(tenant_id)
             tenant_score = tenant_record.priority_score() if tenant_record else 1
             # Tenant deficit dominates; bucket breaks ties within tenant tier.
-            priority = tenant_score * 100 + bucket_priority
+            deficit = tenant_score * 100
+            priority = deficit + bucket_priority
         else:
             priority = bucket_priority
+
+        # Cache-pressure admission, shadow only (T2 — issue #103). Records
+        # what the lever would have done to `deficit`; `priority` above is
+        # what actually reaches the AdmissionController, unchanged.
+        #
+        # The deficit is computed here even under fifo, where the live path
+        # has none. Otherwise a shadow run on the default discipline would
+        # report zeros and read as "the feature is dead" rather than "this
+        # discipline has no deficit to amplify".
+        if self._cache_pressure_shadow is not None:
+            if deficit is None:
+                record = await self.tenant_manager.get_tenant(tenant_id)
+                deficit = (record.priority_score() if record else 1) * 100
+            self._cache_pressure_shadow.record(
+                tenant_id=tenant_id,
+                base_priority=deficit,
+                pressure=self.cache_manager.kv_cache_pressure,
+            )
 
         # Admission control -- wait for engine capacity
         admitted = await self.admission_controller.acquire(
